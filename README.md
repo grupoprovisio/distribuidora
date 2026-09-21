@@ -15,10 +15,13 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2020.9-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Demo online](https://img.shields.io/badge/demo-online-brightgreen?logo=vercel&logoColor=white)](https://atacadao-best-price.vercel.app)
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-yellow.svg)](LICENSE)
 [![Mobile first](https://img.shields.io/badge/layout-mobile%20first%20%2B%20responsivo-0e4b3f)](#funcionalidades)
 
-Aplicativo web (mobile first, responsivo até o desktop) para quem faz **compras de mercado e de supermercado**, construído sobre as APIs públicas da loja online do Atacadão. Ele mostra o **preço real por filial e por quantidade**, destaca o **preço de atacado** (quanto mais leva, menos paga por unidade), sugere alternativas mais baratas, monta **listas de compras** com o total exato e compara o que você **previu com o que pagou** usando a **NFC-e** da compra.
+🔗 **Demo online:** [https://atacadao-best-price.vercel.app](https://atacadao-best-price.vercel.app)
+
+ **compras de mercado e de supermercado**, construído sobre as APIs públicas da loja online do Atacadão. Ele mostra o **preço real por filial e por quantidade**, destaca o **preço de atacado** (quanto mais leva, menos paga por unidade), sugere alternativas mais baratas, monta **listas de compras** com o total exato e compara o que você **previu com o que pagou** usando a **NFC-e** da compra.
 
 > ⚠️ Projeto independente e **não oficial**, sem vínculo com o Atacadão. Veja o [aviso legal](#aviso-legal).
 
@@ -34,6 +37,7 @@ Ir para:
 - [**Configuração**](#configuração)
 - [**SEO e compartilhamento**](#seo-e-compartilhamento)
 - [**Testar no celular**](#testar-no-celular)
+- [**Deploy na Vercel**](#deploy-na-vercel)
 - [**Estrutura do projeto**](#estrutura-do-projeto)
 - [**Rotas de API do app**](#rotas-de-api-do-app)
 - [**Dados e privacidade**](#dados-e-privacidade)
@@ -196,16 +200,24 @@ NEXT_PUBLIC_SITE_URL=https://seu-dominio.com.br
 
 ## **Testar no celular**
 
-O `next dev` só aceita abrir o app por origens permitidas. Em `next.config.ts`, a opção `allowedDevOrigins` lista as liberadas (`127.0.0.1` e túneis `*.trycloudflare.com`). Para testar pelo IP da sua rede local, adicione o IP do seu computador:
+O `next dev` só aceita abrir o app por origens permitidas. Em `next.config.ts`, a opção `allowedDevOrigins` já libera `127.0.0.1` e túneis `*.trycloudflare.com`. Para testar pelo IP da sua rede local, informe o IP do seu computador na variável `DEV_ORIGINS` (vários, separados por vírgula), num arquivo `.env.local` que não vai para o Git:
 
-```ts
-allowedDevOrigins: ["127.0.0.1", "192.168.0.10", "*.trycloudflare.com"],
+```
+DEV_ORIGINS=192.168.0.10
 ```
 
 O leitor de QR/código de barras precisa de **HTTPS** para usar a câmera no celular. Um túnel resolve sem configuração:
 ```
 cloudflared tunnel --url http://localhost:3000
 ```
+
+## **Deploy na Vercel**
+
+O projeto roda na Vercel sem configuração extra: o `vercel.json` fixa a região **São Paulo (`gru1`)**, perto do site do Atacadão e da SEFAZ. Passos:
+
+1. Importe o repositório em [vercel.com/new](https://vercel.com/new) (ou use `npx vercel`).
+2. Defina `NEXT_PUBLIC_SITE_URL` com o endereço do site (usado no sitemap, canonical e Open Graph).
+3. Faça o deploy. Não há chaves nem segredos para configurar.
 
 ## **Estrutura do projeto**
 
