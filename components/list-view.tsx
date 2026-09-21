@@ -304,7 +304,7 @@ function Section({
       {/* Recolhe suavemente: a altura anima entre 0fr e 1fr. */}
       <div
         id={panel}
-        className={`grid transition-[grid-template-rows,opacity] duration-300 motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+        className={`grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows,opacity] duration-300 motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
       >
         <div className={open ? "overflow-visible" : "overflow-hidden"} inert={!open}>
           <ul className="space-y-3 pb-1 pt-1">

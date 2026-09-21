@@ -1,6 +1,43 @@
 {
   "name": "atacadao-best-price",
   "version": "0.1.0",
+  "description": "Comparador de preços de mercado e supermercado para o Atacadão: preço de atacado por filial, promoções, lista de compras inteligente, scanner de código de barras e análise de NFC-e.",
+  "keywords": [
+    "comparador-de-precos",
+    "price-comparison",
+    "mercado",
+    "supermercado",
+    "atacadao",
+    "lista-de-compras",
+    "shopping-list",
+    "preco-de-atacado",
+    "promocoes",
+    "vtex",
+    "vtex-api",
+    "faststore",
+    "barcode-scanner",
+    "qr-code",
+    "nfce",
+    "nota-fiscal",
+    "nextjs",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "mobile-first"
+  ],
+  "homepage": "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora/issues"
+  },
+  "author": {
+    "name": "Distribuidora",
+    "url": "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora"
+  },
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",

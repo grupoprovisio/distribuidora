@@ -1,6 +1,7 @@
+import { AUTHOR } from "@/lib/site";
 import { WRAP } from "@/lib/ui";
 
-export const AUTHOR = { name: "Distribuidora", url: "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora" } as const;
+export { AUTHOR };
 
 /** Link do autor para o GitHub (usado no rodapé e no popup de boas-vindas). */
 export function AuthorLink({ className = "" }: { className?: string }) {

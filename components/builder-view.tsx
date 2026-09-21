@@ -119,7 +119,7 @@ function DraftCard({
       </div>
 
       {/* Continua montado quando recolhido: a escolha automática de opção segue funcionando. */}
-      <div id={panel} className={`grid transition-[grid-template-rows,opacity] duration-300 motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+      <div id={panel} className={`grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows,opacity] duration-300 motion-reduce:transition-none ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
         <div className={open ? "overflow-visible" : "overflow-hidden"} inert={!open}>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Stepper value={item.qty} onChange={(qty) => onChange({ qty, added: false })} label={`Quantidade de ${item.label}`} />
