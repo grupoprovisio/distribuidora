@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { PurchaseDetail } from "@/components/purchases-view";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Compra · Atacadão Best Price" };
+export const metadata = { title: "Compra · Distribuidora" };
 
 export default async function CompraPage(props: PageProps<"/conta/compras/[id]">) {
   const { id } = await props.params;

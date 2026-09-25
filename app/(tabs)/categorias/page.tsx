@@ -6,7 +6,7 @@ import { iconFor, toneFor } from "@/lib/categories";
 import { getDepartments } from "@/lib/taxonomy";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Categorias · Atacadão Best Price" };
+export const metadata = { title: "Categorias · Distribuidora" };
 
 export default async function CategoriasPage() {
   const departments = await getDepartments();

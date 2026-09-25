@@ -1,7 +1,7 @@
 import { request } from "@/lib/atacadao";
 
 /**
- * GET /api/terms?q=arr  -> sugestões de busca do Atacadão para o que está sendo digitado.
+ * GET /api/terms?q=arr  -> sugestões de busca da Distribuidora para o que está sendo digitado.
  * GET /api/terms        -> buscas mais populares do momento.
  * Vem da busca inteligente da loja: nada de lista fixa no app.
  */

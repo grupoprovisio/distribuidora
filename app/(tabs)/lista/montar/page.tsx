@@ -3,7 +3,7 @@ import { BuilderView } from "@/components/builder-view";
 import { ListTabs } from "@/components/list-tabs";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Montar lista · Atacadão Best Price" };
+export const metadata = { title: "Montar lista · Distribuidora" };
 
 export default function MontarPage() {
   return (

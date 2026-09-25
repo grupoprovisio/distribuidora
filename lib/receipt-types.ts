@@ -22,7 +22,7 @@ export type ReceiptNow = {
 };
 
 export type ReceiptItem = {
-  /** Código impresso na nota = `RefId` do produto no Atacadão. */
+  /** Código impresso na nota = `RefId` do produto na Distribuidora. */
   code: string;
   /** Descrição abreviada, como impressa na nota. */
   description: string;

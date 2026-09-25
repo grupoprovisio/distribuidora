@@ -16,7 +16,7 @@ const UNITS: { value: Unit; label: string }[] = [
   { value: "l", label: "L" },
 ];
 
-/** Sugestões de busca do Atacadão para o texto digitado (ou as mais populares, com o campo vazio). */
+/** Sugestões de busca da Distribuidora para o texto digitado (ou as mais populares, com o campo vazio). */
 function useTerms(q: string) {
   const [done, setDone] = useState<{ q: string; terms: string[] } | null>(null);
   const query = q.trim();

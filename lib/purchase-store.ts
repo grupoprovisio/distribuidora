@@ -3,7 +3,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { Receipt } from "@/lib/receipt-types";
 
-// Compras salvas. Cada uma pertence a uma conta do Atacadão (o e-mail) e guarda o que foi planejado (itens, quantidades e os
+// Compras salvas. Cada uma pertence a uma conta da Distribuidora (o e-mail) e guarda o que foi planejado (itens, quantidades e os
 // preços da filial na hora de salvar). Ao finalizar, recebe a NFC-e para comparar o previsto com o que foi pago.
 // Ficam no navegador (localStorage), separadas por conta.
 
@@ -19,7 +19,7 @@ export type PlannedItem = {
 };
 
 export type PaidItem = {
-  /** SKU do Atacadão quando o item da nota foi reconhecido no catálogo. */
+  /** SKU da Distribuidora quando o item da nota foi reconhecido no catálogo. */
   skuId?: string;
   name: string;
   /** Em unidades do catálogo, como na lista (itens por peso viram unidades de 150 g etc.). */
@@ -43,7 +43,7 @@ export type AttachedReceipt = {
 
 export type Purchase = {
   id: string;
-  /** E-mail da conta do Atacadão dona da compra. */
+  /** E-mail da conta da Distribuidora dona da compra. */
   owner: string;
   name: string;
   savedAt: string;

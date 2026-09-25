@@ -21,7 +21,7 @@ export type ItemMeta = {
   manual?: number;
 };
 
-/** `qty`, `meta` e `done` usam o SKU do Atacadão como chave. */
+/** `qty`, `meta` e `done` usam o SKU da Distribuidora como chave. */
 type State = {
   qty: Record<string, number>;
   meta: Record<string, ItemMeta>;

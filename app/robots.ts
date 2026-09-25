@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Telas pessoais (conta, lista, compras) e rotas de servidor não têm o que indexar.
-      disallow: ["/api/", "/conta", "/lista", "/scan"],
+      disallow: ["/api/", "/admin", "/conta", "/lista", "/scan", "/checkout"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,

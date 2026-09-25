@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SearchX } from "lucide-react";
-import { Credit } from "@/components/credit";
 import { EmptyState, primaryButton } from "@/components/section";
 import { WRAP } from "@/lib/ui";
 
@@ -19,7 +18,6 @@ export default function NotFound() {
           }
         />
       </main>
-      <Credit />
     </>
   );
 }

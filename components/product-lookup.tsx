@@ -342,7 +342,7 @@ function Failure({ kind, ean, onRetry }: { kind: "not_found" | "error" | "invali
       <span className="mx-auto grid size-12 place-items-center rounded-full bg-sand text-[#5c3a06]">
         <Icon size={22} aria-hidden />
       </span>
-      <p className="mt-3 text-sm font-extrabold">{notFound ? "Produto não encontrado no Atacadão" : "Não consegui buscar o produto"}</p>
+      <p className="mt-3 text-sm font-extrabold">{notFound ? "Produto não encontrado na Distribuidora" : "Não consegui buscar o produto"}</p>
       <p className="mt-1 text-xs font-medium text-muted">
         {notFound ? `O código ${ean} não está no catálogo.` : "Verifique a conexão e tente de novo."}
       </p>
@@ -424,7 +424,7 @@ export function ProductLookup({
         {badges}
         <h3 className="mt-0.5 text-base font-extrabold leading-snug">{p.name}</h3>
         <p className="mt-1 truncate text-[11px] font-medium text-muted">{p.categoryPath.join(" › ")}</p>
-        <p className="font-mono text-[11px] font-semibold text-muted">EAN {p.ean}</p>
+        <p className="font-mono text-[11px] font-semibold text-muted">SKU {p.skuId} · EAN {p.ean}</p>
       </div>
     </div>
   );
@@ -435,7 +435,11 @@ export function ProductLookup({
       {badges}
       <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">{p.name}</h1>
       <p className="mt-1 text-xs font-medium text-muted">{p.categoryPath.join(" › ")}</p>
-      <p className="font-mono text-xs font-semibold text-muted">EAN {p.ean}</p>
+      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] font-semibold text-muted">
+        <span>SKU {p.skuId}</span>
+        <span>EAN {p.ean}</span>
+        {p.size ? <span>Embalagem {p.size.label}</span> : null}
+      </div>
     </div>
   );
 
@@ -443,7 +447,7 @@ export function ProductLookup({
     <>
       <div className="rounded-3xl bg-canvas p-4 ring-1 ring-line">
         <p className="text-[11px] font-bold uppercase tracking-wide text-muted">
-          Atacadão {filial.name} · {qty} un
+          Distribuidora {filial.name} · {qty} un
         </p>
         {offer.available && offer.atQty !== undefined ? (
           <>
@@ -534,7 +538,7 @@ export function ProductLookup({
 
       {p.url ? (
         <a href={p.url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-forest hover:underline">
-          Ver no site do Atacadão <ExternalLink size={13} aria-hidden />
+          Ver no site da Distribuidora <ExternalLink size={13} aria-hidden />
         </a>
       ) : null}
     </>

@@ -18,13 +18,15 @@ const SORTS: { value: CatalogSort; label: string }[] = [
   { value: "price_desc", label: "Maior preço" },
 ];
 
-type Filters = { q: string; cat: string[]; brand?: string; sort: CatalogSort };
+type Filters = { q: string; cat: string[]; brand?: string; sort: CatalogSort; min?: number; max?: number };
 
 function href(f: Filters) {
   const p = new URLSearchParams();
   if (f.q) p.set("q", f.q);
   if (f.cat.length) p.set("cat", f.cat.join("/"));
   if (f.brand) p.set("brand", f.brand);
+  if (f.min) p.set("min", String(f.min));
+  if (f.max) p.set("max", String(f.max));
   if (f.sort !== "score_desc") p.set("sort", f.sort);
   const s = p.toString();
   return s ? `/buscar?${s}` : "/buscar";
@@ -45,7 +47,7 @@ function ChipRow({ label, children }: { label: string; children: React.ReactNode
 
 /** Lista que se estende sozinha ao rolar. Recriada (via `key`) quando muda filtro ou filial. */
 function Results({ seller, filters }: { seller: string; filters: Filters }) {
-  const { q, cat, brand, sort } = filters;
+  const { q, cat, brand, sort, min, max } = filters;
 
   const inf = useInfinite(async (after) => {
     const qs = new URLSearchParams({ seller, sort, first: String(PAGE), after: String(after) });
@@ -59,7 +61,8 @@ function Results({ seller, filters }: { seller: string; filters: Filters }) {
   });
 
   // Enquanto há mais, o total da busca; no fim, o que de fato está à venda nesta filial.
-  const shownTotal = inf.hasMore ? inf.total : inf.items.length;
+  const visible = inf.items.filter((p) => (min === undefined || p.unit >= min) && (max === undefined || p.unit <= max));
+  const shownTotal = inf.hasMore ? inf.total : visible.length;
 
   return (
     <>
@@ -77,16 +80,16 @@ function Results({ seller, filters }: { seller: string; filters: Filters }) {
         <GridSkeleton count={PAGE / 2} />
       ) : inf.error && inf.items.length === 0 ? (
         <GridMessage kind="error" onRetry={inf.retry} />
-      ) : inf.items.length === 0 ? (
+      ) : visible.length === 0 ? (
         <GridMessage kind="empty" />
       ) : (
         <>
           <div className={PRODUCT_GRID}>
-            {inf.items.map((p, i) => (
+            {visible.map((p, i) => (
               <ProductCard key={p.id} product={p} priority={i < 2} />
             ))}
           </div>
-          <InfiniteFooter sentinel={inf.sentinel} busy={inf.busy} error={inf.error} hasMore={inf.hasMore} retry={inf.retry} shown={inf.items.length} total={inf.total} />
+          <InfiniteFooter sentinel={inf.sentinel} busy={inf.busy} error={inf.error} hasMore={inf.hasMore} retry={inf.retry} shown={visible.length} total={inf.total} />
         </>
       )}
     </>
@@ -96,7 +99,7 @@ function Results({ seller, filters }: { seller: string; filters: Filters }) {
 /** Resultados reais da busca na filial escolhida: filtros de subcategoria/marca, ordenação e rolagem infinita. */
 export function SearchResults(filters: Filters) {
   const { filial } = usePrefs();
-  const { q, cat, brand, sort } = filters;
+  const { q, cat, brand, sort, min, max } = filters;
 
   // Facetas em consulta própria: não são refeitas a cada página.
   const facets = useCatalog({ term: q, cat: cat.join("/"), brand, first: 1, facets: 1 }).data?.facets;
@@ -137,6 +140,15 @@ export function SearchResults(filters: Filters) {
           </Link>
         ))}
       </div>
+
+      <ChipRow label="Faixa de preço">
+        {[
+          { label: "Todos", min: undefined, max: undefined },
+          { label: "Até R$ 10", max: 10 },
+          { label: "R$ 10 a R$ 30", min: 10, max: 30 },
+          { label: "Acima de R$ 30", min: 30 },
+        ].map((range) => <Link key={range.label} href={href({ ...filters, min: range.min, max: range.max })} className={`${chip} ${min === range.min && max === range.max ? on : off}`}>{range.label}</Link>)}
+      </ChipRow>
 
       <Results key={`${filial.seller}|${q}|${cat.join("/")}|${brand}|${sort}`} seller={filial.seller} filters={filters} />
     </div>

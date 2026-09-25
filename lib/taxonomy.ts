@@ -2,7 +2,7 @@ import "server-only";
 
 import { request } from "@/lib/atacadao";
 
-// Departamentos e subcategorias vêm da árvore de categorias do próprio Atacadão (nada fixo no app):
+// Departamentos e subcategorias vêm da árvore de categorias do própria Distribuidora (nada fixo no app):
 // se a loja criar, renomear ou remover um departamento, o app acompanha.
 
 export type Department = {

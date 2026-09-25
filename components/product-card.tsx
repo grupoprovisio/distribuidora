@@ -22,7 +22,7 @@ export function ProductCard({
   const { tier } = product;
   const meta = { name: product.name, brand: product.brand, image: product.image, dept: product.dept };
   return (
-    <article className="relative flex flex-col rounded-3xl bg-paper p-3 shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float/30">
+    <article className="group relative flex flex-col rounded-3xl bg-paper p-3 shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float/30">
       <Link href={`/produto/${product.id}`} aria-label={product.name} className="absolute inset-0 z-0 rounded-3xl" />
 
       <div className="relative aspect-square">
@@ -34,7 +34,7 @@ export function ProductCard({
             unoptimized
             priority={priority}
             sizes="(min-width:1280px) 16vw, (min-width:1024px) 20vw, (min-width:768px) 25vw, (min-width:480px) 33vw, 50vw"
-            className={`object-contain p-1 ${unavailable ? "opacity-50 grayscale" : ""}`}
+            className={`object-contain p-1 transition-transform duration-500 ease-out group-hover:scale-105 ${unavailable ? "opacity-50 grayscale" : ""}`}
           />
         ) : null}
         <HeartButton product={{ id: product.id, ...meta }} className="absolute right-0 top-0 z-10" />
@@ -47,10 +47,14 @@ export function ProductCard({
 
       <p className="mt-2 truncate text-[11px] font-bold uppercase tracking-wide text-muted">{product.brand}</p>
       <h3 className="line-clamp-2 min-h-[2.5rem] text-[13px] font-bold leading-snug sm:text-sm">{product.name}</h3>
+      <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-muted">
+        <span className="rounded-full bg-canvas px-2 py-0.5">SKU {product.id}</span>
+        <span className="truncate">{product.pack ?? "Unidade"}</span>
+      </div>
 
       <div className="mt-2 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          {unavailable ? (
+          {unavailable || product.availability === "unavailable" ? (
             <p className="text-sm font-extrabold text-muted">Indisponível</p>
           ) : (
             <>
@@ -71,6 +75,11 @@ export function ProductCard({
           </div>
         )}
       </div>
+      {!unavailable ? (
+        <span className={`mt-2 w-fit rounded-full px-2 py-0.5 text-[10px] font-extrabold ${product.availability === "low_stock" ? "bg-sand text-[#5c3a06]" : product.availability === "on_order" ? "bg-mist text-forest" : "bg-lime-soft text-forest"}`}>
+          {product.availability === "low_stock" ? "Últimas unidades" : product.availability === "on_order" ? "Sob encomenda" : "Em estoque"}
+        </span>
+      ) : null}
     </article>
   );
 }

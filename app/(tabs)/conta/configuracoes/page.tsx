@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { SettingsForm } from "@/components/settings-form";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Configurações · Atacadão Best Price" };
+export const metadata = { title: "Configurações · Distribuidora" };
 
 export default function ConfiguracoesPage() {
   return (

@@ -22,7 +22,7 @@ const input =
 const button =
   "inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-lime px-6 text-sm font-extrabold text-forest-deep transition-transform active:scale-[0.97] disabled:opacity-60";
 
-/** Login do Atacadão em dois passos: e-mail -> código recebido por e-mail. Sem senha. */
+/** Login da Distribuidora em dois passos: e-mail -> código recebido por e-mail. Sem senha. */
 export function LoginForm({ notice }: { notice?: string }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
@@ -86,7 +86,7 @@ export function LoginForm({ notice }: { notice?: string }) {
           {step === "email" ? <Mail size={22} aria-hidden /> : <KeyRound size={22} aria-hidden />}
         </span>
         <div>
-          <h2 className="text-lg font-extrabold tracking-tight">Entrar com sua conta do Atacadão</h2>
+          <h2 className="text-lg font-extrabold tracking-tight">Entrar com sua conta da Distribuidora</h2>
           <p className="text-xs font-medium text-muted">
             {step === "email" ? "Enviaremos um código para o seu e-mail." : `Código enviado para ${email}`}
           </p>

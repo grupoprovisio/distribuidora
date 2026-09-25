@@ -2,11 +2,17 @@
 
 /** Produto do catálogo real, já com o preço da filial escolhida. */
 export type CatalogProduct = {
-  /** SKU do Atacadão: chave da lista, dos favoritos e da página do produto. */
+  /** SKU da Distribuidora: chave da lista, dos favoritos e da página do produto. */
   id: string;
   name: string;
   brand: string;
+  /** EAN/GTIN, quando informado pelo catálogo. */
+  ean?: string;
   image?: string;
+  /** Unidade ou embalagem comercial exibida no card. */
+  pack?: string;
+  /** Estado comercial informado pela origem do catálogo. */
+  availability?: "in_stock" | "low_stock" | "on_order" | "unavailable";
   /** Preço unitário a 1 unidade na filial. */
   unit: number;
   /** Melhor degrau de atacado (menor preço unitário), quando existe. */

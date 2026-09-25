@@ -7,7 +7,7 @@ const MAX_ITEMS = 100;
 
 /**
  * POST /api/list/compare  { items: [{ id, qty }], seller, sellers?: [...] }
- * Total real da lista em cada filial (simulação de carrinho do Atacadão, com o degrau de atacado de cada quantidade).
+ * Total real da lista em cada filial (simulação de carrinho da Distribuidora, com o degrau de atacado de cada quantidade).
  */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return Response.json({ ok: false, reason: "invalid" }, { status: 403 });

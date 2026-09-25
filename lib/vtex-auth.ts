@@ -1,9 +1,9 @@
 import "server-only";
 
-// Login do Atacadão (VTEX ID) por código enviado ao e-mail, feito pelo SERVIDOR do app:
+// Login da Distribuidora (VTEX ID) por código enviado ao e-mail, feito pelo SERVIDOR do app:
 //   start  -> authenticationToken
-//   send   -> o Atacadão envia o código ao e-mail
-//   verify -> troca e-mail + código pelo cookie de sessão do Atacadão
+//   send   -> o Distribuidora envia o código ao e-mail
+//   verify -> troca e-mail + código pelo cookie de sessão da Distribuidora
 // O token da sessão fica num cookie httpOnly do app (nunca exposto ao JS do navegador). Senha não é usada.
 // Formato das respostas de send/verify segue a documentação do VTEX ID; o `start` foi confirmado ao vivo.
 
@@ -43,7 +43,7 @@ async function startLogin() {
   return json.authenticationToken;
 }
 
-/** Pede ao Atacadão que envie o código ao e-mail. Devolve o token a ser guardado até a verificação. */
+/** Pede à Distribuidora que envie o código ao e-mail. Devolve o token a ser guardado até a verificação. */
 export async function sendAccessKey(email: string) {
   const authenticationToken = await startLogin();
   const res = await idFetch("accesskey/send", form({ email, authenticationToken, locale: "pt-BR" }));
@@ -71,7 +71,7 @@ export async function verifyAccessKey(email: string, code: string, authenticatio
   return { ok: false, reason: res.status >= 500 ? "error" : "invalid" };
 }
 
-/** Vida do cookie = `exp` do JWT do Atacadão (limitada a 30 dias); 24 h se não der para ler. */
+/** Vida do cookie = `exp` do JWT da Distribuidora (limitada a 30 dias); 24 h se não der para ler. */
 function cookieMaxAge(jwt: string) {
   try {
     const payload = JSON.parse(Buffer.from(jwt.split(".")[1], "base64url").toString("utf8")) as { exp?: number };
@@ -142,7 +142,7 @@ type OmsOrders = {
   list?: { orderId?: string; creationDate?: string; totalValue?: number; statusDescription?: string; status?: string }[];
 };
 
-/** Lê o perfil do Atacadão com a sessão do cliente. Mostra só o que o site já mostra ao próprio dono da conta. */
+/** Lê o perfil da Distribuidora com a sessão do cliente. Mostra só o que o site já mostra ao próprio dono da conta. */
 export async function getProfile(token: string): Promise<ProfileResult> {
   const headers = { ...baseHeaders, cookie: `${AUTH_COOKIE_NAME}=${token}` };
   try {

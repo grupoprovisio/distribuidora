@@ -12,7 +12,7 @@ export type LookupProduct = {
   image?: string;
   /** Primeiro parágrafo da descrição, em texto puro. */
   description?: string;
-  /** Página do produto no site do Atacadão. */
+  /** Página do produto no site da Distribuidora. */
   url?: string;
   size?: { unit: "kg" | "l"; base: number; label: string };
   badges: string[];
@@ -32,7 +32,7 @@ export type Offer = {
 };
 
 export type SimilarItem = {
-  /** SKU do Atacadão (abre a página do produto). */
+  /** SKU da Distribuidora (abre a página do produto). */
   skuId: string;
   ean: string;
   name: string;
@@ -74,7 +74,7 @@ export type LookupFail = { ok: false; reason: "not_found" | "invalid" | "error" 
 
 export type LookupResult = LookupOk | LookupFail;
 
-/** Item da lista enviado para comparação: SKU do Atacadão e a quantidade que a pessoa vai levar. */
+/** Item da lista enviado para comparação: SKU da Distribuidora e a quantidade que a pessoa vai levar. */
 export type ListCompareItem = { id: string; qty: number };
 
 export type ListSellerResult = {

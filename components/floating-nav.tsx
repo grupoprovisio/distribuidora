@@ -11,8 +11,8 @@ import { usePurchases } from "@/lib/purchase-store";
 
 const SPRING = { type: "spring", stiffness: 420, damping: 34, mass: 0.8 } as const;
 
-// 5 colunas: [esquerda 0, esquerda 1, centro (scan), direita 3, direita 4]
-const SLOTS: (NavItem | "scan")[] = [...NAV_LEFT, "scan", ...NAV_RIGHT];
+// 6 colunas: [início, promoções, pedido, empresas, conta, scanner]
+const SLOTS: (NavItem | "scan")[] = [...NAV_LEFT, ...NAV_RIGHT, "scan"];
 
 function isActive(pathname: string, item: NavItem) {
   const paths = [item.href, ...(item.also ?? [])];
@@ -32,13 +32,13 @@ export function FloatingNav() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
       <nav
         aria-label="Navegação principal"
-        className="pointer-events-auto relative w-full max-w-sm rounded-full border border-line bg-paper/90 p-1.5 shadow-float backdrop-blur-xl sm:max-w-md"
+        className="pointer-events-auto relative w-full max-w-md rounded-full border border-line bg-paper/90 p-1.5 shadow-float backdrop-blur-xl sm:max-w-lg"
       >
-        <ul className="relative grid grid-cols-5">
+        <ul className="relative grid grid-cols-6">
           {/* Indicador único que desliza entre as abas (só % do próprio tamanho, sem medir layout). */}
           <motion.span
             aria-hidden
-            className="absolute inset-y-0 left-0 w-1/5 rounded-full bg-forest"
+            className="absolute inset-y-0 left-0 w-1/6 rounded-full bg-forest"
             initial={false}
             animate={{ x: `${Math.max(activeIndex, 0) * 100}%`, opacity: activeIndex < 0 ? 0 : 1 }}
             transition={SPRING}
@@ -46,8 +46,20 @@ export function FloatingNav() {
 
           {SLOTS.map((slot, index) => {
             if (slot === "scan") {
-              // Reserva a coluna central; o botão em si é desenhado por cima, maior e elevado.
-              return <li key="scan" aria-hidden className="h-14 sm:h-16" />;
+              return (
+                <li key="scan" className="relative">
+                  <Link
+                    href={SCAN_HREF}
+                    aria-label="Escanear QR code ou código de barras"
+                    className="flex h-14 flex-col items-center justify-center gap-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest/40 sm:h-16"
+                  >
+                    <motion.span className="flex flex-col items-center gap-0.5 text-muted transition-colors duration-200" whileTap={{ scale: 0.88 }} transition={SPRING}>
+                      <QrCode size={20} strokeWidth={2} aria-hidden />
+                      <span className="text-[10.5px] font-bold leading-none sm:text-[11px]">Scanner</span>
+                    </motion.span>
+                  </Link>
+                </li>
+              );
             }
             const active = index === activeIndex;
             const Icon = slot.icon;
@@ -83,7 +95,7 @@ export function FloatingNav() {
                     {alerts ? (
                       <span
                         role="status"
-                        aria-label={askLogin ? "Entre na sua conta do Atacadão" : `${alerts} ${alerts === 1 ? "compra salva aguarda" : "compras salvas aguardam"} a nota fiscal`}
+                        aria-label={askLogin ? "Entre na sua conta da Distribuidora" : `${alerts} ${alerts === 1 ? "compra salva aguarda" : "compras salvas aguardam"} a nota fiscal`}
                         className="animate-dot absolute -right-2.5 -top-1 size-3 rounded-full bg-[#d6334f] shadow-card ring-2 ring-paper"
                       />
                     ) : null}
@@ -94,21 +106,6 @@ export function FloatingNav() {
           })}
         </ul>
 
-        {/* Botão central: maior que os demais e elevado acima da barra. */}
-        <motion.div
-          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[42%]"
-          whileTap={{ scale: 0.92 }}
-          whileHover={{ scale: 1.04 }}
-          transition={SPRING}
-        >
-          <Link
-            href={SCAN_HREF}
-            aria-label="Escanear QR code ou código de barras"
-            className="grid size-[4.75rem] place-items-center rounded-full border-[5px] border-canvas bg-lime text-forest-deep shadow-float outline-none focus-visible:ring-2 focus-visible:ring-forest sm:size-20"
-          >
-            <QrCode size={32} strokeWidth={2.2} aria-hidden />
-          </Link>
-        </motion.div>
       </nav>
     </div>
   );

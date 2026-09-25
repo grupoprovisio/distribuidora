@@ -5,7 +5,7 @@ import { getDepartments } from "@/lib/taxonomy";
 import { CATALOG_SORTS, type CatalogSort } from "@/lib/catalog-types";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Buscar · Atacadão Best Price" };
+export const metadata = { title: "Buscar · Distribuidora" };
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 const SLUG = /^[a-z0-9-]{1,80}$/;
@@ -18,6 +18,8 @@ export default async function BuscarPage(props: PageProps<"/buscar">) {
   const brand = SLUG.test(brandRaw) ? brandRaw : undefined;
   const sortRaw = first(sp.sort);
   const sort = ((CATALOG_SORTS as readonly string[]).includes(sortRaw) ? sortRaw : "score_desc") as CatalogSort;
+  const min = Number(first(sp.min));
+  const max = Number(first(sp.max));
 
   const departments = await getDepartments();
   const dept = departments.find((d) => d.slug === cat[0]);
@@ -47,7 +49,7 @@ export default async function BuscarPage(props: PageProps<"/buscar">) {
 
       <main className={`${WRAP} pt-2`}>
         {/* `key` zera o "carregar mais" quando qualquer filtro muda. */}
-        <SearchResults key={`${q}|${cat.join("/")}|${brand}|${sort}`} q={q} cat={cat} brand={brand} sort={sort} />
+        <SearchResults key={`${q}|${cat.join("/")}|${brand}|${sort}|${min}|${max}`} q={q} cat={cat} brand={brand} sort={sort} min={Number.isFinite(min) && min > 0 ? min : undefined} max={Number.isFinite(max) && max > 0 ? max : undefined} />
       </main>
     </>
   );

@@ -1,0 +1,10 @@
+import type { Metadata } from "next";
+import { AppHeader } from "@/components/app-header";
+import { SiteFooter } from "@/components/site-footer";
+import { WRAP } from "@/lib/ui";
+
+export const metadata: Metadata = { title: "Política de privacidade · Distribuidora" };
+
+export default function PrivacyPage() {
+  return <div className="min-h-dvh bg-canvas"><AppHeader theme="forest" title="Privacidade" backHref="/" /><main className={`${WRAP} animate-page-in py-8 sm:py-12`}><article className="max-w-3xl rounded-[2rem] bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-10"><p className="text-xs font-black uppercase tracking-[0.14em] text-forest">Transparência</p><h1 className="mt-3 text-3xl font-black tracking-tight text-forest-deep">Política de privacidade</h1><p className="mt-5 text-sm font-medium leading-relaxed text-muted">A Distribuidora usa os dados informados neste site para responder solicitações, organizar o atendimento e melhorar a experiência de compra.</p><h2 className="mt-8 text-lg font-extrabold">Dados coletados</h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">Podemos receber nome, empresa, contato, endereço e informações inseridas em formulários de orçamento ou atendimento. Dados técnicos mínimos podem ser usados para segurança e funcionamento do site.</p><h2 className="mt-8 text-lg font-extrabold">Uso e compartilhamento</h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">Os dados são usados pela equipe responsável pelo atendimento comercial. Não vendemos informações pessoais. Integrações necessárias para entrega ou pagamento devem ser informadas no momento da contratação.</p><h2 className="mt-8 text-lg font-extrabold">Seus direitos</h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">Você pode solicitar acesso, correção ou exclusão dos seus dados pelo e-mail comercial@distribuidora.com.</p><p className="mt-8 text-xs font-medium leading-relaxed text-muted">Este texto é uma base editorial e deve ser revisado juridicamente antes da operação comercial.</p></article></main><SiteFooter /></div>;
+}

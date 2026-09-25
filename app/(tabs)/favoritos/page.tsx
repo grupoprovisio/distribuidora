@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { FavoritesView } from "@/components/favorites-view";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Favoritos · Atacadão Best Price" };
+export const metadata = { title: "Favoritos · Distribuidora" };
 
 export default function FavoritosPage() {
   return (

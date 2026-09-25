@@ -4,13 +4,13 @@ import Link from "next/link";
 import { ShoppingBasket } from "lucide-react";
 import { useList } from "@/lib/list-store";
 
-/** Botão redondo da lista no canto do cabeçalho, com contador. */
+/** Botão redondo do pedido no canto do cabeçalho, com contador. */
 export function ListButton() {
   const { count } = useList();
   return (
     <Link
       href="/lista"
-      aria-label={count > 0 ? `Minha lista, ${count} itens` : "Minha lista"}
+      aria-label={count > 0 ? `Pedido, ${count} itens` : "Pedido"}
       className="relative grid size-11 shrink-0 place-items-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
     >
       <ShoppingBasket size={20} aria-hidden />

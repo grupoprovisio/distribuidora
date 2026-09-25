@@ -4,7 +4,7 @@ import { LOGIN_COOKIE, sendAccessKey } from "@/lib/vtex-auth";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Passo 1: o Atacadão envia um código ao e-mail informado. */
+/** Passo 1: o Distribuidora envia um código ao e-mail informado. */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return Response.json({ error: "Requisição não permitida." }, { status: 403 });
 

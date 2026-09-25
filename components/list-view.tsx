@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
-import { AlertTriangle, Check, ChevronDown, ExternalLink, ListChecks, Loader2, MapPin, RefreshCw, RotateCcw, ShoppingBasket, SlidersHorizontal, Tag, Trash2, TrendingDown } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ListChecks, Loader2, MapPin, RefreshCw, RotateCcw, ShoppingBasket, SlidersHorizontal, Tag, Trash2, TrendingDown } from "lucide-react";
 import { Delta } from "@/components/delta";
 import { Price } from "@/components/price";
 import { QtyControl } from "@/components/qty-control";
@@ -516,10 +516,18 @@ export function ListView() {
           ) : (
             <>
               <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-white/60">
-                <MapPin size={13} aria-hidden /> Atacadão {filial.name}
+                <MapPin size={13} aria-hidden /> Distribuidora {filial.name}
               </p>
 
               <dl className="mt-3 space-y-1.5 text-sm">
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-semibold text-white/75">Subtotal</dt>
+                  <dd className="font-bold tabular-nums">{brl(totalNew)}</dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-semibold text-white/75">Frete estimado</dt>
+                  <dd className="font-bold text-white/60">A calcular</dd>
+                </div>
                 <div className="flex items-baseline justify-between gap-3">
                   <dt className="font-semibold text-white/75">Total sem desconto</dt>
                   <dd className={`font-bold tabular-nums ${savings > 0.004 ? "text-white/60 line-through decoration-white/50" : ""}`}>{brl(totalOld)}</dd>
@@ -529,6 +537,7 @@ export function ListView() {
                   <dd className="font-extrabold tabular-nums text-lime">{savings > 0.004 ? `−${brl(savings)}` : brl(0)}</dd>
                 </div>
               </dl>
+              <p className="mt-3 rounded-2xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/70">Pedido mínimo e condição comercial: confirme com a equipe para sua região.</p>
 
               <div className="mt-3 border-t border-white/15 pt-3">
                 <p className="text-xs font-bold uppercase tracking-wide text-white/60">Total com desconto</p>
@@ -594,9 +603,10 @@ export function ListView() {
             </>
           )}
 
-          <a href="https://www.atacadao.com.br" target="_blank" rel="noopener noreferrer" className={`${primaryButton} mt-5 w-full`}>
-            Finalizar no site do Atacadão <ExternalLink size={15} aria-hidden />
-          </a>
+          <div className="mt-5 grid gap-2">
+            <Link href="/checkout" className={`${primaryButton} w-full`}>Continuar pedido</Link>
+            <Link href="/orcamento" className="inline-flex h-10 items-center justify-center rounded-full bg-white/10 px-4 text-xs font-extrabold text-white transition-colors hover:bg-white/15">Solicitar orçamento</Link>
+          </div>
         </div>
 
         {/* Salvar a compra na conta: depois da ida ao mercado, a NFC-e mostra o que foi previsto × pago. */}
@@ -651,7 +661,7 @@ export function ListView() {
           )
         ) : null}
 
-        <p className="px-2 text-[11px] font-medium text-muted">Preços do Atacadão consultados agora, na quantidade de cada item. Podem mudar até a compra.</p>
+        <p className="px-2 text-[11px] font-medium text-muted">Preços da Distribuidora consultados agora, na quantidade de cada item. Podem mudar até a compra.</p>
       </aside>
     </div>
   );

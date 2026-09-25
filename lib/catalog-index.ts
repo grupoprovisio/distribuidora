@@ -4,7 +4,7 @@ import { catalogSearch } from "@/lib/atacadao";
 import type { CatalogProduct } from "@/lib/catalog-types";
 import { getDepartments } from "@/lib/taxonomy";
 
-// Índice do catálogo de UMA filial, montado a partir das APIs do Atacadão: para cada departamento (lidos da árvore de
+// Índice do catálogo de UMA filial, montado a partir das APIs da Distribuidora: para cada departamento (lidos da árvore de
 // categorias, nada fixo), os mais vendidos. Dele saem as promoções (produtos com degrau de atacado), as coleções
 // (`productClusters`) e as categorias mais compradas (base das sugestões de lista). Fica em cache por alguns minutos.
 

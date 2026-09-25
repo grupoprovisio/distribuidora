@@ -1,11 +1,11 @@
-<h1 align="center">Atacadão Best Price</h1>
+<h1 align="center">Distribuidora</h1>
 
 <p align="center">
-  <b>Comparador de preços de mercado para o Atacadão: preço de atacado por filial, promoções, lista de compras inteligente e análise da nota fiscal.</b>
+  <b>Comparador de preços de mercado para o Distribuidora: preço de atacado por filial, promoções, lista de compras inteligente e análise da nota fiscal.</b>
 </p>
 
 <p align="center">
-  <img alt="Atacadão Best Price" src="docs/banner.png" width="100%">
+  <img alt="Distribuidora" src="docs/banner.png" width="100%">
 </p>
 
 ---
@@ -21,11 +21,11 @@
 
 🔗 **Demo online:** [https://atacadao-best-price.vercel.app](https://atacadao-best-price.vercel.app)
 
- **compras de mercado e de supermercado**, construído sobre as APIs públicas da loja online do Atacadão. Ele mostra o **preço real por filial e por quantidade**, destaca o **preço de atacado** (quanto mais leva, menos paga por unidade), sugere alternativas mais baratas, monta **listas de compras** com o total exato e compara o que você **previu com o que pagou** usando a **NFC-e** da compra.
+ **compras de mercado e de supermercado**, construído sobre as APIs públicas da loja online da Distribuidora. Ele mostra o **preço real por filial e por quantidade**, destaca o **preço de atacado** (quanto mais leva, menos paga por unidade), sugere alternativas mais baratas, monta **listas de compras** com o total exato e compara o que você **previu com o que pagou** usando a **NFC-e** da compra.
 
-> ⚠️ Projeto independente e **não oficial**, sem vínculo com o Atacadão. Veja o [aviso legal](#aviso-legal).
+> ⚠️ Projeto independente e **não oficial**, sem vínculo com o Distribuidora. Veja o [aviso legal](#aviso-legal).
 
-> 🇺🇸 **English:** unofficial supermarket price-comparison web app for [Atacadão](https://www.atacadao.com.br) (Brazil's wholesale cash-and-carry chain). It reads the store's public VTEX/FastStore APIs to show real per-branch prices, wholesale tier pricing (buy more, pay less per unit), promotions, smart shopping lists, a barcode/QR scanner and NFC-e receipt analysis (planned vs. paid). Built with Next.js 16, React 19, TypeScript and Tailwind CSS 4.
+> 🇺🇸 **English:** unofficial supermarket price-comparison web app for [Distribuidora](https://www.atacadao.com.br) (Brazil's wholesale cash-and-carry chain). It reads the store's public VTEX/FastStore APIs to show real per-branch prices, wholesale tier pricing (buy more, pay less per unit), promotions, smart shopping lists, a barcode/QR scanner and NFC-e receipt analysis (planned vs. paid). Built with Next.js 16, React 19, TypeScript and Tailwind CSS 4.
 
 Ir para:
 - [**Funcionalidades**](#funcionalidades)
@@ -61,7 +61,7 @@ Ir para:
 | **Sugestões de lista** | Lista completa da "compra do mês" e temas da própria loja (café da manhã, festas…), com quantidade por pessoas, itens removíveis e melhores promoções para cada um. |
 | **Nota fiscal (NFC-e)** | Lê o QR da nota, importa os itens para a lista e compara o que foi pago com o preço de hoje (notas de **MS**, SEFAZ-MS). |
 | **Compras salvas** | Salve a lista na sua conta, anexe a NFC-e ao finalizar e veja o **acerto**: previsto × pago, o que veio de diferença (preço, quantidade, itens fora do plano). |
-| **Conta** | Login real do Atacadão por **código enviado ao e-mail**, dados pessoais, pedidos recentes, favoritos e configurações. |
+| **Conta** | Login real da Distribuidora por **código enviado ao e-mail**, dados pessoais, pedidos recentes, favoritos e configurações. |
 | **Configurações** | Filial (por localização ou CEP), comparação entre filiais ou interna e modelo de compra (atacado ou unitário). |
 
 ## **Capturas de tela**
@@ -125,11 +125,11 @@ Ir para:
   </tr>
 </table>
 
-> As capturas usam preços reais consultados no Atacadão (filial Vila Maria) e dados de demonstração nas telas de compras salvas e da conta.
+> As capturas usam preços reais consultados na Distribuidora (filial Vila Maria) e dados de demonstração nas telas de compras salvas e da conta.
 
 ## **Como funciona**
 
-O Atacadão roda em **VTEX**. O app conversa com as camadas que o próprio site usa, sempre por filial (`seller`) e com a quantidade real:
+O Distribuidora roda em **VTEX**. O app conversa com as camadas que o próprio site usa, sempre por filial (`seller`) e com a quantidade real:
 
 | Camada | Uso no app |
 | --- | --- |
@@ -145,7 +145,7 @@ O Atacadão roda em **VTEX**. O app conversa com as camadas que o próprio site 
 ## **Requisitos**
 * Node.js >= 20.9
 * npm (ou outro gerenciador compatível)
-* Conexão com a internet (o app consulta o site do Atacadão)
+* Conexão com a internet (o app consulta o site da Distribuidora)
 
 ## **Instalação**
 Clone este repositório e instale as dependências:
@@ -213,7 +213,7 @@ cloudflared tunnel --url http://localhost:3000
 
 ## **Deploy na Vercel**
 
-O projeto roda na Vercel sem configuração extra: o `vercel.json` fixa a região **São Paulo (`gru1`)**, perto do site do Atacadão e da SEFAZ. Passos:
+O projeto roda na Vercel sem configuração extra: o `vercel.json` fixa a região **São Paulo (`gru1`)**, perto do site da Distribuidora e da SEFAZ. Passos:
 
 1. Importe o repositório em [vercel.com/new](https://vercel.com/new) (ou use `npx vercel`).
 2. Defina `NEXT_PUBLIC_SITE_URL` com o endereço do site (usado no sitemap, canonical e Open Graph).
@@ -230,7 +230,7 @@ app/
 │   ├── promocoes/     Promoções e degraus de atacado
 │   ├── lista/         Minha lista, Montar e Sugestões
 │   └── conta/         Perfil, configurações e compras salvas
-├── api/               Rotas do servidor (proxy das APIs do Atacadão)
+├── api/               Rotas do servidor (proxy das APIs da Distribuidora)
 ├── produto/[id]/      Página do produto
 └── scan/              Scanner de QR code e código de barras
 components/            Componentes de interface
@@ -242,7 +242,7 @@ Destaques em `lib/`:
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `atacadao.ts` | Cliente das APIs do Atacadão (catálogo, simulação, filiais). |
+| `atacadao.ts` | Cliente das APIs da Distribuidora (catálogo, simulação, filiais). |
 | `deals.ts` | Cálculo de degraus de atacado e "falta N unidades". |
 | `promos.ts`, `catalog-index.ts`, `taxonomy.ts` | Descoberta dinâmica de departamentos e coleções. |
 | `suggest.ts`, `resolve.ts` | Sugestões de lista e perguntas de refinamento. |
@@ -254,7 +254,7 @@ Destaques em `lib/`:
 
 ## **Rotas de API do app**
 
-O navegador nunca fala direto com o Atacadão: as rotas abaixo fazem a consulta no servidor (e o `POST` só aceita requisições do próprio site).
+O navegador nunca fala direto com o Distribuidora: as rotas abaixo fazem a consulta no servidor (e o `POST` só aceita requisições do próprio site).
 
 | Rota | Método | Descrição |
 | --- | --- | --- |
@@ -272,8 +272,8 @@ O navegador nunca fala direto com o Atacadão: as rotas abaixo fazem a consulta 
 
 ## **Dados e privacidade**
 
-- **Sem banco de dados.** Lista, favoritos, preferências, rascunhos e **compras salvas** ficam no `localStorage` do seu navegador, separados por conta do Atacadão (e-mail). Trocar de aparelho ou limpar os dados do navegador apaga essas informações.
-- **Login sem senha:** o app usa o código enviado por e-mail pelo próprio Atacadão. A sessão fica em um **cookie `httpOnly`**, inacessível ao JavaScript. Um cookie separado guarda só o e-mail da conta para o app saber de quem são as compras salvas.
+- **Sem banco de dados.** Lista, favoritos, preferências, rascunhos e **compras salvas** ficam no `localStorage` do seu navegador, separados por conta da Distribuidora (e-mail). Trocar de aparelho ou limpar os dados do navegador apaga essas informações.
+- **Login sem senha:** o app usa o código enviado por e-mail pelo própria Distribuidora. A sessão fica em um **cookie `httpOnly`**, inacessível ao JavaScript. Um cookie separado guarda só o e-mail da conta para o app saber de quem são as compras salvas.
 - **Dados sensíveis** (CPF e telefone) chegam **mascarados** do servidor.
 - **NFC-e:** o servidor só consulta domínios da SEFAZ com leitor implementado (hoje, **MS**) e nunca um endereço arbitrário vindo do QR. A URL da nota trafega por `POST` para não aparecer em logs de acesso.
 
@@ -288,12 +288,8 @@ O navegador nunca fala direto com o Atacadão: as rotas abaixo fazem a consulta 
 
 ## **Aviso legal**
 
-Este é um projeto **independente**, feito por um consumidor, sem afiliação, patrocínio ou aprovação do Atacadão ou do Grupo Carrefour. Ele usa endpoints **públicos e não documentados** do site, que podem mudar ou deixar de funcionar sem aviso. Os preços exibidos são consultados na hora e **podem mudar até a compra**; a finalização da compra acontece sempre no site oficial do Atacadão. Nomes e marcas pertencem aos respectivos donos.
+Este é um projeto **independente**, feito por um consumidor, sem afiliação, patrocínio ou aprovação da Distribuidora ou do Grupo Carrefour. Ele usa endpoints **públicos e não documentados** do site, que podem mudar ou deixar de funcionar sem aviso. Os preços exibidos são consultados na hora e **podem mudar até a compra**; a finalização da compra acontece sempre no site oficial da Distribuidora. Nomes e marcas pertencem aos respectivos donos.
 
 ## **Licença**
 
 [MIT](LICENSE) © 2026 [Distribuidora](https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora).
-
-## **Autor**
-
-Sistema desenvolvido com 💙 por [**Distribuidora**](https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora).

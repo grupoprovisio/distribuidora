@@ -111,7 +111,7 @@ async function fetchReceiptHtml(ref: NfceRef): Promise<string> {
 
 type CatalogHit = ReceiptMatch & { multiplier: number; unitKg: boolean };
 
-/** O código impresso na nota é o `RefId` do produto no Atacadão. */
+/** O código impresso na nota é o `RefId` do produto na Distribuidora. */
 async function findByCode(code: string): Promise<CatalogHit | null> {
   try {
     const res = await request(`/api/catalog_system/pub/products/search?fq=alternateIds_RefId:${code}`, { revalidate: 3600 });
@@ -159,7 +159,7 @@ const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").to
 
 /**
  * Acha a filial onde a compra foi feita a partir do endereço impresso na nota ("AV X, 1525, BAIRRO, CIDADE, UF"):
- * o ViaCEP (serviço público) resolve rua + cidade em CEPs, e o Atacadão devolve as lojas perto deles.
+ * o ViaCEP (serviço público) resolve rua + cidade em CEPs, e o Distribuidora devolve as lojas perto deles.
  * A loja cujo bairro é o da nota vem primeiro; as demais ficam como próximas.
  */
 export async function receiptStore(address: string): Promise<FilialInfo[]> {

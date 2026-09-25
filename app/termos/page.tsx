@@ -1,0 +1,10 @@
+import type { Metadata } from "next";
+import { AppHeader } from "@/components/app-header";
+import { SiteFooter } from "@/components/site-footer";
+import { WRAP } from "@/lib/ui";
+
+export const metadata: Metadata = { title: "Termos de uso · Distribuidora" };
+
+export default function TermsPage() {
+  return <div className="min-h-dvh bg-canvas"><AppHeader theme="terra" title="Termos de uso" backHref="/" /><main className={`${WRAP} animate-page-in py-8 sm:py-12`}><article className="max-w-3xl rounded-[2rem] bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-10"><p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Uso responsável</p><h1 className="mt-3 text-3xl font-black tracking-tight text-forest-deep">Termos de uso</h1><p className="mt-5 text-sm font-medium leading-relaxed text-muted">Este site apresenta catálogo, condições comerciais e canais de contato da Distribuidora. Uma solicitação enviada pelo site não representa pedido confirmado até a validação da equipe.</p><h2 className="mt-8 text-lg font-extrabold">Catálogo e preços</h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">Disponibilidade, preço, descontos, frete e prazo podem depender da região, do volume e da condição comercial aprovada. A confirmação final deve ocorrer antes do faturamento.</p><h2 className="mt-8 text-lg font-extrabold">Responsabilidades</h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">O usuário deve fornecer informações corretas e manter seus dados de contato atualizados. A Distribuidora deve informar as condições confirmadas para cada pedido e atendimento.</p><h2 className="mt-8 text-lg font-extrabold">Atendimento</h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">Dúvidas, correções ou solicitações podem ser encaminhadas para comercial@distribuidora.com.</p><p className="mt-8 text-xs font-medium leading-relaxed text-muted">Este texto é uma base editorial e deve ser revisado juridicamente antes da operação comercial.</p></article></main><SiteFooter /></div>;
+}

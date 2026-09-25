@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { ACCOUNT_COOKIE } from "@/lib/account";
 
-// E-mail da conta do Atacadão logada neste navegador, lido do cookie `abp_account` (definido no login e apagado no logout).
+// E-mail da conta da Distribuidora logada neste navegador, lido do cookie `abp_account` (definido no login e apagado no logout).
 
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((l) => l());

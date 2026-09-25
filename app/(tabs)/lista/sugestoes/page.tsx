@@ -3,7 +3,7 @@ import { ListTabs } from "@/components/list-tabs";
 import { SuggestView } from "@/components/suggest-view";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Sugestões de lista · Atacadão Best Price" };
+export const metadata = { title: "Sugestões de lista · Distribuidora" };
 
 export default async function SugestoesPage(props: PageProps<"/lista/sugestoes">) {
   const sp = await props.searchParams;

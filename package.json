@@ -1,7 +1,7 @@
 {
   "name": "atacadao-best-price",
   "version": "0.1.0",
-  "description": "Comparador de preços de mercado e supermercado para o Atacadão: preço de atacado por filial, promoções, lista de compras inteligente, scanner de código de barras e análise de NFC-e.",
+  "description": "Comparador de preços de mercado e supermercado para o Distribuidora: preço de atacado por filial, promoções, lista de compras inteligente, scanner de código de barras e análise de NFC-e.",
   "keywords": [
     "comparador-de-precos",
     "price-comparison",

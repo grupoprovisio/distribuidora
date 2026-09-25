@@ -62,7 +62,7 @@ export function SettingsForm() {
       const json = (await res.json()) as { filiais?: FilialInfo[]; error?: string };
       if (!res.ok) throw new Error(json.error);
       if (!json.filiais?.length) {
-        setError("Não achei nenhum Atacadão perto desse local.");
+        setError("Não achei nenhuma Distribuidora perto desse local.");
         return;
       }
       // A mais próxima já vira a filial escolhida; as demais ficam para o usuário trocar ou comparar.
@@ -108,7 +108,7 @@ export function SettingsForm() {
           </span>
           <div>
             <h2 id="cfg-filial" className="text-base font-extrabold">Filial</h2>
-            <p className="text-xs font-medium text-muted">Usamos o Atacadão mais próximo de você.</p>
+            <p className="text-xs font-medium text-muted">Usamos o Distribuidora mais próximo de você.</p>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ export function SettingsForm() {
           <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
             <MapPin size={13} aria-hidden /> Filial atual
           </p>
-          <p className="mt-1 text-lg font-extrabold">Atacadão {filial.name}</p>
+          <p className="mt-1 text-lg font-extrabold">Distribuidora {filial.name}</p>
           <p className="text-xs font-medium text-muted">
             {place(filial)}
             {filial.km !== undefined ? ` · ${kmText(filial.km)} de você` : ""}
@@ -205,7 +205,7 @@ export function SettingsForm() {
         ) : null}
 
         <p className="mt-3 text-[11px] font-medium leading-snug text-muted">
-          Sua localização só serve para achar as lojas: ela é enviada ao Atacadão nessa busca e não fica guardada. Guardamos apenas as filiais encontradas.
+          Sua localização só serve para achar as lojas: ela é enviada à Distribuidora nessa busca e não fica guardada. Guardamos apenas as filiais encontradas.
         </p>
       </section>
 

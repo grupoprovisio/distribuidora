@@ -24,7 +24,7 @@ function SignedIn({ children }: { children: (email: string) => React.ReactNode }
       <EmptyState
         icon={ShoppingBasket}
         title="Entre na sua conta"
-        text="As compras salvas ficam atreladas à sua conta do Atacadão. Entre para ver as suas."
+        text="As compras salvas ficam atreladas à sua conta da Distribuidora. Entre para ver as suas."
         action={
           <Link href="/conta" className={primaryButton}>
             Entrar na conta
@@ -410,7 +410,7 @@ function Detail({ email, id }: { email: string; id: string }) {
           ) : null}
         </div>
         <p className="mt-1 text-xs font-semibold text-muted">
-          Salva em {day(purchase.savedAt)} · Atacadão {purchase.filial.name} · {purchase.items.length} {purchase.items.length === 1 ? "item" : "itens"} · previsto {brl(plannedTotal(purchase))}
+          Salva em {day(purchase.savedAt)} · Distribuidora {purchase.filial.name} · {purchase.items.length} {purchase.items.length === 1 ? "item" : "itens"} · previsto {brl(plannedTotal(purchase))}
         </p>
         <p className="mt-2 text-[11px] font-medium text-muted">Atrelada à conta {email}.</p>
       </section>

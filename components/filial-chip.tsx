@@ -10,7 +10,7 @@ export function FilialCardText() {
   const others = Math.max(prefs.nearby.length - 1, 0);
   return (
     <>
-      <p className="truncate text-sm font-extrabold">Atacadão {filial.name}</p>
+      <p className="truncate text-sm font-extrabold">Distribuidora {filial.name}</p>
       <p className="truncate text-xs font-medium text-muted">
         {filialIsDefault ? "Filial padrão · escolha a mais próxima nas Configurações" : others > 0 ? `Filial atual · mais ${others} perto de você` : "Filial atual"}
       </p>

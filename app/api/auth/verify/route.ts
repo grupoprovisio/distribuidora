@@ -16,7 +16,7 @@ function readPending(raw?: string): Pending | null {
   }
 }
 
-/** Passo 2: troca e-mail + código pela sessão do Atacadão, guardada em cookie httpOnly. */
+/** Passo 2: troca e-mail + código pela sessão da Distribuidora, guardada em cookie httpOnly. */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return Response.json({ error: "Requisição não permitida." }, { status: 403 });
 

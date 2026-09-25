@@ -1,4 +1,4 @@
-import { BadgePercent, House, ShoppingBasket, UserRound } from "lucide-react";
+import { BadgePercent, Building2, House, ShoppingBasket, UserRound } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type NavItem = {
@@ -7,11 +7,11 @@ export type NavItem = {
   icon: LucideIcon;
   /** Rotas que mantêm esta aba ativa (além de `href`). "/" só casa exato. */
   also?: string[];
-  /** "list": itens na lista. "account": compras salvas esperando a nota fiscal (sininho que balança). */
+  /** "list": itens no pedido. "account": compras salvas esperando a nota fiscal (sininho que balança). */
   badge?: "list" | "account";
 };
 
-// Ordem visual: dois à esquerda, o botão de scan no centro (fora desta lista), dois à direita.
+// Ordem visual: início, promoções, pedido, empresas, conta e scanner.
 export const NAV_LEFT: NavItem[] = [
   { href: "/", label: "Início", icon: House, also: ["/buscar", "/categorias"] },
   { href: "/promocoes", label: "Promoções", icon: BadgePercent, also: ["/ofertas"] },
@@ -19,6 +19,7 @@ export const NAV_LEFT: NavItem[] = [
 
 export const NAV_RIGHT: NavItem[] = [
   { href: "/lista", label: "Lista", icon: ShoppingBasket, badge: "list" },
+  { href: "/empresas", label: "Empresas", icon: Building2 },
   // Favoritos fica dentro da Conta.
   { href: "/conta", label: "Conta", icon: UserRound, also: ["/favoritos"], badge: "account" },
 ];

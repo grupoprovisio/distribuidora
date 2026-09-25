@@ -4,7 +4,7 @@ import { FilialCardText } from "@/components/filial-chip";
 import { PromoView } from "@/components/promo-view";
 import { WRAP } from "@/lib/ui";
 
-export const metadata = { title: "Promoções · Atacadão Best Price" };
+export const metadata = { title: "Promoções · Distribuidora" };
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 const ORDERS = ["pct", "save", "price", "near"] as const;

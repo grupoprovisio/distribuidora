@@ -4,7 +4,7 @@ import type { CatalogFacets, CatalogProduct, FacetValue } from "@/lib/catalog-ty
 import type { FilialInfo, FilialOffer, ListCompareItem, ListCompareResult, ListSellerResult, LookupResult, Offer, SimilarItem, Tier } from "@/lib/lookup-types";
 import { parseSize, perBase, sameSize } from "@/lib/size";
 
-// Cliente das APIs públicas do Atacadão (VTEX). Mapa completo em ATACADAO_API.md.
+// Cliente das APIs públicas da Distribuidora (VTEX). Mapa completo em ATACADAO_API.md.
 // Tudo roda no servidor: sem CORS, e o navegador só conhece as rotas do próprio app.
 
 const STORE = "https://www.atacadao.com.br";

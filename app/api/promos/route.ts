@@ -7,7 +7,7 @@ const SORTS: PromoSort[] = ["pct", "save", "price", "near"];
 /**
  * GET /api/promos?seller=atacadaobr60&view=overview
  * GET /api/promos?seller=...&view=list&collection=372&dept=mercearia&qty=6&sort=pct&after=0&first=24
- * Promoções reais da filial (coleções, departamentos e quantidades vêm das APIs do Atacadão).
+ * Promoções reais da filial (coleções, departamentos e quantidades vêm das APIs da Distribuidora).
  */
 export async function GET(request: Request) {
   const p = new URL(request.url).searchParams;

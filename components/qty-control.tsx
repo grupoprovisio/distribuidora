@@ -1,6 +1,7 @@
 "use client";
 
 import { Minus, Plus } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { useList, type ItemMeta } from "@/lib/list-store";
 
 /** "+" que vira stepper (− n +) quando o item entra na lista. `meta` guarda os dados de itens fora do catálogo de exemplo. */
@@ -12,7 +13,7 @@ export function QtyControl({ productId, name, meta }: { productId: string; name:
     return (
       <button
         type="button"
-        onClick={() => setQty(productId, 1, meta)}
+        onClick={() => { setQty(productId, 1, meta); track("add_to_cart", { item_id: productId, quantity: 1 }); }}
         aria-label={`Adicionar ${name} à lista`}
         className="grid size-9 place-items-center rounded-full bg-lime text-forest-deep transition-transform active:scale-90"
       >
@@ -25,7 +26,7 @@ export function QtyControl({ productId, name, meta }: { productId: string; name:
     <div className="flex h-9 items-center rounded-full bg-lime text-forest-deep">
       <button
         type="button"
-        onClick={() => setQty(productId, qty - 1)}
+        onClick={() => { setQty(productId, qty - 1); track("remove_from_cart", { item_id: productId, quantity: 1 }); }}
         aria-label={`Remover uma unidade de ${name}`}
         className="grid size-9 place-items-center rounded-full transition-transform active:scale-90"
       >
@@ -36,7 +37,7 @@ export function QtyControl({ productId, name, meta }: { productId: string; name:
       </span>
       <button
         type="button"
-        onClick={() => setQty(productId, qty + 1)}
+        onClick={() => { setQty(productId, qty + 1); track("add_to_cart", { item_id: productId, quantity: 1 }); }}
         aria-label={`Adicionar mais uma unidade de ${name}`}
         className="grid size-9 place-items-center rounded-full transition-transform active:scale-90"
       >

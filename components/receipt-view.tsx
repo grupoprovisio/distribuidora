@@ -219,7 +219,7 @@ export function ReceiptView({ url }: { url: string }) {
       {/* Comparação com hoje */}
       <section className="mt-3 rounded-3xl bg-forest p-4 text-white" aria-label="Comparação com os preços de hoje">
         <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white/60">
-          <MapPin size={12} aria-hidden /> Hoje no Atacadão {filial.name}
+          <MapPin size={12} aria-hidden /> Hoje na Distribuidora {filial.name}
         </p>
         <div className="mt-2 grid grid-cols-2 gap-3">
           <div>

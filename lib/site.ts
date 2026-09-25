@@ -3,27 +3,24 @@
 /** Endereço público do site. Defina `NEXT_PUBLIC_SITE_URL` ao publicar (ex.: https://meu-site.com.br). */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 
-export const SITE_NAME = "Atacadão Best Price";
+export const SITE_NAME = "Distribuidora";
 
-export const SITE_TITLE = "Atacadão Best Price · Comparador de preços de mercado e supermercado";
+export const SITE_TITLE = "Distribuidora · Catálogo e pedidos para o seu negócio";
 
 export const SITE_DESCRIPTION =
-  "Compare os preços do mercado no Atacadão: preço de atacado por filial, promoções, lista de compras inteligente, scanner de código de barras e análise da nota fiscal (NFC-e).";
+  "Encontre produtos para abastecer seu negócio, aproveite condições por volume e monte seus pedidos com a Distribuidora.";
 
 export const SITE_KEYWORDS = [
-  "comparador de preços",
-  "comparador de preços de mercado",
-  "preços de supermercado",
-  "lista de compras de mercado",
-  "lista de compras inteligente",
-  "compra do mês",
-  "Atacadão",
-  "preço de atacado",
-  "promoções Atacadão",
-  "ofertas de mercado",
-  "scanner de código de barras",
-  "nota fiscal NFC-e",
-  "economizar no supermercado",
+  "distribuidora",
+  "fornecedor para empresas",
+  "abastecimento para negócios",
+  "compras por volume",
+  "catálogo para empresas",
+  "pedidos de atacado",
+  "Distribuidora",
+  "preço por quantidade",
+  "ofertas para empresas",
+  "entrega regional",
 ];
 
 export const AUTHOR = { name: "Distribuidora", url: "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora" } as const;

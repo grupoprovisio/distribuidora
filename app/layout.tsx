@@ -10,7 +10,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  // Template neutro: as páginas já definem o título completo ("Conta · Atacadão Best Price").
+  // Template neutro: as páginas já definem o título completo ("Conta · Distribuidora").
   title: { default: SITE_TITLE, template: "%s" },
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
