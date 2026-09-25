@@ -293,3 +293,4 @@ Este é um projeto **independente**, feito por um consumidor, sem afiliação, p
 ## **Licença**
 
 [MIT](LICENSE) © 2026 [Distribuidora](https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora).
+# distribuidora
