@@ -33,10 +33,6 @@
   "bugs": {
     "url": "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora/issues"
   },
-  "author": {
-    "name": "Distribuidora",
-    "url": "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora"
-  },
   "license": "MIT",
   "private": true,
   "scripts": {

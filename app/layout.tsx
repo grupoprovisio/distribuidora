@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
-import { AUTHOR, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -15,8 +15,6 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
   applicationName: SITE_NAME,
-  authors: [{ name: AUTHOR.name, url: AUTHOR.url }],
-  creator: AUTHOR.name,
   category: "shopping",
   alternates: { canonical: "/" },
   openGraph: {
@@ -50,7 +48,6 @@ const jsonLd = {
   inLanguage: "pt-BR",
   keywords: SITE_KEYWORDS.join(", "),
   offers: { "@type": "Offer", price: 0, priceCurrency: "BRL" },
-  author: { "@type": "Person", name: AUTHOR.name, url: AUTHOR.url },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

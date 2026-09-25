@@ -151,7 +151,7 @@ O Distribuidora roda em **VTEX**. O app conversa com as camadas que o próprio s
 Clone este repositório e instale as dependências:
 ```
 git clone https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora.git
-cd atacadao-best-price
+cd distribuidora
 npm install
 ```
 
@@ -292,5 +292,5 @@ Este é um projeto **independente**, feito por um consumidor, sem afiliação, p
 
 ## **Licença**
 
-[MIT](LICENSE) © 2026 [Distribuidora](https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora).
+[MIT](LICENSE).
 # distribuidora

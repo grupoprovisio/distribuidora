@@ -22,5 +22,3 @@ export const SITE_KEYWORDS = [
   "ofertas para empresas",
   "entrega regional",
 ];
-
-export const AUTHOR = { name: "Distribuidora", url: "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora" } as const;
