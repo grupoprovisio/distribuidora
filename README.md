@@ -150,7 +150,7 @@ O Distribuidora roda em **VTEX**. O app conversa com as camadas que o próprio s
 ## **Instalação**
 Clone este repositório e instale as dependências:
 ```
-git clone https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora.git
+git clone https://github.com/grupoprovisio/distribuidora.git
 cd distribuidora
 npm install
 ```

@@ -28,10 +28,10 @@
   "homepage": "https://atacadao-best-price.vercel.app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora.git"
+    "url": "git+https://github.com/grupoprovisio/distribuidora.git"
   },
   "bugs": {
-    "url": "https://github.com/bvdistribuidoradesuprimentos-byte/distribuidora/issues"
+    "url": "https://github.com/grupoprovisio/distribuidora/issues"
   },
   "license": "MIT",
   "private": true,
