@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: "Painel operacional · Distribuidora" };
 
@@ -22,6 +23,7 @@ const ORDERS = [
 ];
 
 export default function AdminPage() {
+  redirect("/admin/login");
   return (
     <div className="min-h-dvh bg-canvas">
       <AppHeader theme="wine" title="Painel operacional" backHref="/" />

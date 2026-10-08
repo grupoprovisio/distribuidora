@@ -1,5 +1,8 @@
+import type { OfferOrigin } from "@/lib/marketplace/types";
+
 export type OrganizationKind = "BUYER" | "SUPPLIER" | "PLATFORM_OPERATOR";
 export type OfferSourceType = "MANUAL_AUTHORIZED" | "SUPPLIER_CSV_AUTHORIZED" | "SUPPLIER_API_AUTHORIZED" | "PLATFORM_STOCK" | "ATACADAO_EXTERNAL" | "VTEX_SCRAPE" | "UNVERIFIED_EXTERNAL";
+export type CommercialOfferOrigin = OfferOrigin;
 
 export type Organization = { id: string; legalName: string; kind: OrganizationKind; isPlatformOwned: boolean; approved: boolean };
 export type Product = { id: string; slug: string; name: string; baseUnit: "un" | "kg" | "l"; status: "active" | "draft" };
