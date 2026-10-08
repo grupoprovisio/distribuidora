@@ -22,7 +22,23 @@ export default async function HomePage() {
   return (
     <>
       <WelcomeDialog />
-      <AppHeader theme="forest" search>
+      <AppHeader
+        theme="forest"
+        search
+        topContent={
+          <nav aria-label="Escolha seu perfil" className="mx-auto mb-4 flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <Link href="/compradores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-center text-xs font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+              Sou comprador
+            </Link>
+            <Link href="/vendedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-center text-xs font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+              Sou vendedor
+            </Link>
+            <Link href="/fornecedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-center text-xs font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+              Sou fornecedor
+            </Link>
+          </nav>
+        }
+      >
         <FilialChip />
 
         <ul className="no-scrollbar mx-auto mt-4 flex w-fit max-w-full gap-4 overflow-x-auto pb-1 sm:gap-8">

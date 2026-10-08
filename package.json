@@ -37,9 +37,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test:marketplace": "node scripts/marketplace-domain-check.mjs && node scripts/marketplace-access-check.mjs && node scripts/marketplace-csv-check.mjs && node scripts/marketplace-order-check.mjs && node scripts/marketplace-operations-check.mjs && node scripts/marketplace-finance-check.mjs"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
