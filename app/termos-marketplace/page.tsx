@@ -1,0 +1,4 @@
+import type { Metadata } from "next";
+import { MarketplaceInfoPage } from "@/components/marketplace-info-page";
+export const metadata: Metadata = { title: "Termos do marketplace · Distribuidora" };
+export default function MarketplaceTermsPage() { return <MarketplaceInfoPage eyebrow="Termos do marketplace" title="Regras antes de qualquer operação real." intro="Esta página apresenta princípios de operação para revisão. Não substitui os contratos jurídicos, fiscais ou comerciais que deverão ser aprovados antes da ativação." bullets={["Ofertas precisam de origem autorizada, aprovação, vigência e organização responsável.", "Pedidos e subpedidos terão condições e responsabilidades separadas.", "Pagamentos, repasses, tributos e devoluções dependem de contrato e validação especializada.", "O ambiente atual é demonstração local e não aceita transações reais."]} cta="/contato" />; }

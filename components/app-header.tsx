@@ -22,14 +22,16 @@ type Props = {
   /** Troca o título pela barra de busca. */
   search?: boolean;
   query?: string;
+  topContent?: React.ReactNode;
   children?: React.ReactNode;
 };
 
 /** Cabeçalho colorido com base curva, estilo do app de referência. Conteúdo extra entra abaixo da barra. */
-export function AppHeader({ theme = "forest", title, backHref, search, query, children }: Props) {
+export function AppHeader({ theme = "forest", title, backHref, search, query, topContent, children }: Props) {
   return (
     <header className={`${THEME[theme]} relative overflow-hidden text-white`}>
       <div className={`${WRAP} pt-[calc(env(safe-area-inset-top)+0.9rem)]`}>
+        {topContent}
         <div className="flex items-center gap-3">
           {backHref ? (
             <Link

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { QrCode } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { NAV_LEFT, NAV_RIGHT, SCAN_HREF, type NavItem } from "@/lib/nav";
 import { useAccountEmail, useHydrated } from "@/lib/account-store";
 import { useList } from "@/lib/list-store";
@@ -26,7 +27,15 @@ export function FloatingNav() {
   const pending = usePurchases(email).open.length;
   // Deslogado: o sininho na Conta chama para entrar (e para salvar compras); logado: avisa das compras sem nota.
   const askLogin = useHydrated() && !email;
+  const [menuOpen, setMenuOpen] = useState(false);
   const activeIndex = SLOTS.findIndex((slot) => slot !== "scan" && isActive(pathname, slot));
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuOpen(false); };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [menuOpen]);
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
@@ -48,16 +57,18 @@ export function FloatingNav() {
             if (slot === "scan") {
               return (
                 <li key="scan" className="relative">
-                  <Link
-                    href={SCAN_HREF}
-                    aria-label="Escanear QR code ou código de barras"
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(true)}
+                    aria-label="Abrir menu lateral"
+                    aria-expanded={menuOpen}
                     className="flex h-14 flex-col items-center justify-center gap-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest/40 sm:h-16"
                   >
                     <motion.span className="flex flex-col items-center gap-0.5 text-muted transition-colors duration-200" whileTap={{ scale: 0.88 }} transition={SPRING}>
-                      <QrCode size={20} strokeWidth={2} aria-hidden />
-                      <span className="text-[10.5px] font-bold leading-none sm:text-[11px]">Scanner</span>
+                      <Menu size={20} strokeWidth={2} aria-hidden />
+                      <span className="text-[10.5px] font-bold leading-none sm:text-[11px]">Menu</span>
                     </motion.span>
-                  </Link>
+                  </button>
                 </li>
               );
             }
@@ -107,6 +118,17 @@ export function FloatingNav() {
         </ul>
 
       </nav>
+
+      {menuOpen ? (
+        <div className="pointer-events-auto fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Menu principal">
+          <button type="button" aria-label="Fechar menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 bg-forest-deep/45 backdrop-blur-sm" />
+          <aside className="animate-sheet-in absolute inset-y-0 right-0 flex w-[min(88vw,22rem)] flex-col bg-paper p-6 shadow-float" aria-label="Navegação adicional">
+            <div className="flex items-center justify-between border-b border-line pb-5"><div><p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Distribuidora</p><h2 className="mt-1 text-xl font-black text-forest-deep">Mais caminhos</h2></div><button type="button" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" className="grid size-10 place-items-center rounded-full bg-canvas text-forest hover:bg-lime-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/50"><X size={20} aria-hidden /></button></div>
+            <nav className="mt-6" aria-label="Páginas da plataforma"><p className="text-xs font-black uppercase tracking-[0.14em] text-muted">Perfis</p><div className="mt-3 grid gap-2">{[["/compradores", "Sou comprador"], ["/vendedores", "Sou vendedor"], ["/fornecedores", "Sou fornecedor"]].map(([href, label]) => <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="rounded-2xl bg-forest px-4 py-3 text-sm font-extrabold text-white transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/50">{label}</Link>)}</div><p className="mt-7 text-xs font-black uppercase tracking-[0.14em] text-muted">Acesso rápido</p><div className="mt-3 grid gap-1">{[[SCAN_HREF, "Escanear código"], ["/lista", "Meu pedido"], ["/categorias", "Categorias"], ["/conta", "Minha conta"], ["/contato", "Fale com a equipe"]].map(([href, label]) => <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="rounded-2xl px-4 py-3 text-sm font-bold text-ink transition-colors hover:bg-lime-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/50">{label}</Link>)}</div></nav>
+            <p className="mt-auto border-t border-line pt-5 text-xs font-medium leading-relaxed text-muted">O menu reúne os perfis comerciais e os atalhos do site em um só lugar.</p>
+          </aside>
+        </div>
+      ) : null}
     </div>
   );
 }

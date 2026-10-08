@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { AppHeader } from "@/components/app-header";
+import { SiteFooter } from "@/components/site-footer";
+import { WRAP } from "@/lib/ui";
+
+export function MarketplaceModule({ title, description, backHref, accent = "forest" }: { title: string; description: string; backHref: string; accent?: "forest" | "plum" | "terra" }) {
+  return <div className="min-h-dvh bg-canvas"><AppHeader theme={accent} title={title} backHref={backHref} /><main className={`${WRAP} animate-page-in py-8 sm:py-12`}><div className="mx-auto max-w-3xl"><div className="rounded-[2rem] bg-paper p-7 shadow-card ring-1 ring-line/70 sm:p-10"><span className="grid size-12 place-items-center rounded-2xl bg-lime-soft text-forest"><CheckCircle2 size={23} aria-hidden /></span><p className="mt-6 text-xs font-black uppercase tracking-[0.14em] text-terra">Demonstração local</p><h1 className="mt-2 text-3xl font-black tracking-tight text-forest-deep sm:text-4xl">{title}</h1><p className="mt-4 text-base font-medium leading-relaxed text-muted">{description}</p><div className="mt-7 rounded-2xl bg-sand p-4 text-sm font-semibold leading-relaxed text-[#5c3a06]">Este módulo está conectado à navegação do portal, mas ainda não lê nem grava dados reais. A ativação depende da identidade multiempresa e da persistência homologada.</div><Link href={backHref} className="mt-7 inline-flex h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-extrabold text-white hover:bg-forest-deep focus-visible:ring-4 focus-visible:ring-lime/50"><ArrowLeft size={15} aria-hidden /> Voltar ao portal</Link></div><Link href="/" className="mx-auto mt-6 flex w-fit items-center gap-1 text-sm font-extrabold text-forest">Voltar ao início <ArrowRight size={14} aria-hidden /></Link></div></main><SiteFooter /></div>;
+}
