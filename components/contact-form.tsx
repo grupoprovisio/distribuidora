@@ -1,0 +1,11 @@
+"use client";
+
+import { Check, Send } from "lucide-react";
+import { useState } from "react";
+import { track } from "@/lib/analytics";
+
+export function ContactForm() {
+  const [sent, setSent] = useState(false);
+  if (sent) return <div className="rounded-3xl bg-lime-soft p-5 text-sm font-extrabold text-forest" role="status"><Check size={18} className="mb-2" aria-hidden />Mensagem preparada para a equipe. Em breve o contato será conectado ao canal comercial.</div>;
+  return <form onSubmit={(event) => { event.preventDefault(); track("generate_lead", { source: "contact_form" }); setSent(true); }} className="rounded-3xl bg-forest p-6 text-white sm:p-8"><p className="text-xs font-black uppercase tracking-[0.14em] text-lime">Fale com a equipe</p><h2 className="mt-2 text-2xl font-black">Qual é o assunto?</h2><div className="mt-5 grid gap-4 sm:grid-cols-2"><label className="text-sm font-extrabold">Nome<input required className="mt-1 h-11 w-full rounded-2xl bg-white px-4 text-sm font-semibold text-ink outline-none focus:ring-4 focus:ring-lime/40" placeholder="Seu nome" /></label><label className="text-sm font-extrabold">Contato<input required className="mt-1 h-11 w-full rounded-2xl bg-white px-4 text-sm font-semibold text-ink outline-none focus:ring-4 focus:ring-lime/40" placeholder="E-mail ou WhatsApp" /></label><label className="text-sm font-extrabold sm:col-span-2">Assunto<select className="mt-1 h-11 w-full rounded-2xl bg-white px-4 text-sm font-semibold text-ink outline-none focus:ring-4 focus:ring-lime/40" defaultValue="compras"><option value="compras">Compras e catálogo</option><option value="financeiro">Financeiro</option><option value="entrega">Entrega</option><option value="fornecedor">Fornecedor</option></select></label><label className="text-sm font-extrabold sm:col-span-2">Mensagem<textarea required className="mt-1 h-24 w-full resize-none rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-ink outline-none focus:ring-4 focus:ring-lime/40" placeholder="Como podemos ajudar?" /></label></div><button type="submit" className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-extrabold text-forest-deep active:scale-95">Enviar mensagem <Send size={15} aria-hidden /></button></form>;
+}
