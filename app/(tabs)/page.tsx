@@ -26,14 +26,14 @@ export default async function HomePage() {
         theme="forest"
         search
         topContent={
-          <nav aria-label="Escolha seu perfil" className="mx-auto mb-4 flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:gap-3">
-            <Link href="/compradores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-center text-xs font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+          <nav aria-label="Escolha seu perfil" className="mx-auto mb-8 flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:mb-10 sm:gap-3">
+            <Link href="/compradores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
               Sou comprador
             </Link>
-            <Link href="/vendedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-center text-xs font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+            <Link href="/vendedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
               Sou vendedor
             </Link>
-            <Link href="/fornecedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-forest px-4 py-2 text-center text-xs font-extrabold text-white ring-1 ring-white/25 transition-colors hover:bg-forest-deep focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+            <Link href="/fornecedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
               Sou fornecedor
             </Link>
           </nav>
