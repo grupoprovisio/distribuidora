@@ -41,7 +41,7 @@ const jsonLd = {
   operatingSystem: "Any",
   inLanguage: "pt-BR",
   keywords: SITE_KEYWORDS.join(", "),
-  offers: { "@type": "Offer", price: 0, priceCurrency: "BRL" },
+  // Nenhuma oferta real publicada: não incluir preço fictício em dados estruturados.
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
