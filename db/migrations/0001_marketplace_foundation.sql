@@ -39,3 +39,20 @@ create table if not exists organization_members (
 
 create index if not exists organization_members_user_idx on organization_members(user_id, status);
 create index if not exists organizations_status_idx on organizations(status);
+
+
+-- Deny-by-default database access. This migration is NOT applied in any environment.
+-- Intentionally no permissive SELECT/INSERT/UPDATE/DELETE policies until real
+-- authentication, organization membership and per-operation authorization exist.
+alter table public.profiles enable row level security;
+alter table public.organizations enable row level security;
+alter table public.organization_capabilities enable row level security;
+alter table public.organization_members enable row level security;
+
+alter table public.profiles force row level security;
+alter table public.organizations force row level security;
+alter table public.organization_capabilities force row level security;
+alter table public.organization_members force row level security;
+
+-- Before enabling a commercial backend, add separately reviewed tenant policies
+-- and negative integration tests (cross-buyer, cross-supplier, revoked membership).
