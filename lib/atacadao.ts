@@ -2,6 +2,7 @@ import "server-only";
 
 import type { CatalogFacets, CatalogProduct, FacetValue } from "@/lib/catalog-types";
 import type { FilialInfo, FilialOffer, ListCompareItem, ListCompareResult, ListSellerResult, LookupResult, Offer, SimilarItem, Tier } from "@/lib/lookup-types";
+import { displayDepartmentName, hasHiddenDepartmentPath, isHiddenDepartment } from "@/lib/hidden-departments";
 import { parseSize, perBase, sameSize } from "@/lib/size";
 
 // Cliente das APIs públicas da Distribuidora (VTEX). Mapa completo em ATACADAO_API.md.
@@ -249,7 +250,9 @@ export async function lookupProduct(rawEan: string, seller: string, qty: number,
     .split("/")
     .filter(Boolean)
     .map((id) => sku.ProductCategories?.[id])
-    .filter((n): n is string => !!n);
+    .filter((n): n is string => !!n)
+    .map(displayDepartmentName);
+  if (hasHiddenDepartmentPath(categoryNames)) return { ok: false, reason: "not_found" };
 
   const [candidates, tiers] = await Promise.all([
     categoryPath ? fetchCandidates(categoryPath) : Promise.resolve<Candidate[]>([]),
@@ -493,7 +496,7 @@ function toProduct(n: GqlNode, seller: string): CatalogProduct | null {
   // Caminho de categorias: os itens do breadcrumb, sem o último (que é o próprio produto: ".../p").
   const path = (n.breadcrumbList?.itemListElement ?? []).flatMap((e) => {
     const slug = e.item?.split("/").filter(Boolean).pop();
-    return e.item && !e.item.endsWith("/p") && slug && e.name ? [{ slug, name: e.name }] : [];
+    return e.item && !e.item.endsWith("/p") && slug && e.name ? [{ slug, name: displayDepartmentName(e.name) }] : [];
   });
 
   return {
@@ -521,7 +524,14 @@ export async function catalogSearch(q: CatalogQuery, after = 0): Promise<{ produ
   });
   const { edges, pageInfo } = data.search.products;
   // `scanned` = quantos itens a API devolveu (inclusive os sem preço nesta filial, que são descartados): é ele que move o cursor.
-  return { products: edges.flatMap((e) => toProduct(e.node, q.seller) ?? []), total: pageInfo.totalCount, scanned: edges.length };
+  return {
+    products: edges.flatMap((e) => {
+      const product = toProduct(e.node, q.seller);
+      return product && !hasHiddenDepartmentPath(product.path?.map((part) => part.name) ?? []) ? [product] : [];
+    }),
+    total: pageInfo.totalCount,
+    scanned: edges.length,
+  };
 }
 
 /** Subcategorias e marcas do recorte atual (para os filtros da busca). */
@@ -540,7 +550,9 @@ export async function catalogFacets(q: CatalogQuery): Promise<CatalogFacets> {
   const cats = facets.find((f) => f.key === `category-${level}`) ?? facets.find((f) => f.key === `category-${depth}`);
   const brands = facets.find((f) => f.key === "brand");
   const map = (f?: GqlFacet) =>
-    (f?.values ?? []).map((v): FacetValue => ({ label: v.label, slug: v.value, count: v.quantity, selected: v.selected }));
+    (f?.values ?? [])
+      .filter((v) => !isHiddenDepartment(v.label) && !isHiddenDepartment(v.value))
+      .map((v): FacetValue => ({ label: displayDepartmentName(v.label), slug: v.value, count: v.quantity, selected: v.selected }));
   return {
     // Com um termo digitado, os departamentos também viram opção (útil para "Qual tipo de X?").
     categories: map(cats).sort((a, b) => b.count - a.count),
@@ -563,7 +575,9 @@ export async function skuInfo(skuId: string): Promise<{ ean: string; name: strin
   const list = (await res.json()) as LegacyProduct[];
   for (const p of list) {
     const item = p.items?.find((i) => String(i.itemId) === skuId);
-    if (item?.ean) return { ean: item.ean, name: p.productName };
+    if (item?.ean && !hasHiddenDepartmentPath((p.categories ?? []).flatMap((path) => path.split("/").filter(Boolean)))) {
+      return { ean: item.ean, name: p.productName };
+    }
   }
   return null;
 }
@@ -615,4 +629,3 @@ export async function nearestFiliais(query: { lat: number; lng: number } | { cep
     })
     .slice(0, 6);
 }
-

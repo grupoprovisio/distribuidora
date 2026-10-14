@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Building2, ChefHat, LayoutGrid, ShoppingBag, Store } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
-import { FilialChip } from "@/components/filial-chip";
+import { HomeBenefits } from "@/components/home-benefits";
+import { HomeMarketplaceShowcase } from "@/components/home-marketplace-showcase";
 import { CatalogSection } from "@/components/product-grid";
 import { PromoStrip } from "@/components/promo-strip";
 import { SectionTitle } from "@/components/section";
@@ -14,6 +15,7 @@ import { WRAP } from "@/lib/ui";
 // Fotos decorativas dos destaques (CDN da Distribuidora).
 const ARROZ_IMG = "https://atacadaobr.vteximg.com.br/arquivos/ids/1508408-300-auto/m.jpg.jpg";
 const CERVEJA_IMG = "https://atacadaobr.vteximg.com.br/arquivos/ids/1522972-300-auto/p.jpg.jpg";
+const DISTRIBUTION_CENTER_IMG = "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1800&q=85";
 
 export default async function HomePage() {
   // Atalhos = os primeiros departamentos, na ordem que o próprio site usa.
@@ -26,21 +28,32 @@ export default async function HomePage() {
         theme="forest"
         search
         topContent={
-          <nav aria-label="Escolha seu perfil" className="mx-auto mb-8 flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:mb-10 sm:gap-3">
-            <Link href="/compradores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
-              Sou comprador
-            </Link>
-            <Link href="/vendedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
-              Sou vendedor
-            </Link>
-            <Link href="/fornecedores" className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 transition-colors hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
-              Sou fornecedor
-            </Link>
-          </nav>
+          <section className="mb-8 sm:mb-10" aria-labelledby="home-title">
+            <nav aria-label="Escolha seu perfil" className="mx-auto mb-5 flex max-w-xl flex-wrap items-center justify-center gap-2 sm:mb-7 sm:gap-3">
+              <Link href="/compradores" className="profile-link relative isolate inline-flex min-h-10 flex-1 items-center justify-center overflow-hidden rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+                <span className="relative z-[1]">Sou comprador</span>
+              </Link>
+              <Link href="/fornecedores" className="profile-link relative isolate inline-flex min-h-10 flex-1 items-center justify-center overflow-hidden rounded-full bg-lime-soft px-4 py-2 text-center text-xs font-extrabold text-forest-deep ring-1 ring-lime/50 hover:bg-lime focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime/60 sm:text-sm">
+                <span className="relative z-[1]">Sou fornecedor</span>
+              </Link>
+            </nav>
+
+            <div className="relative overflow-hidden rounded-[2rem] bg-paper px-5 py-8 text-center text-forest-deep shadow-float sm:rounded-[2.5rem] sm:px-9 sm:py-10">
+            <div className="relative z-10 mx-auto max-w-2xl">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-terra">Abasteça melhor</p>
+              <h2 id="home-title" className="mt-3 text-3xl font-black leading-[1.05] tracking-tight sm:text-5xl">Tudo para o seu negócio continuar vendendo.</h2>
+              <p className="mx-auto mt-4 max-w-lg text-sm font-medium leading-relaxed text-muted sm:text-base">Encontre produtos, compare volumes e monte seu pedido com a praticidade de comprar pelo celular.</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link href="/buscar" className="inline-flex h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-extrabold text-white transition-transform active:scale-95">Explorar catálogo <ArrowRight size={16} aria-hidden /></Link>
+                <Link href="/contato" className="inline-flex h-11 items-center gap-2 rounded-full bg-lime-soft px-5 text-sm font-extrabold text-forest-deep transition-colors hover:bg-lime">Falar com o comercial</Link>
+              </div>
+            </div>
+            <div aria-hidden className="absolute -right-14 -top-20 size-64 rounded-full border-[3rem] border-lime-soft/70 sm:size-80" />
+            <div aria-hidden className="absolute -bottom-28 right-24 size-52 rounded-full border-[2rem] border-terra/15" />
+            </div>
+          </section>
         }
       >
-        <FilialChip />
-
         <ul className="no-scrollbar mx-auto mt-4 flex w-fit max-w-full gap-4 overflow-x-auto pb-1 sm:gap-8">
           {departments.map((d) => {
             const Icon = iconFor(d.name);
@@ -67,45 +80,42 @@ export default async function HomePage() {
       </AppHeader>
 
       <main className={`${WRAP} pt-2`}>
-        <section className="relative overflow-hidden rounded-[2rem] bg-forest px-6 py-8 text-white shadow-float sm:px-10 sm:py-10" aria-labelledby="home-title">
-          <div className="relative z-10 max-w-2xl">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-lime">Abasteça melhor</p>
-            <h2 id="home-title" className="mt-3 text-3xl font-black leading-[1.05] tracking-tight sm:text-5xl">Tudo para o seu negócio continuar vendendo.</h2>
-            <p className="mt-4 max-w-lg text-sm font-medium leading-relaxed text-white/72 sm:text-base">Encontre produtos, compare volumes e monte seu pedido com a praticidade de comprar pelo celular.</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/buscar" className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-extrabold text-forest-deep transition-transform active:scale-95">Explorar catálogo <ArrowRight size={16} aria-hidden /></Link>
-              <Link href="/contato" className="inline-flex h-11 items-center gap-2 rounded-full bg-white/12 px-5 text-sm font-extrabold text-white transition-colors hover:bg-white/20">Falar com o comercial</Link>
-            </div>
-          </div>
-          <div aria-hidden className="absolute -right-14 -top-20 size-64 rounded-full border-[3rem] border-lime/15 sm:size-80" />
-          <div aria-hidden className="absolute -bottom-28 right-24 size-52 rounded-full border-[2rem] border-terra/25" />
-        </section>
+        <HomeMarketplaceShowcase />
 
-        <section className="mt-8" aria-labelledby="business-title">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Compra do seu jeito</p>
-              <h2 id="business-title" className="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">Para cada tipo de operação</h2>
+        <section className="relative isolate mt-8 overflow-hidden rounded-[2rem] bg-forest px-4 py-6 text-white shadow-float sm:rounded-[2.5rem] sm:px-7 sm:py-8" aria-labelledby="business-title">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-cover bg-center"
+            style={{
+              backgroundImage: `linear-gradient(115deg, rgb(8 39 31 / 88%), rgb(8 39 31 / 68%) 52%, rgb(8 39 31 / 78%)), url("${DISTRIBUTION_CENTER_IMG}")`,
+            }}
+          />
+          <div className="relative">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-lime">Compra do seu jeito</p>
+                <h2 id="business-title" className="mt-1 text-xl font-extrabold tracking-tight sm:text-2xl">Para cada tipo de operação</h2>
+              </div>
+              <Link href="/categorias" className="hidden items-center gap-1 text-sm font-bold text-white sm:inline-flex">Ver categorias <ArrowRight size={14} aria-hidden /></Link>
             </div>
-            <Link href="/categorias" className="hidden items-center gap-1 text-sm font-bold text-forest sm:inline-flex">Ver categorias <ArrowRight size={14} aria-hidden /></Link>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { icon: Store, label: "Mercados e lojas", text: "Reposição diária" },
-              { icon: ChefHat, label: "Restaurantes", text: "Volume e variedade" },
-              { icon: Building2, label: "Empresas", text: "Compra recorrente" },
-              { icon: ShoppingBag, label: "Revendedores", text: "Preço por volume" },
-            ].map(({ icon: Icon, label, text }) => (
-              <Link key={label} href="/buscar" className="group rounded-3xl bg-paper p-4 shadow-card ring-1 ring-line/70 transition-transform active:scale-[0.98] sm:p-5">
-                <span className="grid size-10 place-items-center rounded-2xl bg-lime-soft text-forest transition-colors group-hover:bg-lime"><Icon size={20} aria-hidden /></span>
-                <p className="mt-4 text-sm font-extrabold leading-tight">{label}</p>
-                <p className="mt-1 text-xs font-semibold text-muted">{text}</p>
-              </Link>
-            ))}
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { icon: Store, label: "Mercados e lojas", text: "Reposição diária" },
+                { icon: ChefHat, label: "Restaurantes", text: "Volume e variedade" },
+                { icon: Building2, label: "Empresas", text: "Compra recorrente" },
+                { icon: ShoppingBag, label: "Revendedores", text: "Preço por volume" },
+              ].map(({ icon: Icon, label, text }) => (
+                <Link key={label} href="/buscar" className="group rounded-3xl bg-paper/95 p-4 text-ink shadow-card ring-1 ring-white/50 backdrop-blur-sm transition-transform active:scale-[0.98] sm:p-5">
+                  <span className="grid size-10 place-items-center rounded-2xl bg-lime-soft text-forest transition-colors group-hover:bg-lime"><Icon size={20} aria-hidden /></span>
+                  <p className="mt-4 text-sm font-extrabold leading-tight">{label}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted">{text}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 sm:gap-4" aria-label="Destaques">
+        <section className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4" aria-label="Destaques">
           <Link
             href="/lista"
             className="group relative flex min-h-32 items-center overflow-hidden rounded-3xl bg-gradient-to-br from-sand to-[#efc98c] p-5 shadow-card"
@@ -158,31 +168,25 @@ export default async function HomePage() {
         <SectionTitle href="/promocoes">Condições por quantidade</SectionTitle>
         <PromoStrip count={6} />
 
-        <section className="mt-10 grid gap-3 sm:grid-cols-3" aria-label="Benefícios da Distribuidora">
-          {[
-            ["Preço por volume", "Condições melhores para quem compra mais."],
-            ["Catálogo organizado", "Encontre marcas e categorias sem perder tempo."],
-            ["Atendimento próximo", "Fale com a equipe quando sua compra exigir atenção."],
-          ].map(([title, text]) => (
-            <div key={title} className="border-l-2 border-lime pl-4">
-              <p className="text-sm font-extrabold">{title}</p>
-              <p className="mt-1 text-xs font-medium leading-relaxed text-muted">{text}</p>
-            </div>
-          ))}
-        </section>
+        <HomeBenefits />
 
-        <section className="mt-10 grid gap-3 sm:grid-cols-2" aria-label="Atendimento e confiança">
-          <div className="rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Para quem compra</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-forest-deep">Mercados, restaurantes e empresas.</h2>
-            <p className="mt-3 text-sm font-medium leading-relaxed text-muted">Organize a reposição de mercearia, bebidas, limpeza e utilidades em um só catálogo.</p>
-            <Link href="/quem-somos" className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-forest">Conheça a Distribuidora <ArrowRight size={14} aria-hidden /></Link>
-          </div>
-          <div className="rounded-3xl bg-sand p-6 sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Compra recorrente</p>
-            <p className="mt-4 text-xl font-extrabold leading-snug text-[#5c3a06]">“Quando o pedido é organizado, sobra tempo para cuidar do negócio.”</p>
-            <p className="mt-5 text-xs font-bold text-[#5c3a06]/70">Atendimento comercial para volumes e rotas especiais.</p>
-          </div>
+        <section className="mt-10" aria-label="Atendimento e confiança">
+          <article className="group relative isolate min-h-[320px] overflow-hidden rounded-3xl bg-forest text-white shadow-card sm:min-h-[360px]">
+            <Image
+              src="/images/fornecedores/operacao-abastecimento.png"
+              alt="Profissionais selecionando ingredientes frescos em uma cozinha de restaurante"
+              fill
+              sizes="(max-width: 639px) 100vw, 1200px"
+              className="absolute inset-0 -z-20 object-cover object-center transition-transform duration-700 group-hover:scale-105"
+            />
+            <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102f26]/90 via-[#102f26]/65 to-[#102f26]/20" />
+            <div className="flex min-h-[320px] max-w-2xl flex-col justify-center p-6 sm:min-h-[360px] sm:p-10">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-lime">Para quem compra</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Mercados, restaurantes e empresas.</h2>
+              <p className="mt-3 max-w-xl text-sm font-medium leading-relaxed text-white/80 sm:text-base">Organize a reposição de mercearia, bebidas, limpeza e utilidades em um só catálogo.</p>
+              <Link href="/quem-somos" className="mt-5 inline-flex w-fit items-center gap-1 text-sm font-extrabold text-lime hover:text-white">Conheça a Distribuidora <ArrowRight size={14} aria-hidden /></Link>
+            </div>
+          </article>
         </section>
 
         <section className="group mt-10 flex flex-col justify-between gap-5 rounded-[2rem] bg-wine p-6 text-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-float focus-within:-translate-y-1 focus-within:shadow-float sm:flex-row sm:items-center sm:p-8" aria-label="Área para empresas">

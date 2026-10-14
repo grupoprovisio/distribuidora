@@ -1,6 +1,7 @@
 import "server-only";
 
 import { request } from "@/lib/atacadao";
+import { displayDepartmentName, isHiddenDepartment } from "@/lib/hidden-departments";
 
 // Departamentos e subcategorias vêm da árvore de categorias do própria Distribuidora (nada fixo no app):
 // se a loja criar, renomear ou remover um departamento, o app acompanha.
@@ -30,13 +31,14 @@ export async function getDepartments(): Promise<Department[]> {
     if (!res.ok) return [];
     const tree = (await res.json()) as TreeNode[];
     return tree.flatMap((n): Department[] => {
+      if (isHiddenDepartment(n.name)) return [];
       const slug = segments(n.url)[0];
       if (!slug) return [];
       const subs = (n.children ?? []).flatMap((c) => {
         const s = segments(c.url)[1];
         return s ? [{ id: c.id, slug: s, name: c.name }] : [];
       });
-      return [{ id: n.id, slug, name: n.name, subs }];
+      return [{ id: n.id, slug, name: displayDepartmentName(n.name), subs }];
     });
   } catch {
     return [];

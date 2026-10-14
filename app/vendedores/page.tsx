@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, BadgeCheck, BriefcaseBusiness, ClipboardCheck, Handshake, MapPinned, ShieldCheck, ShoppingBasket, Sparkles, Users } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, BriefcaseBusiness, Handshake, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { FloatingNav } from "@/components/floating-nav";
 import { MarketplaceLeadForm } from "@/components/marketplace-lead-form";
 import { SiteFooter } from "@/components/site-footer";
+import { VendorAdvantages } from "@/components/vendor-advantages";
 import { WRAP } from "@/lib/ui";
 
 export const metadata: Metadata = {
@@ -14,21 +15,14 @@ export const metadata: Metadata = {
 
 const assets = {
   hero: "/images/vendedores/chef-hero.png",
-  portrait: "/images/vendedores/chef-retrato.png",
-  produce: "/images/vendedores/chef-insumos.png",
+  restaurant: "/images/vendedores/chef-hero.png",
+  groceryAisle: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=1400&q=85",
 };
-
-const advantages = [
-  { icon: ShoppingBasket, title: "Portfólio com contexto", text: "Apresente soluções de abastecimento com produtos, apresentações e condições comerciais organizadas." },
-  { icon: Users, title: "Relacionamento de verdade", text: "Acompanhe seus compradores com histórico e comunicação pensados para o negócio." },
-  { icon: MapPinned, title: "Atuação por região", text: "Estruture sua carteira e oportunidades de acordo com seu território de atendimento." },
-  { icon: ClipboardCheck, title: "Processos claros", text: "Pedidos, propostas e acompanhamento em uma jornada mais previsível para todos." },
-];
 
 export default function VendedoresPage() {
   return <div className="min-h-dvh bg-[#f8f7f3] text-[#263b32]">
     <AppHeader theme="forest" title="Sou vendedor" backHref="/" />
-    <main>
+    <main className="audience-page">
       <section aria-labelledby="vendedor-title" className="relative isolate overflow-hidden bg-[#102f26] text-white">
         <div aria-hidden="true" className="absolute inset-0 bg-cover bg-[center_35%]" style={{ backgroundImage: `linear-gradient(90deg, rgba(10,37,29,.97) 0%, rgba(10,37,29,.84) 44%, rgba(10,37,29,.34) 100%),url("${assets.hero}")` }} />
         <div className={`${WRAP} relative z-10 grid min-h-[620px] items-center gap-12 py-20 sm:min-h-[690px] lg:grid-cols-[minmax(0,1fr)_330px] lg:py-28`}>
@@ -47,16 +41,13 @@ export default function VendedoresPage() {
         </div>
       </section>
 
-      <section className={`${WRAP} py-20 sm:py-24`} aria-labelledby="beneficios-vendedor">
-        <p className="text-xs font-black uppercase tracking-[.2em] text-[#a16c43]">Por que fazer parte</p><h2 id="beneficios-vendedor" className="mt-3 max-w-3xl text-3xl font-black tracking-[-.03em] sm:text-5xl">Tudo o que um bom vendedor precisa para <span className="text-[#597a4e]">ir mais longe.</span></h2>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{advantages.map(({icon:Icon,title,text})=><article key={title} className="rounded-[1.5rem] border border-[#e3e9df] bg-white p-7 shadow-sm transition-transform duration-300 hover:-translate-y-1"><span className="inline-flex size-12 items-center justify-center rounded-2xl bg-[#e8f0dc] text-[#23563f]"><Icon size={22} aria-hidden /></span><h3 className="mt-6 text-xl font-extrabold leading-snug">{title}</h3><p className="mt-3 text-sm leading-7 text-[#64736a]">{text}</p></article>)}</div>
-      </section>
+      <VendorAdvantages />
 
       <section className="bg-[#e9eee5] py-20 sm:py-24" aria-labelledby="historia-vendedor"><div className={WRAP}>
         <div className="mx-auto max-w-3xl text-center"><p className="text-xs font-black uppercase tracking-[.2em] text-[#a16c43]">Quem faz a diferença</p><h2 id="historia-vendedor" className="mt-3 text-3xl font-black tracking-[-.03em] sm:text-5xl">Por trás de cada grande prato, existe uma <span className="text-[#597a4e]">grande parceria.</span></h2><p className="mt-5 text-base leading-8 text-[#64736a]">Nosso compromisso começa ouvindo quem vive a rotina de uma cozinha profissional.</p></div>
         <div className="mt-12 grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
-          <div className="relative min-h-[380px] overflow-hidden rounded-[1.75rem] bg-[#275342] sm:min-h-[510px]"><div role="img" aria-label="Chef profissional em cozinha de restaurante" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(8,33,26,.72),transparent 55%),url("${assets.portrait}")`}}/><div className="relative flex h-full min-h-[380px] flex-col justify-end p-8 text-white sm:min-h-[510px] sm:p-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#d5edaa]">A cozinha é o nosso ponto de partida</p><h3 className="mt-3 max-w-lg text-2xl font-black leading-tight sm:text-4xl">Gente que entende de comida merece parceiros que entendem de negócios.</h3></div></div>
-          <div className="relative min-h-[330px] overflow-hidden rounded-[1.75rem] bg-[#275342] sm:min-h-[510px]"><div role="img" aria-label="Chef selecionando ingredientes frescos" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(8,33,26,.77),transparent 55%),url("${assets.produce}")`}}/><div className="relative flex h-full min-h-[330px] flex-col justify-end p-8 text-white sm:min-h-[510px]"><p className="text-sm font-medium text-[#d5edaa]">Para cada desafio</p><h3 className="mt-2 text-2xl font-extrabold">Uma oportunidade de construir confiança.</h3></div></div>
+          <div className="relative min-h-[380px] overflow-hidden rounded-[1.75rem] bg-[#275342] sm:min-h-[510px]"><div role="img" aria-label="Chef preparando um prato em cozinha de restaurante" className="absolute inset-0 bg-cover bg-[center_38%]" style={{backgroundImage:`linear-gradient(0deg,rgba(8,33,26,.72),transparent 55%),url("${assets.restaurant}")`}}/><div className="relative flex h-full min-h-[380px] flex-col justify-end p-8 text-white sm:min-h-[510px] sm:p-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#d5edaa]">A cozinha é o nosso ponto de partida</p><h3 className="mt-3 max-w-lg text-2xl font-black leading-tight sm:text-4xl">Gente que entende de comida merece parceiros que entendem de negócios.</h3></div></div>
+          <div className="relative min-h-[330px] overflow-hidden rounded-[1.75rem] bg-[#275342] sm:min-h-[510px]"><div role="img" aria-label="Gôndolas de mercearia abastecidas com alimentos e produtos" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(8,33,26,.77),transparent 55%),url("${assets.groceryAisle}")`}}/><div className="relative flex h-full min-h-[330px] flex-col justify-end p-8 text-white sm:min-h-[510px]"><p className="text-sm font-medium text-[#d5edaa]">Para cada desafio</p><h3 className="mt-2 text-2xl font-extrabold">Uma oportunidade de construir confiança.</h3></div></div>
         </div>
         <p className="mt-4 text-xs text-[#64736a]">Imagens ilustrativas produzidas para a comunicação da Provisio. Não representam depoimentos reais de clientes.</p>
       </div></section>

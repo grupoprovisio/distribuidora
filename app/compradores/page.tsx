@@ -8,9 +8,9 @@ import { WRAP } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Sou comprador | Provisio", description: "Abastecimento profissional para restaurantes e negócios de alimentação. Conheça a proposta B2B da Provisio." };
 const hero = "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=1800&q=85";
-const produce = "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=80";
-const kitchen = "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=85";
-const dishes = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80";
+const packaging = "https://images.unsplash.com/photo-1648587456176-4969b0124b12?auto=format&fit=crop&w=1200&q=85";
+const disposableStock = "https://images.unsplash.com/photo-1522386914164-ae40e2dd4e8d?auto=format&fit=crop&w=1200&q=85";
+const cleaningProducts = "https://images.unsplash.com/photo-1577369117918-7e3785e39cb7?auto=format&fit=crop&w=1000&q=85";
 const benefits = [
   { icon: ClipboardList, title: "Compras mais organizadas", body: "Encontre informações de produtos e condições comerciais em uma experiência pensada para sua rotina." },
   { icon: BadgeCheck, title: "Fornecedores homologados", body: "Conheça ofertas de empresas avaliadas conforme as regras da plataforma." },
@@ -19,7 +19,7 @@ const benefits = [
 export default function CompradoresPage() {
   return <div className="min-h-dvh bg-[#f8f7f2] text-[#173b30]">
     <AppHeader theme="forest" title="Sou comprador" backHref="/" />
-    <main>
+    <main className="audience-page">
       <section aria-labelledby="comprador-title" className="relative isolate flex min-h-[620px] items-center overflow-hidden bg-[#102f26] text-white sm:min-h-[700px]">
         <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `linear-gradient(90deg,rgba(8,33,26,.95),rgba(8,33,26,.78) 48%,rgba(8,33,26,.22)),url("${hero}")` }} />
         <div className={`${WRAP} relative z-10 w-full py-24 sm:py-32`}>
@@ -36,12 +36,12 @@ export default function CompradoresPage() {
         <div className="mt-10 grid gap-5 md:grid-cols-3">{benefits.map(({icon:Icon,title,body})=><article key={title} className="rounded-[1.75rem] border border-[#e4e9dd] bg-white p-8 shadow-sm"><span className="inline-flex size-12 items-center justify-center rounded-2xl bg-[#eaf2df]"><Icon size={24}/></span><h3 className="mt-7 text-xl font-extrabold">{title}</h3><p className="mt-3 text-sm leading-7 text-[#63736a]">{body}</p></article>)}</div>
       </section>
       <section className="bg-[#e9eee4] py-20 sm:py-24" aria-labelledby="categorias-title"><div className={WRAP}>
-        <p className="text-xs font-black uppercase tracking-[.2em] text-[#9d6438]">Para sua operação</p><h2 id="categorias-title" className="mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">Do ingrediente ao prato, tudo começa com uma boa escolha.</h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-2">{[{photo:produce,title:"Hortifrúti e ingredientes frescos",sub:"Insumos para sua rotina"},{photo:dishes,title:"Alimentos e mercearia",sub:"Variedade para diferentes preparações"}].map(item=><article key={item.title} className="relative min-h-[340px] overflow-hidden rounded-[1.75rem] bg-[#244638] text-white"><div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(7,29,23,.9),transparent 75%),url("${item.photo}")`}}/><div className="relative flex min-h-[340px] flex-col justify-end p-8"><p className="text-sm text-white/80">{item.sub}</p><h3 className="mt-2 text-2xl font-extrabold sm:text-3xl">{item.title}</h3></div></article>)}</div>
+        <p className="text-xs font-black uppercase tracking-[.2em] text-[#9d6438]">Para sua operação</p><h2 id="categorias-title" className="mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">Da embalagem à limpeza, tudo começa com uma boa escolha.</h2>
+        <div className="mt-10 grid gap-5 md:grid-cols-2">{[{photo:packaging,title:"Embalagens e descartáveis",sub:"Soluções para servir, embalar e levar"},{photo:cleaningProducts,title:"Esponjas e produtos de limpeza",sub:"Itens para limpeza e cuidado diário da sua operação"}].map(item=><article key={item.title} className="relative min-h-[340px] overflow-hidden rounded-[1.75rem] bg-[#244638] text-white"><div aria-hidden="true" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(7,29,23,.9),transparent 75%),url("${item.photo}")`}}/><div className="relative flex min-h-[340px] flex-col justify-end p-8"><p className="text-sm text-white/80">{item.sub}</p><h3 className="mt-2 text-2xl font-extrabold sm:text-3xl">{item.title}</h3></div></article>)}</div>
         <p className="mt-5 text-sm text-[#63736a]">A disponibilidade de produtos depende das ofertas habilitadas na plataforma.</p>
       </div></section>
       <section id="como-funciona" className={`${WRAP} grid scroll-mt-20 items-center gap-12 py-20 sm:py-28 lg:grid-cols-2`} aria-labelledby="como-title">
-        <div role="img" aria-label="Cozinha profissional" className="min-h-[400px] rounded-[2rem] bg-cover bg-center shadow-xl sm:min-h-[510px]" style={{backgroundImage:`url("${kitchen}")`}}/>
+        <div role="img" aria-label="Estoque de embalagens descartáveis para alimentos" className="min-h-[400px] rounded-[2rem] bg-cover bg-center shadow-xl sm:min-h-[510px]" style={{backgroundImage:`url("${disposableStock}")`}}/>
         <div><p className="text-xs font-black uppercase tracking-[.2em] text-[#9d6438]">Simples desde o início</p><h2 id="como-title" className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">Menos tempo comprando. Mais tempo criando.</h2>
           <div className="mt-9 space-y-7">{[["01","Conte sobre seu negócio","Apresente sua operação e seu interesse comercial."],["02","Conheça as possibilidades","Descubra a proposta de catálogo B2B e condições comerciais."],["03","Prepare seu abastecimento","Organize sua rotina com informações mais claras."]].map(([n,t,b])=><div key={n} className="flex gap-5"><span className="text-2xl font-black text-[#9aab81]">{n}</span><div><h3 className="text-lg font-extrabold">{t}</h3><p className="mt-2 text-sm leading-7 text-[#63736a]">{b}</p></div></div>)}</div>
           <a href="#interesse" className="mt-9 inline-flex items-center gap-2 rounded-full bg-[#173b30] px-7 py-4 text-sm font-extrabold text-white hover:bg-[#2c5c49]">Tenho interesse <ArrowRight size={18}/></a>

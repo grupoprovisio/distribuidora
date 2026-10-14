@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 const photos = {
   hero: "/images/fornecedores/chef-hero.png",
   partners: "/images/fornecedores/parceria-cozinha.png",
-  operation: "/images/fornecedores/operacao-abastecimento.png",
+  operation: {
+    clothAndPaperTowel: "https://images.unsplash.com/photo-1590833406655-811de878ab32?auto=format&fit=crop&w=1200&q=85",
+    toiletPaper: "https://images.pexels.com/photos/3958205/pexels-photo-3958205.jpeg?auto=compress&w=1200",
+  },
 };
 
 const benefits = [
@@ -36,7 +39,7 @@ const steps = [
 export default function FornecedoresPage() {
  return <div className="min-h-dvh bg-[#f8f7f3] text-[#263b32]">
   <AppHeader theme="forest" title="Sou fornecedor" backHref="/" />
-  <main>
+  <main className="audience-page">
    <section aria-labelledby="supplier-hero" className="relative isolate overflow-hidden bg-[#0e3026] text-white">
     <div className="absolute inset-0 bg-cover bg-[center_40%]" aria-hidden="true" style={{backgroundImage:`linear-gradient(90deg,rgba(8,31,24,.98) 0%,rgba(8,31,24,.85) 43%,rgba(8,31,24,.34) 100%),url("${photos.hero}")`}} />
     <div className={`${WRAP} relative z-10 grid min-h-[650px] gap-12 py-20 lg:min-h-[680px] lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center lg:gap-16 lg:py-24`}>
@@ -76,9 +79,9 @@ export default function FornecedoresPage() {
     <div className="mx-auto max-w-3xl text-center"><p className="text-xs font-black uppercase tracking-[.2em] text-[#d5edaa]">Parcerias que fazem sentido</p><h2 id="supplier-partnership" className="mt-3 text-3xl font-black tracking-[-.03em] sm:text-5xl">O valor de uma parceria está no que <span className="text-[#d5edaa]">ela entrega.</span></h2><p className="mt-5 text-base leading-8 text-white/75">Qualidade, transparência e atenção a cada detalhe aproximam quem fornece de quem transforma ingredientes em experiências.</p></div>
     <div className="mt-12 grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
      <article className="relative min-h-[370px] overflow-hidden rounded-[1.75rem] bg-[#325947] sm:min-h-[510px]"><div role="img" aria-label="Fornecedor e chef avaliando produtos frescos em cozinha profissional" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(9,37,28,.8),transparent 63%),url("${photos.partners}")`}}/><div className="relative flex h-full min-h-[370px] flex-col justify-end p-8 sm:min-h-[510px] sm:p-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#d5edaa]">Da origem à cozinha</p><h3 className="mt-3 max-w-xl text-2xl font-black sm:text-4xl">Boas relações comerciais começam com produtos de confiança.</h3></div></article>
-     <article className="relative min-h-[310px] overflow-hidden rounded-[1.75rem] bg-[#325947] sm:min-h-[510px]"><div role="img" aria-label="Chef conferindo a qualidade dos insumos recebidos" className="absolute inset-0 bg-cover bg-center" style={{backgroundImage:`linear-gradient(0deg,rgba(9,37,28,.8),transparent 63%),url("${photos.operation}")`}}/><div className="relative flex h-full min-h-[310px] flex-col justify-end p-8 sm:min-h-[510px]"><p className="text-sm font-bold text-[#d5edaa]">Mais do que distribuir</p><h3 className="mt-2 text-2xl font-extrabold">Conectar oferta, demanda e qualidade.</h3></div></article>
+     <article className="relative min-h-[310px] overflow-hidden rounded-[1.75rem] bg-[#325947] sm:min-h-[510px]"><div role="img" aria-label="Pano de limpeza, papel-toalha e rolos de papel higiênico" className="absolute inset-0 grid grid-cols-[1.1fr_.9fr]"><div className="bg-cover bg-center" style={{backgroundImage:`url("${photos.operation.clothAndPaperTowel}")`}}/><div className="bg-cover bg-center" style={{backgroundImage:`url("${photos.operation.toiletPaper}")`}}/><div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#09251c]/80 via-transparent to-transparent"/></div><div className="relative flex h-full min-h-[310px] flex-col justify-end p-8 sm:min-h-[510px]"><p className="text-sm font-bold text-[#d5edaa]">Mais do que distribuir</p><h3 className="mt-2 text-2xl font-extrabold">Conectar oferta, demanda e qualidade.</h3></div></article>
     </div>
-    <p className="mt-4 text-xs text-white/65">Fotografias ilustrativas geradas para a Provisio; não são depoimentos nem registros de parceiros reais.</p>
+    <p className="mt-4 text-xs text-white/65">Fotografias ilustrativas; não são depoimentos nem registros de parceiros reais.</p>
    </div></section>
 
    <section id="como-funciona" className={`${WRAP} scroll-mt-20 grid gap-12 py-20 sm:py-28 lg:grid-cols-[.85fr_1.15fr] lg:gap-24`} aria-labelledby="supplier-process">

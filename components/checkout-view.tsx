@@ -47,7 +47,7 @@ export function CheckoutView() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-extrabold sm:col-span-2">Nome ou razão social<input required className={field} placeholder="Como devemos identificar sua compra?" /></label>
             <label className="text-sm font-extrabold">E-mail<input required type="email" className={field} placeholder="voce@empresa.com" /></label>
-            <label className="text-sm font-extrabold">WhatsApp<input required type="tel" className={field} placeholder="(00) 00000-0000" /></label>
+            <label className="text-sm font-extrabold">WhatsApp<input required type="tel" className={field} placeholder="(11) 98269-8119" /></label>
           </div>
         </section>
         <section className="rounded-[2rem] bg-paper p-5 shadow-card ring-1 ring-line/70 sm:p-6">
