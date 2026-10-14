@@ -21,13 +21,15 @@ type Props = {
   backHref?: string;
   /** Troca o título pela barra de busca. */
   search?: boolean;
+  /** Hide legacy shopping-list shortcut on the new marketplace public pages. */
+  showListButton?: boolean;
   query?: string;
   topContent?: React.ReactNode;
   children?: React.ReactNode;
 };
 
 /** Cabeçalho colorido com base curva, estilo do app de referência. Conteúdo extra entra abaixo da barra. */
-export function AppHeader({ theme = "forest", title, backHref, search, query, topContent, children }: Props) {
+export function AppHeader({ theme = "forest", title, backHref, search, query, topContent, children, showListButton = true }: Props) {
   return (
     <header className={`${THEME[theme]} relative overflow-hidden text-white`}>
       <div className={`${WRAP} pt-[calc(env(safe-area-inset-top)+0.9rem)]`}>
@@ -51,7 +53,7 @@ export function AppHeader({ theme = "forest", title, backHref, search, query, to
             <h1 className="flex-1 truncate text-center text-lg font-extrabold tracking-tight">{title}</h1>
           )}
 
-          <ListButton />
+          {showListButton ? <ListButton /> : <span aria-hidden className="size-11 shrink-0" />}
         </div>
         {children}
       </div>
