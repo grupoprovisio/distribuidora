@@ -1,4 +1,5 @@
 import "server-only";
+import { blockLegacyCommerce } from "@/lib/legacy-commercial-access";
 
 // Login da Distribuidora (VTEX ID) por código enviado ao e-mail, feito pelo SERVIDOR do app:
 //   start  -> authenticationToken
@@ -21,6 +22,7 @@ const UA =
 const baseHeaders = { "user-agent": UA, accept: "application/json" };
 
 async function idFetch(path: string, init?: RequestInit) {
+  blockLegacyCommerce();
   return fetch(`${ID_HOST}/api/vtexid/pub/authentication/${path}`, {
     ...init,
     headers: { ...baseHeaders, ...init?.headers },
@@ -146,6 +148,7 @@ type OmsOrders = {
 export async function getProfile(token: string): Promise<ProfileResult> {
   const headers = { ...baseHeaders, cookie: `${AUTH_COOKIE_NAME}=${token}` };
   try {
+    blockLegacyCommerce();
     const formRes = await fetch(`${STORE_HOST}/api/checkout/pub/orderForm`, {
       method: "POST",
       headers: { ...headers, "content-type": "application/json" },
