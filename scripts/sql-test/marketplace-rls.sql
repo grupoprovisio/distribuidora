@@ -1,0 +1,133 @@
+-- Seeds de teste. Nunca aplicar fora do Postgres efemero do CI.
+-- Migrations 0001..0004 ja devem ter sido instaladas sem erros.
+insert into auth.users (id, raw_user_meta_data) values
+('00000000-0000-4000-8000-000000000001', '{"full_name":"Fornecedor A"}'),
+('00000000-0000-4000-8000-000000000002', '{"full_name":"Fornecedor B"}'),
+('00000000-0000-4000-8000-000000000003', '{"full_name":"Comprador"}'),
+('00000000-0000-4000-8000-000000000004', '{"full_name":"Revogado"}'),
+('00000000-0000-4000-8000-000000000005', '{"full_name":"Pendente","role":"PLATFORM_ADMIN"}');
+
+select test.assert_count((select count(*) from public.profiles where status = 'pending'), 5, 'new users require explicit approval');
+update public.profiles set status='active'
+where id in (
+ '00000000-0000-4000-8000-000000000001',
+ '00000000-0000-4000-8000-000000000002',
+ '00000000-0000-4000-8000-000000000003',
+ '00000000-0000-4000-8000-000000000004'
+);
+
+insert into public.organizations (id, legal_name, kind, status) values
+('10000000-0000-4000-8000-000000000001', 'Fornecedor A', 'SUPPLIER','approved'),
+('10000000-0000-4000-8000-000000000002', 'Fornecedor B', 'SUPPLIER','approved'),
+('10000000-0000-4000-8000-000000000003', 'Comprador', 'BUYER','approved');
+
+insert into public.organization_capabilities(organization_id,capability,status) values
+('10000000-0000-4000-8000-000000000001','SUPPLIER','approved'),
+('10000000-0000-4000-8000-000000000002','SUPPLIER','approved'),
+('10000000-0000-4000-8000-000000000003','BUYER','approved');
+
+insert into public.organization_members(organization_id,user_id,role,status) values
+('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','SUPPLIER_ADMIN','active'),
+('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000002','SUPPLIER_ADMIN','active'),
+('10000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000003','BUYER','active'),
+('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000004','SELLER','revoked'),
+('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000005','PLATFORM_ADMIN','active');
+
+insert into public.products(id,slug,name,base_unit,status) values
+('20000000-0000-4000-8000-000000000001','produto-fornecedor-a','Produto A','un','active'),
+('20000000-0000-4000-8000-000000000002','produto-fornecedor-b','Produto B','un','active');
+
+insert into public.supplier_products(id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status) values
+('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','SKU-A',1,'un','approved'),
+('30000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','SKU-B',1,'un','approved');
+
+insert into public.offers(id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from) values
+('40000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','MANUAL_AUTHORIZED',1000,1,'approved','2026-01-01'),
+('40000000-0000-4000-8000-000000000002','30000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','MANUAL_AUTHORIZED',2000,1,'approved','2026-01-01');
+
+insert into public.offer_price_tiers(offer_id,min_quantity,unit_price_minor) values
+('40000000-0000-4000-8000-000000000001',10,900),
+('40000000-0000-4000-8000-000000000002',10,1900);
+insert into public.offer_regions(offer_id,region_code) values
+('40000000-0000-4000-8000-000000000001','BR-SP'),
+('40000000-0000-4000-8000-000000000002','BR-SP');
+insert into public.inventory_positions(supplier_product_id,supplier_org_id,available_quantity) values
+('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',100),
+('30000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002',200);
+
+-- Protecao contra falsificacao de fornecedor e trocas cruzadas de SKU.
+do $$
+declare denied boolean;
+begin
+  denied := false;
+  begin
+    insert into public.supplier_products(supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit)
+    values ('10000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','SKU-BUYER',1,'un');
+  exception when check_violation then denied := true;
+  end;
+  if not denied then raise exception 'buyer was allowed to own supplier SKU'; end if;
+
+  denied := false;
+  begin
+    insert into public.offers(supplier_product_id,supplier_org_id,source_type,base_price_minor,valid_from)
+    values ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','PLATFORM_STOCK',1000,'2026-01-01');
+  exception when check_violation then denied := true;
+  end;
+  if not denied then raise exception 'third-party supplier was allowed to impersonate platform stock'; end if;
+
+  denied := false;
+  begin
+    insert into public.offers(supplier_product_id,supplier_org_id,source_type,base_price_minor,valid_from)
+    values ('30000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','MANUAL_AUTHORIZED',1000,'2026-01-01');
+  exception when foreign_key_violation then denied := true;
+  end;
+  if not denied then raise exception 'offer was allowed to use a foreign supplier_product'; end if;
+end $$;
+
+-- Usuario fornecedor A: apenas A, inclusive ao tentar ID do concorrente.
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select test.assert_count((select count(*) from public.profiles),1,'supplier A sees own profile');
+select test.assert_count((select count(*) from public.organizations),1,'supplier A sees own organization');
+select test.assert_count((select count(*) from public.organization_members),1,'supplier A sees own membership');
+select test.assert_count((select count(*) from public.products),1,'supplier A sees own product');
+select test.assert_count((select count(*) from public.supplier_products),1,'supplier A sees own SKU');
+select test.assert_count((select count(*) from public.offers),1,'supplier A sees own offer');
+select test.assert_count((select count(*) from public.offer_price_tiers),1,'supplier A sees own tier');
+select test.assert_count((select count(*) from public.offer_regions),1,'supplier A sees own region');
+select test.assert_count((select count(*) from public.inventory_positions),1,'supplier A sees own stock');
+select test.assert_count((select count(*) from public.offers where supplier_org_id = '10000000-0000-4000-8000-000000000002'),0,'supplier A cannot read supplier B using B ID');
+select test.expect_permission_denied('update public.offers set base_price_minor=1 where supplier_org_id = ''10000000-0000-4000-8000-000000000001''');
+select test.expect_permission_denied('insert into public.organization_members(organization_id,user_id,role) values (''10000000-0000-4000-8000-000000000001'',''00000000-0000-4000-8000-000000000001'',''PLATFORM_ADMIN'')');
+
+-- Usuario fornecedor B: apenas B.
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',false);
+select test.assert_count((select count(*) from public.offers),1,'supplier B sees own offer');
+select test.assert_count((select count(*) from public.offers where supplier_org_id = '10000000-0000-4000-8000-000000000001'),0,'supplier B cannot read supplier A');
+
+-- Comprador A nao recebe acesso ao catalogo privado do fornecedor.
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
+select test.assert_count((select count(*) from public.organizations),1,'buyer sees own organization');
+select test.assert_count((select count(*) from public.products),0,'buyer cannot read private products');
+select test.assert_count((select count(*) from public.offers),0,'buyer cannot read supplier offers');
+select test.assert_count((select count(*) from public.inventory_positions),0,'buyer cannot read supplier stock');
+
+-- Revogado e pendente nao recebem dados privados.
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000004',false);
+select test.assert_count((select count(*) from public.offers),0,'revoked supplier sees no offers');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000005',false);
+select test.assert_count((select count(*) from public.offers),0,'pending user with claimed PLATFORM_ADMIN sees no offers');
+reset role;
+
+-- Nenhum acesso anon a linhas protegidas nem chamadas de helpers privados.
+set role anon;
+select test.expect_permission_denied('select * from public.offers');
+select test.expect_permission_denied('select marketplace_private.has_active_capability(''10000000-0000-4000-8000-000000000001''::uuid,''SUPPLIER'')');
+reset role;
+
+-- A ausencia de token e negativa mesmo para role authenticated.
+set role authenticated;
+select set_config('request.jwt.claim.sub','',false);
+select test.assert_count((select count(*) from public.offers),0,'missing JWT fails closed');
+reset role;
+select 'PASS: supabase marketplace isolation database suite' as result;
