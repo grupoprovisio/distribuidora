@@ -29,7 +29,7 @@ type Props = {
 };
 
 /** Cabeçalho colorido com base curva, estilo do app de referência. Conteúdo extra entra abaixo da barra. */
-export function AppHeader({ theme = "forest", title, backHref, search, query, topContent, children, showListButton = true }: Props) {
+export function AppHeader({ theme = "forest", title, backHref, search, query, topContent, children, showListButton = false }: Props) {
   return (
     <header className={`${THEME[theme]} relative overflow-hidden text-white`}>
       <div className={`${WRAP} pt-[calc(env(safe-area-inset-top)+0.9rem)]`}>
