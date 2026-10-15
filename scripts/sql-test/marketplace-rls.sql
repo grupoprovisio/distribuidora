@@ -119,6 +119,36 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000005'
 select test.assert_count((select count(*) from public.offers),0,'pending user with claimed PLATFORM_ADMIN sees no offers');
 reset role;
 
+-- Revogacao no banco tem efeito imediato mesmo que o JWT original continue valido.
+update public.organization_members set status = 'revoked'
+where organization_id = '10000000-0000-4000-8000-000000000001'
+  and user_id = '00000000-0000-4000-8000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select test.assert_count((select count(*) from public.offers),0,'immediate membership revocation');
+reset role;
+
+update public.organization_members set status = 'active'
+where organization_id = '10000000-0000-4000-8000-000000000001'
+  and user_id = '00000000-0000-4000-8000-000000000001';
+update public.organization_capabilities set status = 'revoked'
+where organization_id = '10000000-0000-4000-8000-000000000001'
+  and capability = 'SUPPLIER';
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select test.assert_count((select count(*) from public.offers),0,'immediate capability revocation');
+reset role;
+
+update public.organization_capabilities set status = 'approved'
+where organization_id = '10000000-0000-4000-8000-000000000001'
+  and capability = 'SUPPLIER';
+update public.profiles set status = 'blocked'
+where id = '00000000-0000-4000-8000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select test.assert_count((select count(*) from public.offers),0,'immediate user block');
+reset role;
+
 -- Nenhum acesso anon a linhas protegidas nem chamadas de helpers privados.
 set role anon;
 select test.expect_permission_denied('select * from public.offers');
