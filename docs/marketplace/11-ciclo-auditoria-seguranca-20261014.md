@@ -71,3 +71,24 @@ Os testes isolados não são substitutos para build completo, validação de imp
 **DECISÃO:** **NO-GO para merge, deploy ou venda real**.
 
 **CONFIRMAÇÃO:** nenhuma operação de merge, push na `main`, alteração de banco remoto, deploy manual, configuração de pagamento live ou operação financeira foi executada neste ciclo. A proteção de previews automáticos foi configurada na própria branch, sem confirmação independente do painel Vercel.
+
+## Complemento: corte do comparador e execução de CI na branch
+
+**Inventário adicional de migração concluída no código:**
+
+- As rotas API `/api/catalog`, `/api/catalog/prices`, `/api/lookup`, `/api/list/compare`, `/api/promos`, `/api/suggest`, `/api/terms`, `/api/filiais/nearest`, `/api/filiais/receipt-store`, `/api/auth/send`, `/api/auth/verify` e `/api/receipt` retornam `410 Gone` e não enviam dados ao Atacadão/VTEX.
+- As páginas `/buscar`, `/categorias`, `/promocoes`, `/ofertas`, `/scan`, `/produto/[id]`, `/checkout`, `/orcamento`, `/lista/montar`, `/lista/sugestoes` redirecionam para catálogo autorizado ou módulo de cotações demonstrativo.
+- As páginas `/conta`, `/conta/configuracoes`, `/conta/compras`, `/conta/compras/[id]`, `/lista`, `/favoritos` agora redirecionam para `/legado`: **histórico preservado no navegador**, consulta a antigos preços externos desativada.
+- A antiga tela `/admin` com números comerciais fictícios sem indicação clara foi substituída por redirecionamento a `/admin/marketplace`, cujo conteúdo sinaliza o modo de demonstração. `/empresas`, `/entregas` e `/quem-somos` redirecionam a páginas institucionais novas, preservando caminhos sem promessas legadas.
+- O `README.md` principal foi substituído por instruções atuais e aviso de pré-produção; `/legado` exporta dados antigos em JSON somente no browser, sem envio nem conversão.
+- A documentação antiga sobre "rotas ainda a redirecionar" descreve o estado **antes** deste complemento; esta seção registra a mudança posterior.
+
+**Execução real de CI (GitHub Actions), sem deploy**:
+
+- Workflow isolado `.github/workflows/marketplace-isolated-validation.yml`: `npm ci`, testes do marketplace, `next typegen`, TypeScript, ESLint, build, com todas flags comerciais desativadas.
+- Primeira execução [38669092405](https://github.com/grupoprovisio/distribuidora/actions/runs/38669092405): instalação e testes de marketplace passaram; TypeScript falhou por ausência de tipos gerados pelo Next e narrowing incorreto em código legado.
+- Segunda execução [38669197041](https://github.com/grupoprovisio/distribuidora/actions/runs/38669197041): instalação, testes, geração de tipos e typecheck passaram; lint falhou por variável `module` no runner. Corrigido com `loadedModule`.
+- A execução de CI que inclui todos os últimos redirecionamentos precisa ser executada e confirmada; uma execução anterior não cobre commits posteriores.
+- Estas execuções são validações da branch, **não deploys**. A configuração da Vercel impede deployments Git automáticos nesta branch, mas o painel Vercel não foi acessado independentemente para comprovação de previews.
+
+**Decisão inalterada: NO-GO.** Não há backend seguro de pedidos reais, autenticação tenant persistente, RLS homologado nem emissão/cobrança permitida.
