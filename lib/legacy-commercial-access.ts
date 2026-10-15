@@ -8,3 +8,11 @@
 export function blockLegacyCommerce(): never {
   throw new Error("Comparador externo desativado: use somente o catalogo autorizado da Provisio.");
 }
+
+/** Historic commercial endpoints must not silently return third-party prices. */
+export function legacyEndpointGone(): Response {
+  return Response.json(
+    { ok: false, reason: "legacy_comparator_retired", replacement: "/produtos" },
+    { status: 410, headers: { "Cache-Control": "no-store" } },
+  );
+}
