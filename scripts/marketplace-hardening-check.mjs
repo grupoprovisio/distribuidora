@@ -180,3 +180,58 @@ test("retired VTEX/Atacadao data sources cannot execute outbound commercial requ
     assert.match(source, /blockLegacyCommerce\(\)/, `Missing legacy network gate in ${path}`);
   }
 });
+
+test("legacy commerce APIs return HTTP 410 without any external catalog access", async () => {
+  const routes = [
+    ["app/api/catalog/route", "GET"],
+    ["app/api/catalog/prices/route", "GET"],
+    ["app/api/lookup/route", "GET"],
+    ["app/api/list/compare/route", "POST"],
+    ["app/api/promos/route", "GET"],
+    ["app/api/suggest/route", "GET"],
+    ["app/api/terms/route", "GET"],
+    ["app/api/filiais/nearest/route", "GET"],
+    ["app/api/filiais/receipt-store/route", "GET"],
+    ["app/api/auth/send/route", "POST"],
+    ["app/api/auth/verify/route", "POST"],
+    ["app/api/receipt/route", "POST"],
+  ];
+  for (const [path, method] of routes) {
+    const route = load(path);
+    const response = route[method]();
+    assert.equal(response.status, 410, path);
+    assert.equal(response.headers.get("cache-control"), "no-store", path);
+    assert.equal((await response.json()).replacement, "/produtos", path);
+  }
+});
+
+test("legacy screens redirect safely and browser history export remains local", () => {
+  const screenRoutes = [
+    ["app/(tabs)/buscar/page.tsx", "/produtos"],
+    ["app/(tabs)/categorias/page.tsx", "/produtos"],
+    ["app/(tabs)/promocoes/page.tsx", "/produtos"],
+    ["app/(tabs)/ofertas/page.tsx", "/produtos"],
+    ["app/scan/page.tsx", "/produtos"],
+    ["app/produto/[id]/page.tsx", "/produtos"],
+    ["app/checkout/page.tsx", "/produtos"],
+    ["app/orcamento/page.tsx", "/app/comprador/cotacoes"],
+    ["app/(tabs)/lista/montar/page.tsx", "/produtos"],
+    ["app/(tabs)/lista/sugestoes/page.tsx", "/produtos"],
+    ["app/(tabs)/conta/page.tsx", "/legado"],
+    ["app/(tabs)/conta/configuracoes/page.tsx", "/legado"],
+    ["app/(tabs)/conta/compras/page.tsx", "/legado"],
+    ["app/(tabs)/conta/compras/[id]/page.tsx", "/legado"],
+    ["app/(tabs)/lista/page.tsx", "/legado"],
+    ["app/(tabs)/favoritos/page.tsx", "/legado"],
+    ["app/admin/page.tsx", "/admin/marketplace"],
+  ];
+  for (const [path, destination] of screenRoutes) {
+    const source = readFileSync(resolve(root, path), "utf8");
+    assert.ok(source.includes(`redirect("${destination}")`), path);
+    assert.doesNotMatch(source, /@\\/lib\\/atacadao|@\\/lib\\/vtex-auth/, path);
+  }
+  const legacyExport = readFileSync(resolve(root, "app/legado/page.tsx"), "utf8");
+  assert.match(legacyExport, /window\\.localStorage\\.getItem/);
+  assert.match(legacyExport, /URL\\.createObjectURL/);
+  assert.doesNotMatch(legacyExport, /fetch\\s*\\(|navigator\\.sendBeacon|XMLHttpRequest/);
+});
