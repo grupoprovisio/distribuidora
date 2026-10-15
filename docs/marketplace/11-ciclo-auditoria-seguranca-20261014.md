@@ -92,3 +92,16 @@ Os testes isolados não são substitutos para build completo, validação de imp
 - Estas execuções são validações da branch, **não deploys**. A configuração da Vercel impede deployments Git automáticos nesta branch, mas o painel Vercel não foi acessado independentemente para comprovação de previews.
 
 **Decisão inalterada: NO-GO.** Não há backend seguro de pedidos reais, autenticação tenant persistente, RLS homologado nem emissão/cobrança permitida.
+
+## Complemento final — catálogo versionável, UX sem dados fictícios e pipeline
+
+- `db/drafts/marketplace_catalog_staging_proposal.sql`: desenho **não executado** (não é migration aplicada), com categorias, produtos, códigos, SKUs por fornecedor, ofertas, tiers, regiões, estoque e eventos de homologação. Restrições de proveniência autorizada, FK de ofertas para SKUs da mesma organização e RLS `enable + force` sem políticas públicas. A modelagem depende de validação SQL e integração/teste negativo em **staging separado** antes de qualquer banco real.
+- `next.config.ts`: removidas allowlists de CDNs VTEX para imagens.
+- `package.json` e `package-lock.json`: identidade técnica agora `provisio-marketplace-b2b`, sem alterações no conjunto de dependências.
+- `components/contact-form.tsx`, `app/contato/page.tsx`: removidos telefone/e-mail fictícios e pseudoenvio de dados pessoais; contato por `mailto:contato@grupoprovisio.com`, sem coleta server-side.
+- `scripts/marketplace-hardening-check.mjs`: verifica rotas legadas `410`, redirecionamentos, exportação local, marca, lockfile, contato e imagem remota.
+- [CI de referência (38669463243)](https://github.com/grupoprovisio/distribuidora/actions/runs/38669463243): `npm ci`, `npm run test:marketplace`, `npx next typegen`, `npm run typecheck`, `npm run lint` e `npm run build` **passaram** no commit `e06d82b`. Uma validação adicional precisa cobrir os commits finais de conteúdo, documentação e testes.
+
+**Atenção:** o schema é somente proposta, sem gatilhos append-only, políticas de leitura pública segura, versionamento de migrations via Supabase CLI ou testes de integração PostgreSQL. Nunca aplicar no projeto `xprvdquocenfqvnokmmi` sem autorização futura expressa. Não há dados reais, fornecedores homologados reais ou checkout utilizável em produção.
+
+**Status e decisão:** desenvolvimento isolado e revisável; **NO-GO** para clientes, merge, deploy e qualquer alteração de produção.
