@@ -1,4 +1,5 @@
 import "server-only";
+import { blockLegacyCommerce } from "@/lib/legacy-commercial-access";
 
 import { catalogSearch } from "@/lib/atacadao";
 import { getIndex } from "@/lib/catalog-index";
@@ -49,6 +50,7 @@ type CmsCollection = { id: string; name: string; description?: string };
 
 async function html(path: string): Promise<string | null> {
   try {
+    blockLegacyCommerce();
     const res = await fetch(SITE + path, {
       headers: { "user-agent": UA, accept: "text/html" },
       next: { revalidate: 1800 },
