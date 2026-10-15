@@ -117,3 +117,16 @@ Os testes isolados não são substitutos para build completo, validação de imp
 ### Critérios verificáveis para retomar fases 3–9
 
 A futura homologação em ambiente isolado deve comprovar: login real e MFA administrativo, organizações e políticas RLS testadas com usuários adversariais, separação de ofertas/produtos por fornecedor, aprovação e proveniência, pedidos por fornecedor com idempotência transacional, trilha de auditoria, integridade de pagamento e contratos fiscais/logísticos. Sem isso, o resultado permanece **NO-GO**, independentemente de build verde.
+
+## Validação final concluída
+
+O pipeline da branch atual [GitHub Actions #38669770705](https://github.com/grupoprovisio/distribuidora/actions/runs/38669770705), para o commit `b1fecde441ab26fa10db65b174563db2a6c5a4b5`, concluiu **SUCCESS**:
+
+- `npm ci`: PASSOU.
+- `npm run test:marketplace`: PASSOU.
+- `npx next typegen`: PASSOU.
+- `npm run typecheck`: PASSOU.
+- `npm run lint`: PASSOU.
+- `npm run build`: PASSOU.
+
+Esta anotação foi inserida após a execução, sem mudanças funcionais e sem necessidade de novo build. **Não substitui testes E2E, staging com políticas RLS, revisão de acessibilidade e teste de integrações externas.** Resultado final continua **NO-GO para produção**. Nenhum merge, deploy ou alteração em banco foi executado.
