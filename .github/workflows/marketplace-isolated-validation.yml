@@ -1,0 +1,40 @@
+name: Marketplace B2B - branch validation
+
+on:
+  push:
+    branches:
+      - feat/marketplace-b2b-auditoria-seguranca-20261014
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Lint, types, security tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      MARKETPLACE_DEMO_API_ENABLED: "false"
+      MARKETPLACE_CATALOG_ENABLED: "false"
+      MARKETPLACE_CHECKOUT_SIMULATION: "false"
+      MARKETPLACE_PUBLIC_SIGNUP: "false"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Marketplace safety regressions
+        run: npm run test:marketplace
+      - name: TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Next build (no deploy)
+        run: npm run build
