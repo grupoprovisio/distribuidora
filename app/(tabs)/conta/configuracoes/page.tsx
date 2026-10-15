@@ -1,18 +1,6 @@
-import { AppHeader } from "@/components/app-header";
-import { SettingsForm } from "@/components/settings-form";
-import { WRAP } from "@/lib/ui";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Configurações · Distribuidora" };
-
-export default function ConfiguracoesPage() {
-  return (
-    <>
-      <AppHeader theme="forest" title="Configurações" backHref="/conta" />
-      <main className={`${WRAP} pt-2`}>
-        <div className="mx-auto max-w-2xl">
-          <SettingsForm />
-        </div>
-      </main>
-    </>
-  );
+/** Legacy page retired; browser data remains available for explicit local export. */
+export default function ConfiguracoesLegacyPage() {
+  redirect("/legado");
 }
