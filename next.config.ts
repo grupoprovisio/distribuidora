@@ -8,13 +8,9 @@ const devOrigins = (process.env.DEV_ORIGINS ?? "")
 const nextConfig: NextConfig = {
   // Só vale no `next dev`: libera abrir por 127.0.0.1, túneis do Cloudflare e os hosts de `DEV_ORIGINS` (IP da rede local, separados por vírgula).
   allowedDevOrigins: ["127.0.0.1", "*.trycloudflare.com", ...devOrigins],
-  images: {
-    // CDNs de imagem da Distribuidora (VTEX). Redimensionamento é feito na própria URL (ver lib/products.ts).
-    remotePatterns: [
-      { protocol: "https", hostname: "atacadaobr.vteximg.com.br" },
-      { protocol: "https", hostname: "atacadaobr.vtexassets.com" },
-    ],
-  },
+  // Remote product images will be enabled only for authorized and reviewed suppliers.
+  // No VTEX/Atacadao image CDN is allowed in the new marketplace.
+  images: { remotePatterns: [] },
 };
 
 export default nextConfig;
