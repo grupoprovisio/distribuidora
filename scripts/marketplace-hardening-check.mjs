@@ -248,3 +248,11 @@ test("project branding and image allowlist contain no external comparator vendor
   assert.match(contact, /mailto:contato@grupoprovisio\.com/);
   assert.doesNotMatch(contact, /onSubmit=|track\("generate_lead"/);
 });
+
+test("unauthenticated admin demo never asks for password or exposes legacy cart", () => {
+  const login = readFileSync(resolve(root, "app/admin/login/page.tsx"), "utf8");
+  assert.doesNotMatch(login, /type=["']password["']/);
+  assert.match(login, /Autenticação administrativa ainda indisponível/);
+  const header = readFileSync(resolve(root, "components/app-header.tsx"), "utf8");
+  assert.match(header, /showListButton = false/);
+});
