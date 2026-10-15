@@ -1,7 +1,6 @@
-import { Scanner } from "@/components/scanner";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Escanear · Distribuidora" };
-
-export default function ScanPage() {
-  return <Scanner />;
+/** Controlled migration: preserve bookmarked paths without fetching third-party pricing. */
+export default function ScannerLegacyPage() {
+  redirect("/produtos");
 }
