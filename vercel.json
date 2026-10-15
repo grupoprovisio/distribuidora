@@ -1,5 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "regions": ["gru1"]
+  "regions": [
+    "gru1"
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "feat/marketplace-b2b-auditoria-seguranca-20261014": false
+    }
+  }
 }
