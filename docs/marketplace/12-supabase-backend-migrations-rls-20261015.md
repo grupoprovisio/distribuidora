@@ -47,3 +47,20 @@
 
 ## Registro de verificação
 Os endpoints podem ser testados sem credenciais usando fetch simulado na suíte. A execução em banco real continua bloqueada. Quando estiver liberado, registrar data, ambiente, SHA da migration, contagem de tabelas, resultado de RLS e query de `pg_policies` como evidência.
+
+## Teste adicional: PostgreSQL 17 real e descartavel (15/10/2026)
+
+O workflow `.github/workflows/marketplace-supabase.yml` ganhou o job `database-rls`. Ele instancia um container temporario `postgres:17`, cria uma pequena emulacao de `auth.users/auth.uid()` somente para teste e executa em ordem as migrations 0001-0004.
+
+O arquivo `scripts/sql-test/marketplace-rls.sql` cobre:
+- Criação de perfis pendentes, sem herdar `role` de `raw_user_meta_data`.
+- Duas empresas fornecedoras distintas e um comprador, com ofertas, tiers, regiões e posições de estoque.
+- Leitura de dados do próprio fornecedor e acesso negado ao fornecedor concorrente via RLS real.
+- Usuários com associação revogada, perfil pendente, JWT ausente e `anon` bloqueado.
+- Erros de integridade para SKU de organização compradora, oferta com origem `PLATFORM_STOCK` de terceiros e referência cruzada de SKU.
+- Ausência de permissão de escrita para `authenticated`.
+- Revogação imediata de associação, capacidade SUPPLIER e perfil: nenhuma oferta pode continuar visível mesmo com mesmo JWT.
+
+Testes reais no Postgres temporario **nao** comprovam a integridade de um Supabase remoto (extensões, grants, PostgREST, auth, configurações). Ainda precisamos do ambiente de homologacao Provisio para validar os fluxos completos, RLS, data API e advisor.
+
+Referência de sucesso no CI: https://github.com/grupoprovisio/distribuidora/actions/runs/38816938475
