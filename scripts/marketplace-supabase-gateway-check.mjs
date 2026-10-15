@@ -15,12 +15,12 @@ function load(path) {
   const js = ts.transpileModule(readFileSync(file, "utf8"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  const module = { exports: {} };
-  cache.set(file, module);
+  const loadedModule = { exports: {} };
+  cache.set(file, loadedModule);
   const localRequire = (specifier) =>
     specifier.startsWith("@/") ? load(specifier.slice(2)) : require(specifier);
-  new Function("module", "exports", "require", js)(module, module.exports, localRequire);
-  return module.exports;
+  new Function("module", "exports", "require", js)(loadedModule, loadedModule.exports, localRequire);
+  return loadedModule.exports;
 }
 
 const originalEnv = { ...process.env };
