@@ -228,10 +228,10 @@ test("legacy screens redirect safely and browser history export remains local", 
   for (const [path, destination] of screenRoutes) {
     const source = readFileSync(resolve(root, path), "utf8");
     assert.ok(source.includes(`redirect("${destination}")`), path);
-    assert.doesNotMatch(source, /@\\/lib\\/atacadao|@\\/lib\\/vtex-auth/, path);
+    assert.doesNotMatch(source, /@\/lib\/atacadao|@\/lib\/vtex-auth/, path);
   }
   const legacyExport = readFileSync(resolve(root, "app/legado/page.tsx"), "utf8");
-  assert.match(legacyExport, /window\\.localStorage\\.getItem/);
-  assert.match(legacyExport, /URL\\.createObjectURL/);
-  assert.doesNotMatch(legacyExport, /fetch\\s*\\(|navigator\\.sendBeacon|XMLHttpRequest/);
+  assert.match(legacyExport, /window\.localStorage\.getItem/);
+  assert.match(legacyExport, /URL\.createObjectURL/);
+  assert.doesNotMatch(legacyExport, /fetch\s*\(|navigator\.sendBeacon|XMLHttpRequest/);
 });
