@@ -105,3 +105,15 @@ Os testes isolados não são substitutos para build completo, validação de imp
 **Atenção:** o schema é somente proposta, sem gatilhos append-only, políticas de leitura pública segura, versionamento de migrations via Supabase CLI ou testes de integração PostgreSQL. Nunca aplicar no projeto `xprvdquocenfqvnokmmi` sem autorização futura expressa. Não há dados reais, fornecedores homologados reais ou checkout utilizável em produção.
 
 **Status e decisão:** desenvolvimento isolado e revisável; **NO-GO** para clientes, merge, deploy e qualquer alteração de produção.
+
+## Controles finais adicionados antes do freeze de branch
+
+- `components/app-header.tsx`: botão de lista do comparador antigo oculto por padrão nos cabeçalhos; o carrinho próprio só poderá ser reativado após implementar autorização por organização.
+- `app/admin/login/page.tsx`: removido formulário de senha que não possuía autenticação real. Exibe aviso e link claramente demonstrativo, sem coletar credenciais.
+- Testes estáticos adicionais impedem regressão nessas duas alterações.
+- Nenhuma oferta real, fornecedor externo, cliente, pedido ou pagamento foi cadastrado; nenhuma permissão de produção foi modificada.
+- As funcionalidades úteis do scanner, favoritos e lista continuam presentes no histórico Git, porém seu fluxo comercial está temporariamente desativado até aceitar somente produtos homologados. **Não as declarar concluídas como marketplace.**
+
+### Critérios verificáveis para retomar fases 3–9
+
+A futura homologação em ambiente isolado deve comprovar: login real e MFA administrativo, organizações e políticas RLS testadas com usuários adversariais, separação de ofertas/produtos por fornecedor, aprovação e proveniência, pedidos por fornecedor com idempotência transacional, trilha de auditoria, integridade de pagamento e contratos fiscais/logísticos. Sem isso, o resultado permanece **NO-GO**, independentemente de build verde.
