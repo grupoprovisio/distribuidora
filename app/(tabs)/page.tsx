@@ -11,8 +11,7 @@ import { iconFor } from "@/lib/categories";
 import { getDepartments } from "@/lib/taxonomy";
 import { WRAP } from "@/lib/ui";
 
-// Fotos decorativas dos destaques (CDN da Distribuidora).
-const ARROZ_IMG = "https://atacadaobr.vteximg.com.br/arquivos/ids/1508408-300-auto/m.jpg.jpg";
+// Foto decorativa dos destaques (CDN da Distribuidora).
 const CERVEJA_IMG = "https://atacadaobr.vteximg.com.br/arquivos/ids/1522972-300-auto/p.jpg.jpg";
 
 export default async function HomePage() {
@@ -101,13 +100,9 @@ export default async function HomePage() {
                 Começar compra <ArrowUpRight size={13} aria-hidden />
               </span>
             </div>
-            <Image
-              src={ARROZ_IMG}
-              alt=""
-              width={140}
-              height={140}
-              unoptimized
-              className="absolute -bottom-3 -right-2 size-32 rotate-6 object-contain mix-blend-multiply transition-transform duration-500 ease-out group-hover:scale-110 sm:size-36"
+            <ShoppingBag
+              aria-hidden
+              className="absolute -bottom-3 -right-2 size-32 rotate-6 text-[#5c3a06]/20 transition-transform duration-500 ease-out group-hover:scale-110 sm:size-36"
             />
           </Link>
 
@@ -159,7 +154,7 @@ export default async function HomePage() {
           <div className="rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Para quem compra</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight text-forest-deep">Mercados, restaurantes e empresas.</h2>
-            <p className="mt-3 text-sm font-medium leading-relaxed text-muted">Organize a reposição de mercearia, bebidas, limpeza e utilidades em um só catálogo.</p>
+            <p className="mt-3 text-sm font-medium leading-relaxed text-muted">Organize a reposição de bebidas, limpeza, hortifrúti e utilidades em um só catálogo.</p>
             <Link href="/quem-somos" className="mt-5 inline-flex items-center gap-1 text-sm font-extrabold text-forest">Conheça a Distribuidora <ArrowRight size={14} aria-hidden /></Link>
           </div>
           <div className="rounded-3xl bg-sand p-6 sm:p-8">

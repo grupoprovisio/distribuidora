@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { SearchResults } from "@/components/search-results";
 import { getDepartments } from "@/lib/taxonomy";
+import { isHiddenDepartment } from "@/lib/catalog-visibility";
 import { CATALOG_SORTS, type CatalogSort } from "@/lib/catalog-types";
 import { WRAP } from "@/lib/ui";
 
@@ -13,7 +14,8 @@ const SLUG = /^[a-z0-9-]{1,80}$/;
 export default async function BuscarPage(props: PageProps<"/buscar">) {
   const sp = await props.searchParams;
   const q = first(sp.q).trim().slice(0, 80);
-  const cat = first(sp.cat).split("/").filter((s) => SLUG.test(s)).slice(0, 3);
+  const requestedCategory = first(sp.cat).split("/").filter((s) => SLUG.test(s)).slice(0, 3);
+  const cat = isHiddenDepartment(requestedCategory[0]) ? [] : requestedCategory;
   const brandRaw = first(sp.brand);
   const brand = SLUG.test(brandRaw) ? brandRaw : undefined;
   const sortRaw = first(sp.sort);
