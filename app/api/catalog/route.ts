@@ -1,5 +1,6 @@
 import { catalogFacets, catalogSearch, type CatalogQuery } from "@/lib/atacadao";
 import { CATALOG_SORTS, type CatalogResponse } from "@/lib/catalog-types";
+import { isHiddenDepartment } from "@/lib/catalog-visibility";
 
 const SELLER = /^atacadaobr\d{1,4}$/;
 const SLUG = /^[a-z0-9-]{1,80}$/;
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
   try {
     const term = (p.get("term") ?? "").trim().slice(0, 80);
     const cat = (p.get("cat") ?? "").split("/").filter(Boolean);
+    if (isHiddenDepartment(cat[0])) return invalid();
     const brand = p.get("brand") ?? undefined;
     const sort = p.get("sort") ?? "score_desc";
     const first = Number.parseInt(p.get("first") ?? "24", 10);
