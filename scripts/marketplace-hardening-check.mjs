@@ -235,3 +235,16 @@ test("legacy screens redirect safely and browser history export remains local", 
   assert.match(legacyExport, /URL\.createObjectURL/);
   assert.doesNotMatch(legacyExport, /fetch\s*\(|navigator\.sendBeacon|XMLHttpRequest/);
 });
+
+test("project branding and image allowlist contain no external comparator vendors", () => {
+  const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+  const lock = JSON.parse(readFileSync(resolve(root, "package-lock.json"), "utf8"));
+  assert.equal(pkg.name, "provisio-marketplace-b2b");
+  assert.equal(lock.name, pkg.name);
+  assert.equal(lock.packages[""].name, pkg.name);
+  const config = readFileSync(resolve(root, "next.config.ts"), "utf8");
+  assert.doesNotMatch(config, /hostname:\s*["']atacadaobr\./i);
+  const contact = readFileSync(resolve(root, "components/contact-form.tsx"), "utf8");
+  assert.match(contact, /mailto:contato@grupoprovisio\.com/);
+  assert.doesNotMatch(contact, /onSubmit=|track\("generate_lead"/);
+});
