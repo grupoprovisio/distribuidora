@@ -1,0 +1,73 @@
+# Ciclo de auditoria e hardening B2B — 14/10/2026
+
+## Contrato de execução e procedência
+
+- Repositório: `grupoprovisio/distribuidora`.
+- Plano lido integralmente: `PLANO_CODEX_DISTRIBUIDORA_MARKETPLACE_HIBRIDO.md`. O arquivo **não está na `main`**: foi encontrado e incorporado por herança da branch `feat/marketplace-b2b-hardening-20261014`.
+- Branch de trabalho: `feat/marketplace-b2b-auditoria-seguranca-20261014`, derivada de `feat/marketplace-b2b-hardening-20261014`, sem checkout nem alteração da `main`.
+- O código existente das fases 0–9 é **protótipo / simulação**, não um marketplace pronto para clientes. Seu resultado anterior documentado é **NO-GO**.
+- O projeto Supabase `xprvdquocenfqvnokmmi` foi acessado somente em leitura anteriormente: zero tabelas no schema `public`. Nenhuma migração remota, chave, credencial, usuário ou pagamento foi criado aqui.
+
+## Fase 0: inventário confirmado
+
+Árvore Git da branch de base: aproximadamente 206 arquivos versionados, incluindo 75 em `app/`, 47 em `components/`, 40 em `lib/`, 7 em `scripts/` e uma migração SQL local. A auditoria detalhada anterior permanece em `docs/marketplace/00-auditoria.md` e o mapa de transição em `01-plano-migracao.md`.
+
+| Área | Exemplos de arquivos | Dependência / dado | Decisão |
+| --- | --- | --- | --- |
+| Busca, categorias e filtros | `app/(tabs)/buscar`, `categorias`, `lib/taxonomy.ts`, `lib/catalog-index.ts` | APIs públicas VTEX | Preservar UX, substituir busca por catálogo aprovado |
+| Catálogo e preços legados | `lib/atacadao.ts`, `app/api/catalog/*`, `app/api/lookup`, `app/api/list/compare` | GraphQL FastStore, produtos, quantidades e sellers externos | **Desativar rede**, migrar/retirar endpoints |
+| Promoções | `lib/promos.ts`, `app/(tabs)/promocoes` | CMS e listas Atacadão | **Desativar rede**, substituir ofertas internas |
+| Login legado e perfil | `lib/vtex-auth.ts`, `app/api/auth/*` | VTEX ID, perfil e pedidos terceiros | **Desativar rede**, criar identidade própria |
+| Experiência reaproveitável | 47 componentes em `components/`, scanner, favoritos, listas, telas públicas | Componentes de UI e dados locais/legados | Manter aparência e controles; trocar proveniência |
+| Histórico local | `lib/list-store.ts`, `purchase-store.ts`, `prefs-store.ts`, `account-store.ts` | `localStorage`/cookies | Não importar ofertas externas, proteger legado e migrar voluntariamente |
+| Núcleo novo | `lib/marketplace/*`, `app/api/marketplace/*` | Fixtures autorizadas de desenvolvimento | Preservar e fortalecer até existir Supabase staging/RLS |
+| Portais | `app/app/comprador`, `vendedor`, `fornecedor`, `admin/marketplace` | Telas demonstrativas | Não habilitar para dados privados reais sem autorização server-side |
+
+## Correções realizadas nesta branch
+
+1. `lib/legacy-commercial-access.ts`: bloqueio explícito, sem variável de reativação, para integrações comerciais externas. Guard adicionado antes das chamadas de rede em `lib/atacadao.ts`, `lib/promos.ts` e `lib/vtex-auth.ts` (incluindo leitura de perfil/pedidos).
+2. `lib/marketplace/csv-import.ts`: importação não pode declarar `MANUAL_AUTHORIZED` nem `PLATFORM_STOCK`; apenas `SUPPLIER_CSV_AUTHORIZED`. Parser de linha aceita aspas escapadas e rejeita erros de colunas, regiões inválidas, valores monetários fora de limites inteiros seguros e SKUs duplicados.
+3. `lib/marketplace/order-simulation.ts`: fingerprint de idempotência inclui região normalizada, e há validação adicional de subtotal seguro por fornecedor.
+4. `lib/marketplace/financial-sandbox.ts`: eventos são rejeitados sem verificador explícito de assinatura. Campo de assinatura não vazio, sozinho, não autentica um webhook. Deduplicação apenas após verificação.
+5. `scripts/marketplace-hardening-check.mjs`: testes adicionais para origem CSV, campos inválidos, idempotência regional, webhook não verificado e presença do bloqueio de rede.
+6. `vercel.json`: `git.deploymentEnabled` desabilitado para esta branch de trabalho; mensagens de commit usam `[skip ci]`. Nenhum comando de deploy foi executado.
+
+## Dados, privacidade, multiempresa
+
+- Mantidos os contratos de organização, membro, fornecedor, produto mestre e oferta da branch de base.
+- A migração SQL `db/migrations/0001_marketplace_foundation.sql` permanece **somente no Git**, com RLS deny-by-default e sem políticas permissivas.
+- **Não existe** autenticação persistente de organização, aprovação real de fornecedor, RLS validado com usuários de teste nem pedidos reais persistidos.
+- Nenhum dado VTEX/Atacadão foi copiado para o catálogo comercial novo. Fixtures são fictícias, isoladas em desenvolvimento.
+- Ainda há rotas legadas visíveis, agora sem acesso à fonte externa; elas precisam receber substituição/estado vazio/redirecionamento controlado, com teste de regressão de histórico do navegador, antes de merge.
+
+## Testes e limites de verificação
+
+| Teste | Resultado e escopo |
+| --- | --- |
+| TypeScript isolado (`tsc --strict`) | **Passou** para reproduções verificadas dos módulos CSV e sandbox financeiro; tipos de importação substituídos somente no teste isolado |
+| Node.js isolado, 17 cenários | **Passou**: CSV válido/aspas, fontes proibidas, números/regiões/linhas inválidos, duplicidade e rejeição/deduplicação de eventos |
+| Regressões novas adicionadas ao runner do repositório | **Criadas, mas não executadas no checkout completo** |
+| `npm ci` / `npm run test:marketplace` / `npm run typecheck` / `npm run lint` / `npm run build` | **Não executados nesta branch:** clone GitHub bloqueado por DNS de rede no ambiente de testes; Mac conectado ao Desktop Commander estava offline |
+| GitHub diff da branch | Commits e arquivos verificados pelo GitHub; `main` não foi alterada |
+| Vercel | Configurado bloqueio de deploy para branch; **a ausência de previews não pôde ser verificada no painel** por acesso Vercel anteriormente negado (403) |
+
+Os testes isolados não são substitutos para build completo, validação de imports Next.js, testes E2E, carga, segurança de RLS ou homologação multiempresa.
+
+## Pendências prioritárias e critérios de saída
+
+1. **P0 — checkout completo e testes:** executar `npm ci`, `npm run test:marketplace`, `npm run typecheck`, `npm run lint`, `npm run build`, `git diff --check` em máquina/CI autorizada que consiga ler o repositório. Corrigir regressões, se encontradas.
+2. **P0 — UX legada:** substituir `/buscar`, `/categorias`, `/promocoes`, `/checkout`, `/scan`, listas/favoritos e endpoints antigos pelo catálogo autorizado ou estados vazios/410 apropriados, sem apagar histórico do navegador; validar navegação/SEO.
+3. **P0 — backend multiempresa de teste:** provisionar ambiente **staging separado**, revisar migrações versionadas, Auth, políticas RLS negativas, escopo por organização e administração de homologações. Não aplicar no Supabase de produção.
+4. **P1 — catálogo real autorizado:** cadastro/importação por fornecedor autenticado, aprovação de fonte/organização/oferta, SKU/GTIN, preço/estoque por região, logs e auditoria.
+5. **P1 — pedidos simulados persistentes em staging:** orçamento, carrinho multiforncedor, `supplier_orders`, snapshots, concorrência/idempotência em banco e permissões do comprador/vendedor/fornecedor.
+6. **P1 — segurança operacional:** webhook com assinatura criptográfica baseada no corpo bruto, limite de taxa, CSRF, upload seguro, logs append-only, comissões e estornos auditados.
+7. **P2 — contratos e homologação:** documentos fiscais, merchant of record, responsabilidades por entrega/pagamento/repasse, acessibilidade, testes mobile, carga, backup, monitoramento e checklist GO/NO-GO.
+8. **Infra:** Vercel ainda requer reconexão/permite somente avaliação parcial. Não executar deploy.
+
+## Resultado
+
+**FASE ATUAL:** Fase 0 revisitada + incrementos de segurança nas fases 1, 4, 5 e 8.
+
+**DECISÃO:** **NO-GO para merge, deploy ou venda real**.
+
+**CONFIRMAÇÃO:** nenhuma operação de merge, push na `main`, alteração de banco remoto, deploy manual, configuração de pagamento live ou operação financeira foi executada neste ciclo. A proteção de previews automáticos foi configurada na própria branch, sem confirmação independente do painel Vercel.
