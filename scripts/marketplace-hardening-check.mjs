@@ -171,3 +171,12 @@ test("sandbox webhooks fail closed without actual signature verification", () =>
   assert.equal(seen.size, 1);
   assert.throws(() => finance.acceptWebhookEvent({ ...event, eventId: "bad:id" }, seen, verify), /identificação/);
 });
+
+test("retired VTEX/Atacadao data sources cannot execute outbound commercial requests", () => {
+  const legacy = load("lib/legacy-commercial-access");
+  assert.throws(() => legacy.blockLegacyCommerce(), /desativado/);
+  for (const path of ["lib/atacadao.ts", "lib/promos.ts", "lib/vtex-auth.ts"]) {
+    const source = readFileSync(resolve(root, path), "utf8");
+    assert.match(source, /blockLegacyCommerce\(\)/, `Missing legacy network gate in ${path}`);
+  }
+});
