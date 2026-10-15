@@ -26,7 +26,7 @@ function splitLine(line: string): string[] | null {
       values.push(current.trim()); current = ""; closed = false;
     } else if (char === '"' && current.length === 0 && !closed) {
       quoted = true;
-    } else if (closed && /\\s/.test(char)) {
+    } else if (closed && (char === " " || char === "\t")) {
       continue;
     } else if (char === '"' || closed) {
       return null;
