@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// As ofertas viraram a aba "Promoções". Links antigos continuam funcionando.
-export default function OfertasPage() {
-  redirect("/promocoes");
+/** Controlled migration: preserve bookmarked paths without fetching third-party pricing. */
+export default function OfertasLegacyPage() {
+  redirect("/produtos");
 }
