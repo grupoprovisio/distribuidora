@@ -15,6 +15,12 @@ export type Department = {
 
 type TreeNode = { id: number; name: string; url?: string; children?: TreeNode[] };
 
+// Departamentos que a Provisio não comercializa não devem aparecer na navegação.
+// A fonte VTEX continua intacta; esta regra vale somente para o catálogo do site.
+const HIDDEN_DEPARTMENTS = new Set(["mercearia"]);
+const isHiddenDepartment = (name: string, slug: string) =>
+  HIDDEN_DEPARTMENTS.has(name.trim().toLowerCase()) || HIDDEN_DEPARTMENTS.has(slug.trim().toLowerCase());
+
 const segments = (url?: string) => {
   try {
     return new URL(url ?? "").pathname.split("/").filter(Boolean);
@@ -31,7 +37,7 @@ export async function getDepartments(): Promise<Department[]> {
     const tree = (await res.json()) as TreeNode[];
     return tree.flatMap((n): Department[] => {
       const slug = segments(n.url)[0];
-      if (!slug) return [];
+      if (!slug || isHiddenDepartment(n.name, slug)) return [];
       const subs = (n.children ?? []).flatMap((c) => {
         const s = segments(c.url)[1];
         return s ? [{ id: c.id, slug: s, name: c.name }] : [];
