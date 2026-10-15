@@ -29,7 +29,8 @@ export function simulateCheckout(buyerOrgId: string, lines: CartLine[], idempote
     }
     fingerprintLines.push(`${line.offerId}:${line.quantity}`);
   }
-  const fingerprint = JSON.stringify(fingerprintLines.sort());
+  // The same key cannot silently reuse a snapshot for a different delivery region.
+  const fingerprint = JSON.stringify({ region: buyerRegion.trim().toUpperCase(), lines: fingerprintLines.sort() });
   const key = `${buyerOrgId}:${idempotencyKey}`;
   const previous = results.get(key);
   if (previous) {
@@ -53,6 +54,9 @@ export function simulateCheckout(buyerOrgId: string, lines: CartLine[], idempote
     subtotalMinor: items.reduce((sum, item) => sum + item.totalMinor, 0),
     status: "pending_simulation" as const,
   }));
+  for (const suborder of supplierOrders) {
+    if (!validAmount(suborder.subtotalMinor)) throw new Error("Subtotal fora do limite seguro");
+  }
   const grandTotalMinor = supplierOrders.reduce((sum, suborder) => sum + suborder.subtotalMinor, 0);
   if (!validAmount(grandTotalMinor)) throw new Error("Total fora do limite seguro");
   const order: SimulatedOrder = {
