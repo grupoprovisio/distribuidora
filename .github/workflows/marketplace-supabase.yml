@@ -1,0 +1,41 @@
+name: Marketplace Supabase foundation checks
+
+on:
+  push:
+    branches:
+      - feat/provisio-supabase-fundacao-20261015
+  pull_request:
+    paths:
+      - "db/migrations/**"
+      - "lib/marketplace/**"
+      - "app/api/marketplace/supabase/**"
+      - "scripts/marketplace-supabase-gateway-check.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/marketplace-supabase.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MARKETPLACE_SUPABASE_API_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Static type checking
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Marketplace domain tests
+        run: npm run test:marketplace
+      - name: Supabase foundation tests (without credentials)
+        run: npm run test:supabase-foundation
