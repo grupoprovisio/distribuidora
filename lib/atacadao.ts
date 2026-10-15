@@ -1,4 +1,5 @@
 import "server-only";
+import { blockLegacyCommerce } from "@/lib/legacy-commercial-access";
 
 import type { CatalogFacets, CatalogProduct, FacetValue } from "@/lib/catalog-types";
 import type { FilialInfo, FilialOffer, ListCompareItem, ListCompareResult, ListSellerResult, LookupResult, Offer, SimilarItem, Tier } from "@/lib/lookup-types";
@@ -15,6 +16,7 @@ const UA =
 type Cache = { revalidate: number } | "no-store";
 
 export async function request(path: string, cache: Cache, init?: RequestInit) {
+  blockLegacyCommerce();
   return fetch(STORE + path, {
     ...init,
     headers: { "user-agent": UA, accept: "application/json", ...init?.headers },
