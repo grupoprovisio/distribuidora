@@ -16,11 +16,11 @@ function load(sourcePath) {
   const js = ts.transpileModule(source, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022,
   }}).outputText;
-  const module = { exports: {} };
-  cache.set(absolute, module);
+  const loadedModule = { exports: {} };
+  cache.set(absolute, loadedModule);
   const localRequire = (specifier) => specifier.startsWith("@/") ? load(specifier.slice(2)) : require(specifier);
-  new Function("module", "exports", "require", js)(module, module.exports, localRequire);
-  return module.exports;
+  new Function("module", "exports", "require", js)(loadedModule, loadedModule.exports, localRequire);
+  return loadedModule.exports;
 }
 
 const catalog = load("lib/marketplace/catalog");
