@@ -127,3 +127,47 @@ test("local demo checkout rejects buyer impersonation and external regions", asy
     cache.clear();
   }
 });
+
+test("CSV import rejects source spoofing, malformed quotes, unsafe amounts and outside regions", () => {
+  const csv = load("lib/marketplace/csv-import");
+  const header = "supplier_sku,product_name,base_unit,pack_quantity,pack_unit,base_price_minor,min_quantity,regions";
+  const row = 'SKU-01,"Arroz, ""Premium""",kg,5,kg,2500,1,BR-SP';
+  const valid = csv.previewAuthorizedCsv(header + "\n" + row);
+  assert.equal(valid.accepted, true);
+  assert.equal(valid.rows[0].productName, 'Arroz, "Premium"');
+  assert.equal(valid.rows[0].sourceType, "SUPPLIER_CSV_AUTHORIZED");
+  for (const unauthorized of ["MANUAL_AUTHORIZED", "PLATFORM_STOCK", "ATACADAO_EXTERNAL", "VTEX_SCRAPE"]) {
+    assert.equal(csv.previewAuthorizedCsv(header + "\n" + row, unauthorized).accepted, false, unauthorized);
+  }
+  for (const invalidRow of [
+    "SKU-01,Arroz,kg,5,kg,9007199254740992,1,BR-SP",
+    "SKU-01,Arroz,kg,5,kg,2500,1,INVALID_REGION",
+    'SKU-01,"Unclosed,kg,5,kg,2500,1,BR-SP',
+    "SKU-01,Arroz,kg,5,kg,2500,1",
+  ]) assert.equal(csv.previewAuthorizedCsv(header + "\n" + invalidRow).accepted, false, invalidRow);
+  assert.equal(csv.previewAuthorizedCsv(header + "\n" + row + "\n" + row).accepted, false);
+});
+
+test("checkout idempotency includes region and enforces safe supplier subtotals", () => {
+  order.clearSimulationStore();
+  const firstRecord = record();
+  firstRecord.offer.regions = ["BR-SP", "BR-RJ"];
+  const one = { offerId: firstRecord.offer.id, quantity: 1, record: firstRecord };
+  order.simulateCheckout("buyer-demo", [one], "test-region-001", "BR-SP", date);
+  assert.throws(() => order.simulateCheckout("buyer-demo", [one], "test-region-001", "BR-RJ", date), /idempotente/);
+  order.clearSimulationStore();
+});
+
+test("sandbox webhooks fail closed without actual signature verification", () => {
+  const finance = load("lib/marketplace/financial-sandbox");
+  const seen = new Set();
+  const event = { provider: "sandbox", eventId: "event_1", type: "test", payload: {}, signature: "unverified-value" };
+  assert.throws(() => finance.acceptWebhookEvent(event, seen), /não verificada/);
+  assert.throws(() => finance.acceptWebhookEvent(event, seen, () => false), /não verificada/);
+  assert.equal(seen.size, 0);
+  const verify = (incoming) => incoming.provider === "sandbox" && incoming.signature === "unverified-value";
+  assert.equal(finance.acceptWebhookEvent(event, seen, verify).accepted, true);
+  assert.equal(finance.acceptWebhookEvent(event, seen, verify).duplicate, true);
+  assert.equal(seen.size, 1);
+  assert.throws(() => finance.acceptWebhookEvent({ ...event, eventId: "bad:id" }, seen, verify), /identificação/);
+});
