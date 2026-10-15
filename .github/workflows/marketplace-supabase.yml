@@ -41,3 +41,40 @@ jobs:
         run: npm run test:marketplace
       - name: Supabase foundation tests (without credentials)
         run: npm run test:supabase-foundation
+
+  database-rls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Execute real PostgreSQL RLS checks
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGDATABASE: postgres
+          PGUSER: postgres
+          PGPASSWORD: ci-only-password
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/bootstrap.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0001_marketplace_foundation.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0002_marketplace_catalog.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0003_marketplace_rls_readonly.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0004_marketplace_supplier_integrity.sql
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-rls.sql
