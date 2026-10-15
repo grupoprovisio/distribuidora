@@ -5,7 +5,7 @@
  *
  * No environment variable can re-enable these external requests.
  */
-export function blockLegacyCommerce(): never {
+export function blockLegacyCommerce(): void {
   throw new Error("Comparador externo desativado: use somente o catalogo autorizado da Provisio.");
 }
 
