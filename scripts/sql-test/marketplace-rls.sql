@@ -192,7 +192,7 @@ begin
 end $$;
 
 select test.assert_count(
-  (select (count(*) > 0)::bigint from marketplace_private.access_audit
+  (select case when count(*) > 0 then 1::bigint else 0::bigint end from marketplace_private.access_audit
     where source_table='organization_members' and action='UPDATE'),
   1, 'privilege changes recorded in internal audit');
 set role authenticated;
