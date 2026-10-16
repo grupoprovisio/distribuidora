@@ -59,5 +59,10 @@ export async function requireMarketplaceLogin() {
 export async function requireMarketplacePortal(portal: Portal) {
   const access = await requireMarketplaceLogin();
   if (!access.allowed.includes(portal)) redirect("/acesso-restrito");
+  if (portal === "admin") {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (error || data.currentLevel !== "aal2") redirect("/seguranca/mfa");
+  }
   return access;
 }
