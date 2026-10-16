@@ -54,3 +54,17 @@ end;
 $$;
 grant execute on function test.assert_count(bigint,bigint,text) to anon, authenticated;
 grant execute on function test.expect_permission_denied(text) to anon, authenticated;
+
+create function test.expect_rejected(command text)
+returns void language plpgsql security invoker set search_path = ''
+as $$
+begin
+  begin
+    execute command;
+  exception when insufficient_privilege or check_violation then
+    return;
+  end;
+  raise exception 'expected rejection but operation succeeded';
+end;
+$$;
+grant execute on function test.expect_rejected(text) to anon,authenticated;
