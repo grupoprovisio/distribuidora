@@ -11,6 +11,9 @@ export const config = {
     "/app/:path*",
     "/admin/:path*",
     "/auth/callback",
+    "/auth/confirm",
+    "/recuperar-acesso",
+    "/redefinir-senha",
     "/seguranca/mfa",
   ],
 };
