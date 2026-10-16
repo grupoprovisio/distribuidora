@@ -14,6 +14,18 @@ as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
 $$;
 
+-- Mock minimo de sessoes/AAL para is_verified_platform_admin no Postgres temporario.
+create table auth.sessions (
+  id uuid primary key,
+  user_id uuid not null references auth.users(id),
+  aal text not null check (aal in ('aal1','aal2')),
+  not_after timestamptz
+);
+create function auth.jwt() returns jsonb language sql stable
+as $
+ select coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,'{}'::jsonb);
+$;
+
 -- Instala um runner de assertions SEM SECURITY DEFINER: RLS continua efetivo.
 create schema test;
 grant usage on schema test to anon, authenticated;
