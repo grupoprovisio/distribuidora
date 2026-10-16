@@ -7,6 +7,10 @@ on:
   pull_request:
     paths:
       - "db/migrations/**"
+      - "app/**"
+      - "components/**"
+      - "lib/supabase/**"
+      - "proxy.ts"
       - "lib/marketplace/**"
       - "app/api/marketplace/supabase/**"
       - "scripts/marketplace-supabase-gateway-check.mjs"
@@ -43,6 +47,26 @@ jobs:
         run: npm run test:marketplace
       - name: Supabase foundation tests (without credentials)
         run: npm run test:supabase-foundation
+      - name: Production Next.js build with features off
+        env:
+          MARKETPLACE_AUTH_ENABLED: "false"
+        run: npm run build
+      - name: Smoke tests for locked-down entry and portals
+        env:
+          MARKETPLACE_AUTH_ENABLED: "false"
+        run: |
+          set -euo pipefail
+          npm run start -- -p 3100 > /tmp/provisio-next.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:3100/entrar; then break; fi
+            sleep 1
+          done
+          curl -fsS http://localhost:3100/entrar | grep -q 'O acesso empresarial está em preparação'
+          curl -sSI http://localhost:3100/app | grep -i 'location: /entrar'
+          curl -sSI http://localhost:3100/admin/marketplace | grep -i 'location: /entrar'
+
 
   database-rls:
     runs-on: ubuntu-latest
