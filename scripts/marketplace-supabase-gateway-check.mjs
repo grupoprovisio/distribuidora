@@ -163,6 +163,17 @@ test("marketplace login is invite-first and every private panel uses server auth
   assert.match(session, /PORTAL_ACCESS/);
   assert.match(proxy, /auth\.getClaims\(/);
   assert.match(proxy, /Cache-Control/);
+  assert.match(session, /getAuthenticatorAssuranceLevel\(/);
+  assert.match(session, /currentLevel !== "aal2"/);
+  const mfa = readFileSync(resolve(root,"components/marketplace-mfa-form.tsx"),"utf8");
+  assert.match(mfa, /mfa\.enroll\(/);
+  assert.match(mfa, /mfa\.challenge\(/);
+  assert.match(mfa, /mfa\.verify\(/);
+  assert.match(proxy, /Cache-Control/);
+  const callback = readFileSync(resolve(root,"app/auth/callback/route.ts"),"utf8");
+  assert.match(callback, /exchangeCodeForSession/);
+  assert.doesNotMatch(callback, /searchParams\.get\("next"\)/);
+
   assert.match(browser, /createBrowserClient/);
   for (const pathname of [
     "app/app/layout.tsx",
