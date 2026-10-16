@@ -98,7 +98,7 @@ select test.assert_count((select count(*) from public.offer_regions),1,'supplier
 select test.assert_count((select count(*) from public.inventory_positions),1,'supplier A sees own stock');
 select test.assert_count((select count(*) from public.offers where supplier_org_id = '10000000-0000-4000-8000-000000000002'),0,'supplier A cannot read supplier B using B ID');
 select test.expect_permission_denied('update public.offers set base_price_minor=1 where supplier_org_id = ''10000000-0000-4000-8000-000000000001''');
-select test.expect_permission_denied('insert into public.organization_members(organization_id,user_id,role) values (''10000000-0000-4000-8000-000000000001'',''00000000-0000-4000-8000-000000000001'',''PLATFORM_ADMIN'')');
+select test.expect_rejected('insert into public.organization_members(organization_id,user_id,role) values (''10000000-0000-4000-8000-000000000001'',''00000000-0000-4000-8000-000000000001'',''PLATFORM_ADMIN'')');
 
 -- Usuario fornecedor B: apenas B.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',false);
