@@ -28,14 +28,16 @@ returns trigger language plpgsql security invoker set search_path=''
 as $code$
 begin
   if current_user in ('anon','authenticated','service_role') then
-    if tg_table_name = 'organization_members' and new.role = 'PLATFORM_ADMIN' then
-      raise exception 'PLATFORM_ADMIN bootstrap is not allowed through Data API'
-        using errcode='23514';
-    end if;
-    if tg_table_name = 'organization_capabilities'
-       and new.capability = 'PLATFORM_OPERATOR' then
-      raise exception 'platform capability requires privileged database operation'
-        using errcode='23514';
+    if tg_table_name = 'organization_members' then
+      if new.role = 'PLATFORM_ADMIN' then
+        raise exception 'PLATFORM_ADMIN bootstrap is not allowed through Data API'
+          using errcode='23514';
+      end if;
+    elsif tg_table_name = 'organization_capabilities' then
+      if new.capability = 'PLATFORM_OPERATOR' then
+        raise exception 'platform capability requires privileged database operation'
+          using errcode='23514';
+      end if;
     end if;
   end if;
   return new;
