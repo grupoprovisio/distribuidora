@@ -107,4 +107,5 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0006_marketplace_access_governance.sql
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0007_marketplace_admin_mfa_access.sql
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0008_marketplace_platform_bootstrap_guard.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0009_private_access_audit_deny.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-rls.sql
