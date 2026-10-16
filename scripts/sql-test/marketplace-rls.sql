@@ -160,4 +160,44 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','',false);
 select test.assert_count((select count(*) from public.offers),0,'missing JWT fails closed');
 reset role;
+-- Atribuicoes administrativas nunca podem aparecer em organizacoes parceiras.
+do $
+declare denied boolean;
+begin
+  denied:=false;
+  begin
+    insert into public.organization_capabilities(organization_id,capability,status)
+    values ('10000000-0000-4000-8000-000000000001','PLATFORM_OPERATOR','approved');
+  exception when check_violation then denied:=true;
+  end;
+  if not denied then raise exception 'supplier received platform operator capability'; end if;
+
+  denied:=false;
+  begin
+    insert into public.organization_members(organization_id,user_id,role,status)
+    values ('10000000-0000-4000-8000-000000000001',
+      '00000000-0000-4000-8000-000000000005','PLATFORM_ADMIN','active')
+    on conflict(organization_id,user_id) do update set role=excluded.role,status=excluded.status;
+  exception when check_violation then denied:=true;
+  end;
+  if not denied then raise exception 'supplier received PLATFORM_ADMIN role'; end if;
+
+  denied:=false;
+  begin
+    update public.organizations set kind='PLATFORM_OPERATOR',is_platform_owned=true
+    where id='10000000-0000-4000-8000-000000000001';
+  exception when check_violation then denied:=true;
+  end;
+  if not denied then raise exception 'organization type was changed after creation'; end if;
+end $;
+
+select test.assert_count(
+  (select count(*) from marketplace_private.access_audit
+    where source_table='organization_members' and action='UPDATE'),
+  1, 'privilege changes recorded in internal audit');
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',false);
+select test.expect_permission_denied('select * from marketplace_private.access_audit');
+reset role;
+
 select 'PASS: supabase marketplace isolation database suite' as result;
