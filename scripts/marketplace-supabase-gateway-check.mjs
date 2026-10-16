@@ -145,3 +145,34 @@ test("migrations keep RLS, no anonymous grants, and no external catalog provenan
     assert.match(one + two, new RegExp(`alter table public\\.${table} force row level security;`));
   }
 });
+
+
+test("marketplace login is invite-first and every private panel uses server authorization", () => {
+  const login = readFileSync(resolve(root,"components/marketplace-login-form.tsx"),"utf8");
+  const session = readFileSync(resolve(root,"lib/marketplace/session.ts"),"utf8");
+  const proxy = readFileSync(resolve(root,"lib/supabase/proxy.ts"),"utf8");
+  const browser = readFileSync(resolve(root,"lib/supabase/client.ts"),"utf8");
+  assert.match(login, /shouldCreateUser:\s*false/);
+  assert.match(login, /signInWithPassword/);
+  assert.match(login, /verifyOtp/);
+  assert.doesNotMatch(login, /auth\.signUp\(/);
+  assert.match(session, /auth\.getUser\(/);
+  assert.match(session, /profiles/);
+  assert.match(session, /organization_capabilities/);
+  assert.match(session, /organization_members/);
+  assert.match(session, /PORTAL_ACCESS/);
+  assert.match(proxy, /auth\.getClaims\(/);
+  assert.match(proxy, /Cache-Control/);
+  assert.match(browser, /createBrowserClient/);
+  for (const pathname of [
+    "app/app/layout.tsx",
+    "app/app/comprador/layout.tsx",
+    "app/app/fornecedor/layout.tsx",
+    "app/app/vendedor/layout.tsx",
+    "app/admin/layout.tsx",
+  ]) {
+    const source=readFileSync(resolve(root,pathname),"utf8");
+    assert.match(source,/requireMarketplace(Login|Portal)/,pathname);
+    assert.match(source,/force-dynamic/,pathname);
+  }
+});
