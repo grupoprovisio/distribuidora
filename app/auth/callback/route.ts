@@ -4,7 +4,9 @@ import { supabaseAuthEnabled } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
-  const destination = new URL("/app",request.url);
+  // Destinos enumerados: nao aceitar next arbitrario de querystring.
+  const flow = request.nextUrl.searchParams.get("flow");
+  const destination = new URL(flow === "recovery" ? "/redefinir-senha" : "/app",request.url);
   if (!supabaseAuthEnabled()) return NextResponse.redirect(new URL("/entrar", request.url));
   const params=request.nextUrl.searchParams;
   const code=params.get("code");
