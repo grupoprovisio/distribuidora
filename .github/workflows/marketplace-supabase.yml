@@ -77,4 +77,5 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0002_marketplace_catalog.sql
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0003_marketplace_rls_readonly.sql
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0004_marketplace_supplier_integrity.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0005_marketplace_fk_indexes.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-rls.sql
