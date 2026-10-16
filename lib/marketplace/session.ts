@@ -53,7 +53,13 @@ export async function getMarketplaceAccess() {
 export async function requireMarketplaceLogin() {
   if (!supabaseAuthEnabled()) redirect("/entrar");
   const access = await getMarketplaceAccess();
-  if (!access) redirect("/acesso-pendente");
+  if (!access) {
+    // Ausencia de sessao e falta de homologacao sao estados diferentes.
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || user.is_anonymous) redirect("/entrar");
+    redirect("/acesso-pendente");
+  }
   return access;
 }
 export async function requireMarketplacePortal(portal: Portal) {
