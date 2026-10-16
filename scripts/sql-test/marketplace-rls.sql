@@ -161,7 +161,7 @@ select set_config('request.jwt.claim.sub','',false);
 select test.assert_count((select count(*) from public.offers),0,'missing JWT fails closed');
 reset role;
 -- Atribuicoes administrativas nunca podem aparecer em organizacoes parceiras.
-do $
+do $$
 declare denied boolean;
 begin
   denied:=false;
@@ -189,7 +189,7 @@ begin
   exception when check_violation then denied:=true;
   end;
   if not denied then raise exception 'organization type was changed after creation'; end if;
-end $;
+end $$;
 
 select test.assert_count(
   (select (count(*) > 0)::bigint from marketplace_private.access_audit
