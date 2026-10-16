@@ -229,6 +229,13 @@ insert into public.organizations(legal_name,kind,status)
 values ('New supplier from admin','SUPPLIER','pending');
 select test.assert_count((select count(*) from public.organizations where legal_name='New supplier from admin'),1,'admin with MFA creates pending organization');
 select test.expect_permission_denied('select * from marketplace_private.access_audit');
+select test.expect_rejected(
+ 'insert into public.organizations(legal_name,kind,is_platform_owned,status) values (''Fake platform'',''PLATFORM_OPERATOR'',true,''approved'')');
+select test.expect_rejected(
+ 'insert into public.organization_members(organization_id,user_id,role,status) values (''10000000-0000-4000-8000-000000000004'',''00000000-0000-4000-8000-000000000003'',''PLATFORM_ADMIN'',''active'')');
+select test.expect_rejected(
+ 'update public.organization_capabilities set status=''revoked'' where organization_id=''10000000-0000-4000-8000-000000000004'' and capability=''PLATFORM_OPERATOR''');
+
 
 reset role;
 update auth.sessions set not_after=now()-interval '1 second'
