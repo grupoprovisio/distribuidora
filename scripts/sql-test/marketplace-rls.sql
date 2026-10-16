@@ -200,4 +200,43 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002'
 select test.expect_permission_denied('select * from marketplace_private.access_audit');
 reset role;
 
+-- Sem sessão MFA, um suposto admin nao recebe permissao.
+insert into auth.users(id,raw_user_meta_data)
+values ('00000000-0000-4000-8000-000000000006','{"full_name":"Administrador"}');
+update public.profiles set status='active'
+where id='00000000-0000-4000-8000-000000000006';
+insert into public.organizations(id,legal_name,kind,is_platform_owned,status)
+values ('10000000-0000-4000-8000-000000000004','Grupo Provisio','PLATFORM_OPERATOR',true,'approved');
+insert into public.organization_capabilities(organization_id,capability,status)
+values ('10000000-0000-4000-8000-000000000004','PLATFORM_OPERATOR','approved');
+insert into public.organization_members(organization_id,user_id,role,status)
+values ('10000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-000000000006','PLATFORM_ADMIN','active');
+insert into auth.sessions(id,user_id,aal,not_after)
+values ('70000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000006','aal2',now()+interval '1 day');
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000001"}',false);
+select test.assert_count((select count(*) from public.profiles),1,'aal1 does not expose other company profiles');
+select test.expect_permission_denied('insert into public.organizations(legal_name,kind) values (''Unauthorized AAL1'',''BUYER'')');
+
+select set_config('request.jwt.claims','{"aal":"aal2","session_id":"70000000-0000-4000-8000-000000000002"}',false);
+select test.expect_permission_denied('insert into public.organizations(legal_name,kind) values (''Forged session ID'',''BUYER'')');
+
+select set_config('request.jwt.claims','{"aal":"aal2","session_id":"70000000-0000-4000-8000-000000000001"}',false);
+select test.assert_count((select count(*) from public.profiles),6,'real aal2 admin can read all profiles');
+insert into public.organizations(legal_name,kind,status)
+values ('New supplier from admin','SUPPLIER','pending');
+select test.assert_count((select count(*) from public.organizations where legal_name='New supplier from admin'),1,'admin with MFA creates pending organization');
+select test.expect_permission_denied('select * from marketplace_private.access_audit');
+
+reset role;
+update auth.sessions set not_after=now()-interval '1 second'
+where id='70000000-0000-4000-8000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',false);
+select set_config('request.jwt.claims','{"aal":"aal2","session_id":"70000000-0000-4000-8000-000000000001"}',false);
+select test.expect_permission_denied('insert into public.organizations(legal_name,kind) values (''Expired AAL2 session'',''BUYER'')');
+reset role;
+
 select 'PASS: supabase marketplace isolation database suite' as result;
