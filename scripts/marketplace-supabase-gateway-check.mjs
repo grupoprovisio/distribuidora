@@ -154,7 +154,11 @@ test("marketplace login is invite-first and every private panel uses server auth
   const browser = readFileSync(resolve(root,"lib/supabase/client.ts"),"utf8");
   assert.match(login, /shouldCreateUser:\s*false/);
   assert.match(login, /signInWithPassword/);
-  assert.match(login, /verifyOtp/);
+  assert.match(login, /signInWithOtp/);
+  assert.match(login, /emailRedirectTo/);
+  const confirm = readFileSync(resolve(root,"app/auth/confirm/route.ts"),"utf8");
+  assert.match(confirm, /verifyOtp/);
+  assert.doesNotMatch(confirm, /searchParams\.get\("next"\)/);
   assert.doesNotMatch(login, /auth\.signUp\(/);
   assert.match(session, /auth\.getUser\(/);
   assert.match(session, /profiles/);
