@@ -29,12 +29,15 @@ export default async function SupplierCatalogPage() {
     current.push(offer);
     bySupplierProduct.set(key, current);
   }
+  // Somente origens próprias/homologadas podem entrar na vitrine comercial privada.
+  // Ofertas externas VTEX/Atacadão não entram nem como comparação.
+  const allowedSources = new Set(["MANUAL_AUTHORIZED", "SUPPLIER_CSV_AUTHORIZED", "SUPPLIER_API_AUTHORIZED", "PLATFORM_STOCK"]);
   const rows: SupplierCatalogRow[] = (supplierProducts.data ?? []).map(item => {
     const product = byProduct.get(item.product_id);
     const org = byOrganization.get(item.supplier_org_id);
-    const entryOffers = bySupplierProduct.get(item.id + ":" + item.supplier_org_id) ?? [];
+    const entryOffers = (bySupplierProduct.get(item.id + ":" + item.supplier_org_id) ?? []).filter(offer => allowedSources.has(offer.source_type));
     const approved = entryOffers.filter(offer => offer.status === "approved");
-    const first = approved[0] ?? entryOffers[0];
+    const first = approved[0];
     return {
       id: item.id,
       supplierName: org?.trade_name || org?.legal_name || "Minha organização",
