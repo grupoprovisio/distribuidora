@@ -86,17 +86,17 @@ test("unapproved profile or revoked org stays inaccessible",async()=>{
   const access=await getMarketplaceAccess();
   assert.deepEqual(access.allowed,[]);
 });
-test("buyer does not access supplier, seller, or admin",async()=>{
+test("buyer does not access supplier or admin",async()=>{
   reset();
   assert.deepEqual((await getMarketplaceAccess()).allowed,["comprador"]);
   await assert.rejects(requireMarketplacePortal("fornecedor"),/REDIRECT:\/acesso-restrito/);
   await assert.rejects(requireMarketplacePortal("admin"),/REDIRECT:\/acesso-restrito/);
 });
-test("supplier admin and seller each see only assigned panel",async()=>{
+test("supplier admin has supplier access and obsolete seller role has no portal",async()=>{
   reset();context.role="SUPPLIER_ADMIN";context.capability="SUPPLIER";
   assert.deepEqual((await getMarketplaceAccess()).allowed,["fornecedor"]);
   reset();context.role="SELLER";context.capability="SUPPLIER";
-  assert.deepEqual((await getMarketplaceAccess()).allowed,["vendedor"]);
+  assert.deepEqual((await getMarketplaceAccess()).allowed,[]);
 });
 test("verified PLATFORM_ADMIN needs active org and capability",async()=>{
   reset();context.role="PLATFORM_ADMIN";context.capability="PLATFORM_OPERATOR";
