@@ -15,6 +15,7 @@ on:
       - "lib/marketplace/**"
       - "app/api/marketplace/supabase/**"
       - "scripts/marketplace-supabase-gateway-check.mjs"
+      - "scripts/marketplace-frontend-scope-check.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/marketplace-supabase.yml"

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -111,5 +112,32 @@ test("Páginas premium preservam textos, imagens e cards principais sem consulta
   assert.doesNotMatch(home + showcase, /useCatalog\(|getDepartments\(|CatalogSection|PromoStrip/);
   for (const asset of ["public/images/fornecedores/chef-hero.png", "public/images/fornecedores/parceria-cozinha.png", "public/images/provisio/chef-retrato.png"]) {
     assert.ok(existsSync(path.join(root,asset)), `Imagem ausente: ${asset}`);
+  }
+});
+
+
+/**
+ * Contrato visual da Provisio aceito em 17/10/2026.
+ * Atualizar estas impressões digitais SOMENTE quando o proprietário aprovar
+ * uma alteração visual explícita nas landings públicas ou suas fotografias.
+ * O hash é o SHA1 de blob Git, calculado sobre os bytes exatos do arquivo.
+ */
+test("Home, Sou comprador, Sou fornecedor, cards e fotos mantêm a identidade visual aprovada", () => {
+  const approved = {
+    "app/(tabs)/page.tsx": "7eb4cfbedff14c823789902f8dd86e4cd1a5fb43",
+    "app/compradores/page.tsx": "2599c7b969c7b89ab1d7c32e8d057cae50f93683",
+    "app/fornecedores/page.tsx": "af92a2f8ddc3fdbdcf63c0b4a75ee9d5458971c9",
+    "components/home-benefits.tsx": "b48c2e151075af25abea17fd570333bc6f826824",
+    "components/home-marketplace-showcase.tsx": "fbdd63872fe17991822ebe927d0130582683f343",
+    "components/marketplace-lead-form.tsx": "31699aad3b6b693c16342599a9a3e642f29aa0ea",
+    "public/images/fornecedores/chef-hero.png": "b62de160e5692338b4ad3b860cb373daf41e2c8f",
+    "public/images/fornecedores/operacao-abastecimento.png": "295704f2704cd1cbf85dea349db92cee84497ade",
+    "public/images/fornecedores/parceria-cozinha.png": "66bdcaf522eedd5737b1ec15120faea0b9011006",
+    "public/images/provisio/chef-retrato.png": "d31bdad0dc6dcd0f59ece340f6e52342f1867ef7",
+  };
+  for (const [filename,expectedSha] of Object.entries(approved)) {
+    const bytes = readFileSync(path.join(root,filename));
+    const actual = createHash("sha1").update("blob "+bytes.length+"\0").update(bytes).digest("hex");
+    assert.equal(actual,expectedSha,"A identidade aprovada mudou sem autorização: "+filename);
   }
 });
