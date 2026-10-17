@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { supabaseAuthEnabled } from "@/lib/supabase/config";
 import { cookies } from "next/headers";
 import { Building2, ChevronRight, CreditCard, Heart, QrCode, ShoppingBasket, SlidersHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -22,6 +24,9 @@ const SHORTCUTS: { href: string; label: string; hint: string; icon: LucideIcon; 
 ];
 
 export default async function ContaPage() {
+  // Ao habilitar marketplace, a conta unica passa a ser a identidade Supabase.
+  // O antigo login VTEX permanece somente enquanto a flag estiver desligada.
+  if (supabaseAuthEnabled()) redirect("/app");
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const result = token ? await getProfile(token) : undefined;
 
