@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { request } from "@/lib/atacadao";
 
 /**
@@ -6,6 +7,7 @@ import { request } from "@/lib/atacadao";
  * Vem da busca inteligente da loja: nada de lista fixa no app.
  */
 export async function GET(request_: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const q = (new URL(request_.url).searchParams.get("q") ?? "").trim().slice(0, 40);
   const path = q
     ? `/api/io/_v/api/intelligent-search/search_suggestions?query=${encodeURIComponent(q)}`

@@ -2,111 +2,98 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
-import { QrCode } from "lucide-react";
-import { NAV_LEFT, NAV_RIGHT, SCAN_HREF, type NavItem } from "@/lib/nav";
-import { useAccountEmail, useHydrated } from "@/lib/account-store";
-import { useList } from "@/lib/list-store";
-import { usePurchases } from "@/lib/purchase-store";
+import { Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { NAV_LEFT, NAV_RIGHT, type NavItem } from "@/lib/nav";
 
-const SPRING = { type: "spring", stiffness: 420, damping: 34, mass: 0.8 } as const;
+const items = [...NAV_LEFT, ...NAV_RIGHT];
 
-// 6 colunas: [início, promoções, pedido, empresas, conta, scanner]
-const SLOTS: (NavItem | "scan")[] = [...NAV_LEFT, ...NAV_RIGHT, "scan"];
-
-function isActive(pathname: string, item: NavItem) {
-  const paths = [item.href, ...(item.also ?? [])];
-  return paths.some((p) => (p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/")));
+function isActive(path: string, item: NavItem) {
+  return path === item.href || (item.href !== "/" && path.startsWith(item.href + "/"));
 }
 
 export function FloatingNav() {
   const pathname = usePathname();
-  const { count } = useList();
-  const email = useAccountEmail();
-  const pending = usePurchases(email).open.length;
-  // Deslogado: o sininho na Conta chama para entrar (e para salvar compras); logado: avisa das compras sem nota.
-  const askLogin = useHydrated() && !email;
-  const activeIndex = SLOTS.findIndex((slot) => slot !== "scan" && isActive(pathname, slot));
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const panel = dialogRef.current;
+    panel?.querySelector<HTMLElement>("a, button")?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setOpen(false); return; }
+      if (event.key !== "Tab" || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", keydown);
+    return () => {
+      document.removeEventListener("keydown", keydown);
+      triggerRef.current?.focus();
+    };
+  }, [open]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-      <nav
-        aria-label="Navegação principal"
-        className="pointer-events-auto relative w-full max-w-md rounded-full border border-line bg-paper/90 p-1.5 shadow-float backdrop-blur-xl sm:max-w-lg"
-      >
-        <ul className="relative grid grid-cols-6">
-          {/* Indicador único que desliza entre as abas (só % do próprio tamanho, sem medir layout). */}
-          <motion.span
-            aria-hidden
-            className="absolute inset-y-0 left-0 w-1/6 rounded-full bg-forest"
-            initial={false}
-            animate={{ x: `${Math.max(activeIndex, 0) * 100}%`, opacity: activeIndex < 0 ? 0 : 1 }}
-            transition={SPRING}
-          />
-
-          {SLOTS.map((slot, index) => {
-            if (slot === "scan") {
+    <>
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <nav aria-label="Navegação principal" className="pointer-events-auto w-full max-w-lg rounded-full border border-line bg-paper/95 p-1.5 shadow-float backdrop-blur-xl">
+          <ul className="grid grid-cols-5">
+            {items.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(pathname, item);
               return (
-                <li key="scan" className="relative">
-                  <Link
-                    href={SCAN_HREF}
-                    aria-label="Escanear QR code ou código de barras"
-                    className="flex h-14 flex-col items-center justify-center gap-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest/40 sm:h-16"
-                  >
-                    <motion.span className="flex flex-col items-center gap-0.5 text-muted transition-colors duration-200" whileTap={{ scale: 0.88 }} transition={SPRING}>
-                      <QrCode size={20} strokeWidth={2} aria-hidden />
-                      <span className="text-[10.5px] font-bold leading-none sm:text-[11px]">Scanner</span>
-                    </motion.span>
+                <li key={item.href}>
+                  <Link href={item.href} aria-current={active ? "page" : undefined}
+                    className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-full px-1 text-[10px] font-bold transition-colors focus-visible:ring-2 focus-visible:ring-forest/50 sm:min-h-16 sm:text-xs ${active ? "bg-forest text-white" : "text-forest hover:bg-lime-soft"}`}>
+                    <Icon size={20} aria-hidden />
+                    <span className="truncate">{item.label}</span>
                   </Link>
                 </li>
               );
-            }
-            const active = index === activeIndex;
-            const Icon = slot.icon;
-            const badge = slot.badge === "list" && count > 0 ? count : 0;
-            const alerts = slot.badge === "account" ? (askLogin ? 1 : pending) : 0;
-            return (
-              <li key={slot.href} className="relative">
-                <Link
-                  href={slot.href}
-                  aria-current={active ? "page" : undefined}
-                  className="flex h-14 flex-col items-center justify-center gap-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest/40 sm:h-16"
-                >
-                  <motion.span
-                    className={`relative flex flex-col items-center gap-0.5 transition-colors duration-200 ${
-                      active ? "text-white" : "text-muted"
-                    }`}
-                    whileTap={{ scale: 0.88 }}
-                    animate={{ y: active ? -1 : 0 }}
-                    transition={SPRING}
-                  >
-                    <motion.span animate={{ scale: active ? 1.1 : 1 }} transition={SPRING}>
-                      <Icon size={20} strokeWidth={active ? 2.4 : 2} aria-hidden />
-                    </motion.span>
-                    <span className="text-[10.5px] font-bold leading-none sm:text-[11px]">{slot.label}</span>
-                    {badge ? (
-                      <span
-                        aria-label={`${badge} itens na lista`}
-                        className="absolute -right-3 -top-1.5 grid min-w-[1.1rem] place-items-center rounded-full bg-lime px-1 text-[10px] font-extrabold leading-[1.1rem] text-forest-deep"
-                      >
-                        {badge > 99 ? "99+" : badge}
-                      </span>
-                    ) : null}
-                    {alerts ? (
-                      <span
-                        role="status"
-                        aria-label={askLogin ? "Entre na sua conta da Distribuidora" : `${alerts} ${alerts === 1 ? "compra salva aguarda" : "compras salvas aguardam"} a nota fiscal`}
-                        className="animate-dot absolute -right-2.5 -top-1 size-3 rounded-full bg-[#d6334f] shadow-card ring-2 ring-paper"
-                      />
-                    ) : null}
-                  </motion.span>
+            })}
+            <li>
+              <button type="button" ref={triggerRef} onClick={() => setOpen(true)} aria-label="Abrir menu" aria-expanded={open}
+                className="flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-full text-[10px] font-bold text-forest hover:bg-lime-soft focus-visible:ring-2 focus-visible:ring-forest/50 sm:min-h-16 sm:text-xs">
+                <Menu size={20} aria-hidden /><span>Menu</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      {open && (
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Menu da Provisio">
+          <button type="button" aria-label="Fechar menu" onClick={() => setOpen(false)} className="absolute inset-0 bg-forest-deep/45 backdrop-blur-sm" />
+          <aside ref={dialogRef} className="absolute inset-y-0 right-0 flex w-[min(88vw,22rem)] flex-col bg-paper p-6 shadow-float">
+            <div className="flex items-center justify-between border-b border-line pb-5">
+              <h2 className="text-xl font-black text-forest-deep">Grupo Provisio</h2>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Fechar menu"
+                className="grid size-10 place-items-center rounded-full bg-canvas text-forest focus-visible:ring-2 focus-visible:ring-forest">
+                <X size={20} aria-hidden />
+              </button>
+            </div>
+            <nav aria-label="Páginas da plataforma" className="mt-6 grid gap-2">
+              {[
+                ["/", "Início"], ["/produtos", "Catálogo autorizado"],
+                ["/compradores", "Sou comprador"], ["/fornecedores", "Sou fornecedor"],
+                ["/como-funciona", "Como funciona"], ["/contato", "Contato"],
+              ].map(([href, label]) => (
+                <Link key={href} href={href} onClick={() => setOpen(false)}
+                  className="rounded-2xl px-4 py-3 text-sm font-bold text-ink transition-colors hover:bg-lime-soft focus-visible:ring-2 focus-visible:ring-forest">
+                  {label}
                 </Link>
-              </li>
-            );
-          })}
-        </ul>
-
-      </nav>
-    </div>
+              ))}
+            </nav>
+            <p className="mt-auto border-t border-line pt-5 text-xs leading-relaxed text-muted">
+              Plataforma comercial em desenvolvimento. Nenhuma transação real está habilitada.
+            </p>
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

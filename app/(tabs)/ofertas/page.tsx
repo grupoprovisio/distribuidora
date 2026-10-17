@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// As ofertas viraram a aba "Promoções". Links antigos continuam funcionando.
-export default function OfertasPage() {
-  redirect("/promocoes");
+/** Compatibilidade: fluxo legado foi substituido pelo marketplace com origem autorizada. */
+export default function RetiredComparatorPage() {
+  redirect("/produtos");
 }

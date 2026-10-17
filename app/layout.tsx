@@ -1,12 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
-
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -47,12 +41,12 @@ const jsonLd = {
   operatingSystem: "Any",
   inLanguage: "pt-BR",
   keywords: SITE_KEYWORDS.join(", "),
-  offers: { "@type": "Offer", price: 0, priceCurrency: "BRL" },
+  // Nenhuma oferta real publicada: não incluir preço fictício em dados estruturados.
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${manrope.variable} h-full antialiased`}>
+    <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-dvh">
         {children}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />

@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { parseNfceUrl } from "@/lib/nfce";
 import { loadReceipt, supportedUf } from "@/lib/receipt";
 import { isSameOrigin } from "@/lib/route-guard";
@@ -10,6 +11,7 @@ const SELLER = /^atacadaobr\d{1,4}$/;
  * POST (e não GET) para que a URL da nota, que identifica a compra, não caia em logs de acesso.
  */
 export async function POST(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   if (!isSameOrigin(request)) return Response.json({ ok: false, reason: "invalid" }, { status: 403 });
 
   const body = (await request.json().catch(() => null)) as { url?: unknown; seller?: unknown } | null;

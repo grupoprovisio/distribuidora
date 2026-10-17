@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { suggestList, suggestModes } from "@/lib/suggest";
 
 const SELLER = /^atacadaobr\d{1,4}$/;
@@ -8,6 +9,7 @@ const SELLER = /^atacadaobr\d{1,4}$/;
  * Modos e itens saem das coleções e dos mais vendidos da própria loja.
  */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const p = new URL(request.url).searchParams;
   const seller = p.get("seller") ?? "atacadaobr60";
   const mode = p.get("mode");

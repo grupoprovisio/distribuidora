@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { nearestFiliais } from "@/lib/atacadao";
 
 /**
@@ -5,6 +6,7 @@ import { nearestFiliais } from "@/lib/atacadao";
  * Atacadões mais próximos (até 6), do mais perto ao mais longe.
  */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const params = new URL(request.url).searchParams;
   const cep = (params.get("cep") ?? "").replace(/\D/g, "");
   const hasCoords = params.has("lat") && params.has("lng");

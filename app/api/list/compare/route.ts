@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { compareList } from "@/lib/atacadao";
 import type { ListCompareItem } from "@/lib/lookup-types";
 import { isSameOrigin } from "@/lib/route-guard";
@@ -10,6 +11,7 @@ const MAX_ITEMS = 100;
  * Total real da lista em cada filial (simulação de carrinho da Distribuidora, com o degrau de atacado de cada quantidade).
  */
 export async function POST(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   if (!isSameOrigin(request)) return Response.json({ ok: false, reason: "invalid" }, { status: 403 });
 
   const body = (await request.json().catch(() => null)) as { items?: unknown; seller?: unknown; sellers?: unknown } | null;

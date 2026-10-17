@@ -1,0 +1,29 @@
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, Boxes, ClipboardList, FileText, MapPin, ShieldCheck, ShoppingCart } from "lucide-react";
+import { AppHeader } from "@/components/app-header";
+import { SiteFooter } from "@/components/site-footer";
+import { WRAP } from "@/lib/ui";
+import type { MarketplaceOrganizationSummary } from "@/lib/marketplace/my-organizations";
+
+type Portal = "comprador" | "fornecedor";
+const content = {
+  comprador: { title: "Área do comprador", eyebrow: "Operação de compras", intro: "Organize catálogo, cotações e pedidos para sua empresa.", theme: "forest" as const, cards: [[ShoppingCart, "Catálogo autorizado", "Encontre produtos e ofertas homologadas.", "/app/comprador/catalogo"], [FileText, "Cotações", "Compare respostas internas sem misturar fornecedores.", "/app/comprador/cotacoes"], [ClipboardList, "Pedidos", "Acompanhe pedidos e subpedidos por organização.", "/app/comprador/pedidos"]], links: [["/compradores", "Como funciona"]] },
+  fornecedor: { title: "Área do fornecedor", eyebrow: "Operação de oferta", intro: "Acompanhe catálogo, ofertas e homologação da sua organização.", theme: "terra" as const, cards: [[Boxes, "Catálogo", "Mantenha SKUs e embalagens autorizados.", "/app/fornecedor/catalogo"], [MapPin, "Regiões e prazos", "Defina onde sua operação atende.", "/app/fornecedor/operacao"], [ShieldCheck, "Homologação", "Acompanhe documentos e aprovação de ofertas.", "/app/fornecedor/homologacao"]], links: [["/fornecedores", "Ver requisitos"]] },
+} as const;
+
+export function MarketplacePortal({ portal, summary }: { portal: Portal; summary: MarketplaceOrganizationSummary }) {
+  const item = content[portal];
+  return <div className="min-h-dvh bg-canvas"><AppHeader theme={item.theme} title={item.title} backHref="/" /><main className={`${WRAP} animate-page-in py-8 sm:py-12`}><div className="flex items-center justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[0.14em] text-terra">{item.eyebrow}</p><h1 className="mt-2 text-3xl font-black tracking-tight text-forest-deep sm:text-4xl">{item.title}</h1><p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-muted">{item.intro}</p></div><Link href="/" aria-label="Voltar para o início" className="hidden items-center gap-2 rounded-full bg-paper px-4 py-2 text-xs font-extrabold text-forest ring-1 ring-line hover:bg-lime-soft sm:inline-flex"><ArrowLeft size={14} aria-hidden /> Início</Link></div><div className="mt-6 rounded-3xl border border-sand bg-sand/70 p-4 text-sm font-semibold text-[#5c3a06]">Sua identidade e as permissões deste portal são verificadas no servidor. Pedidos e transações ainda não estão habilitados.</div><section className="mt-8" aria-labelledby="org-list-title">
+  <h2 id="org-list-title" className="text-xl font-black text-forest-deep">Minhas empresas autorizadas</h2>
+  <p className="mt-2 text-sm leading-relaxed text-muted">Somente organizações aprovadas às quais sua conta possui vínculo ativo para este perfil.</p>
+  {summary.error ? <div role="alert" className="mt-4 rounded-2xl border border-line bg-paper p-5 text-sm font-semibold text-wine">Não foi possível carregar suas empresas. Confira sua sessão e tente novamente.</div>
+  : summary.organizations.length ? <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+    {summary.organizations.map(org=><li key={org.id} className="rounded-2xl border border-line bg-paper p-5">
+      <strong className="block text-base text-forest-deep">{org.name}</strong>
+      <span className="mt-2 inline-flex rounded-full bg-lime-soft px-3 py-1 text-xs font-black text-forest">Empresa aprovada</span>
+      <p className="mt-3 text-xs font-semibold text-muted">Permissão: {org.role}</p>
+    </li>)}
+  </ul> : <div className="mt-4 rounded-2xl bg-paper p-5 text-sm text-muted">Nenhuma empresa aprovada encontrada para este perfil. Solicite a revisão do seu vínculo à administração da Provisio.</div>}
+</section>
+<section className="mt-8 grid gap-3 md:grid-cols-3" aria-label="Módulos do portal">{item.cards.map(([Icon, title, text, href]) => <Link href={href} key={title} className="group rounded-3xl bg-paper p-5 shadow-card ring-1 ring-line/70 transition hover:-translate-y-1 hover:shadow-float"><span className="grid size-11 place-items-center rounded-2xl bg-lime-soft text-forest"><Icon size={21} aria-hidden /></span><h2 className="mt-5 flex items-center justify-between text-base font-extrabold">{title}<ArrowRight size={16} className="text-muted transition-transform group-hover:translate-x-1" aria-hidden /></h2><p className="mt-2 text-sm font-medium leading-relaxed text-muted">{text}</p><span className="mt-5 inline-flex text-xs font-extrabold text-muted">{portal === "fornecedor" ? "Consulta de dados autorizados" : "Em preparação"}</span></Link>)}</section><section className="mt-8 rounded-[2rem] bg-forest p-6 text-white sm:p-8"><p className="text-xs font-black uppercase tracking-[0.14em] text-lime">Próximo passo</p><h2 className="mt-2 text-2xl font-black tracking-tight">Conecte sua operação com segurança.</h2><p className="mt-3 max-w-2xl text-sm font-medium leading-relaxed text-white/70">Organizações e acessos são consultados com segurança. Módulos de compras e pagamentos continuam indisponíveis até a homologação de suas operações.</p><div className="mt-5 flex flex-wrap gap-2">{item.links.map(([href, label]) => <Link key={href} href={href} className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-extrabold text-forest-deep hover:bg-white focus-visible:ring-4 focus-visible:ring-lime/50">{label}<ArrowRight size={15} aria-hidden /></Link>)}</div></section></main><SiteFooter /></div>;
+}

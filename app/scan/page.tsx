@@ -1,7 +1,6 @@
-import { Scanner } from "@/components/scanner";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Escanear · Distribuidora" };
-
-export default function ScanPage() {
-  return <Scanner />;
+/** Compatibilidade: fluxo legado foi substituido pelo marketplace com origem autorizada. */
+export default function RetiredComparatorPage() {
+  redirect("/produtos");
 }

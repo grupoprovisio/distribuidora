@@ -1,27 +1,16 @@
-import { BadgePercent, Building2, House, ShoppingBasket, UserRound } from "lucide-react";
+import { Boxes, Building2, House, PackageCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type NavItem = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  /** Rotas que mantêm esta aba ativa (além de `href`). "/" só casa exato. */
-  also?: string[];
-  /** "list": itens no pedido. "account": compras salvas esperando a nota fiscal (sininho que balança). */
-  badge?: "list" | "account";
-};
+export type NavItem = { href: string; label: string; icon: LucideIcon; also?: string[]; badge?: "list" | "account" };
 
-// Ordem visual: início, promoções, pedido, empresas, conta e scanner.
+/** Only routes served by the authorized internal marketplace, no legacy VTEX navigation. */
 export const NAV_LEFT: NavItem[] = [
-  { href: "/", label: "Início", icon: House, also: ["/buscar", "/categorias"] },
-  { href: "/promocoes", label: "Promoções", icon: BadgePercent, also: ["/ofertas"] },
+  { href: "/", label: "Início", icon: House },
+  { href: "/produtos", label: "Produtos", icon: Boxes },
 ];
-
 export const NAV_RIGHT: NavItem[] = [
-  { href: "/lista", label: "Lista", icon: ShoppingBasket, badge: "list" },
-  { href: "/empresas", label: "Empresas", icon: Building2 },
-  // Favoritos fica dentro da Conta.
-  { href: "/conta", label: "Conta", icon: UserRound, also: ["/favoritos"], badge: "account" },
+  { href: "/compradores", label: "Comprador", icon: Building2 },
+  { href: "/fornecedores", label: "Fornecedor", icon: PackageCheck },
 ];
-
-export const SCAN_HREF = "/scan";
+/** Scanner legado desativado na navegação até utilizar exclusivamente SKUs homologados. */
+export const SCAN_HREF = "/produtos";

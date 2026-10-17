@@ -1,24 +1,10 @@
-// Dados do site usados nos metadados (SEO), no sitemap, no robots e no manifest.
-
-/** Endereço público do site. Defina `NEXT_PUBLIC_SITE_URL` ao publicar (ex.: https://meu-site.com.br). */
+// Identidade comercial do site — sem dependência de catálogo externo.
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
-
-export const SITE_NAME = "Distribuidora";
-
-export const SITE_TITLE = "Distribuidora · Catálogo e pedidos para o seu negócio";
-
-export const SITE_DESCRIPTION =
-  "Encontre produtos para abastecer seu negócio, aproveite condições por volume e monte seus pedidos com a Distribuidora.";
-
+export const SITE_NAME = "Grupo Provisio";
+export const SITE_TITLE = "Grupo Provisio · Distribuidora e marketplace B2B";
+export const SITE_DESCRIPTION = "Uma plataforma B2B em desenvolvimento para conectar distribuidores próprios, fornecedores homologados e compradores empresariais.";
 export const SITE_KEYWORDS = [
-  "distribuidora",
-  "fornecedor para empresas",
-  "abastecimento para negócios",
-  "compras por volume",
-  "catálogo para empresas",
-  "pedidos de atacado",
-  "Distribuidora",
-  "preço por quantidade",
-  "ofertas para empresas",
-  "entrega regional",
+  "Grupo Provisio", "distribuidora B2B", "marketplace de fornecedores",
+  "abastecimento empresarial", "compras corporativas", "fornecedores homologados",
+  "catálogo autorizado",
 ];
