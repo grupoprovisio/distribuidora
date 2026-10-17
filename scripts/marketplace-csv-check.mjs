@@ -61,3 +61,14 @@ const tooLarge=previewAuthorizedCsv(columns+"\n"+data.repeat(140000));
 assert.equal(tooLarge.accepted,false);
 assert.ok(tooLarge.errors.some(error=>error.field==="csv"));
 console.log("marketplace-csv-check: CSV robusto com cabeçalho, aspas, separadores, linhas e segurança OK");
+
+
+const { exportCsvValidationErrors } = await import("../lib/marketplace/csv-import.ts");
+const exported = exportCsvValidationErrors([
+  {line:12,field:"regions",message:'Região "RJ" duplicada'},
+  {line:15,field:"supplier_sku",message:"SKU duplicado"}
+]);
+assert.ok(exported.startsWith("\uFEFFlinha,campo,erro\n"),"UTF-8 BOM makes Google Planilhas recognize accents");
+assert.ok(exported.includes('"12","regions","Região ""RJ"" duplicada"'));
+assert.ok(exported.includes('"15","supplier_sku","SKU duplicado"'));
+console.log("marketplace-csv-check: relatório de correções CSV exportável OK");
