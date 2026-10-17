@@ -1,6 +1,7 @@
 import "server-only";
 
 import { request } from "@/lib/atacadao";
+import { isHiddenDepartment } from "@/lib/catalog-visibility";
 
 // Departamentos e subcategorias vêm da árvore de categorias do própria Distribuidora (nada fixo no app):
 // se a loja criar, renomear ou remover um departamento, o app acompanha.
@@ -14,6 +15,8 @@ export type Department = {
 };
 
 type TreeNode = { id: number; name: string; url?: string; children?: TreeNode[] };
+
+// A fonte VTEX continua intacta; ocultamos apenas departamentos fora do mix.
 
 const segments = (url?: string) => {
   try {
@@ -31,7 +34,7 @@ export async function getDepartments(): Promise<Department[]> {
     const tree = (await res.json()) as TreeNode[];
     return tree.flatMap((n): Department[] => {
       const slug = segments(n.url)[0];
-      if (!slug) return [];
+      if (!slug || isHiddenDepartment(n.name) || isHiddenDepartment(slug)) return [];
       const subs = (n.children ?? []).flatMap((c) => {
         const s = segments(c.url)[1];
         return s ? [{ id: c.id, slug: s, name: c.name }] : [];

@@ -5,6 +5,7 @@ import { GridMessage, GridSkeleton, useCatalog } from "@/components/product-grid
 import { InfiniteFooter } from "@/components/infinite-footer";
 import { ProductCard } from "@/components/product-card";
 import type { CatalogFail, CatalogResponse, CatalogSort, FacetValue } from "@/lib/catalog-types";
+import { isHiddenDepartment } from "@/lib/catalog-visibility";
 import { useInfinite } from "@/lib/infinite";
 import { usePrefs } from "@/lib/prefs-store";
 import { PRODUCT_GRID } from "@/lib/ui";
@@ -103,7 +104,7 @@ export function SearchResults(filters: Filters) {
 
   // Facetas em consulta própria: não são refeitas a cada página.
   const facets = useCatalog({ term: q, cat: cat.join("/"), brand, first: 1, facets: 1 }).data?.facets;
-  const subs: FacetValue[] = facets?.categories ?? [];
+  const subs: FacetValue[] = (facets?.categories ?? []).filter((item) => !isHiddenDepartment(item.slug) && !isHiddenDepartment(item.label));
   const brands: FacetValue[] = facets?.brands ?? [];
   // No nível mais fundo (3) as subcategorias listadas são irmãs da atual.
   const base = cat.length >= 3 ? cat.slice(0, 2) : cat;
