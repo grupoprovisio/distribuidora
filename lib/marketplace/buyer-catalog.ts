@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { allowedBuyerRegionCodes } from "@/lib/marketplace/brazil-regions";
 
 type Client = Awaited<ReturnType<typeof createClient>>;
 export type PrivateOffer = {
@@ -15,12 +16,12 @@ export type PrivateOffer = {
 export type BuyerCatalogResult = { items: PrivateOffer[]; error: boolean; hasMore: boolean };
 const SOURCES = new Set(["MANUAL_AUTHORIZED","SUPPLIER_CSV_AUTHORIZED","SUPPLIER_API_AUTHORIZED","PLATFORM_STOCK"]);
 const PAGE_SIZE = 24;
-const REGION = /^[A-Z]{2}(?:-[A-Z0-9]{2,8})?$/;
 
 /** Only the authenticated user's RLS-visible rows are used; no service_role key. */
 export async function buyerCatalog(client: Client, region: string, page: number): Promise<BuyerCatalogResult> {
   const empty: BuyerCatalogResult = { items: [], error: false, hasMore: false };
-  if (!REGION.test(region) || !Number.isSafeInteger(page) || page < 1 || page > 1000) return {...empty,error:true};
+  const regionCodes=allowedBuyerRegionCodes(region);
+  if (!regionCodes.length || !Number.isSafeInteger(page) || page < 1 || page > 1000) return {...empty,error:true};
   const now = new Date().toISOString();
   const offset = (page - 1) * PAGE_SIZE;
   const query = await client.from("offers")
@@ -40,7 +41,7 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const [skus,orgs,regions,inventory,capabilities]=await Promise.all([
     client.from("supplier_products").select("id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status").in("id",skuIds).eq("status","approved"),
     client.from("organizations").select("id,legal_name,trade_name,kind,status").in("id",orgIds).eq("status","approved"),
-    client.from("offer_regions").select("offer_id,region_code").in("offer_id",ids).eq("region_code",region),
+    client.from("offer_regions").select("offer_id,region_code").in("offer_id",ids).in("region_code",regionCodes),
     client.from("inventory_positions").select("supplier_product_id,supplier_org_id,available_quantity,reserved_quantity").in("supplier_product_id",skuIds),
     client.from("organization_capabilities").select("organization_id,capability,status").in("organization_id",orgIds).eq("capability","SUPPLIER").eq("status","approved")
   ]);
