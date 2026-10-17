@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Boxes, BriefcaseBusiness, Building2, CheckCircle2, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, Boxes, Building2, CheckCircle2, ShieldCheck, Truck } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { WRAP } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "Grupo Provisio — Distribuidora e marketplace B2B",
-  description: "Conheça a plataforma B2B em desenvolvimento do Grupo Provisio para compradores, representantes e fornecedores homologados.",
+  description: "Conheça a plataforma B2B em desenvolvimento do Grupo Provisio para compradores e fornecedores homologados.",
 };
 
 const profiles = [
   { href: "/compradores", label: "Sou comprador", icon: Building2, title: "Abastecimento para empresas", description: "Conheça o catálogo autorizado, condições por volume e o futuro processo de cotação e compra." },
-  { href: "/vendedores", label: "Sou vendedor", icon: BriefcaseBusiness, title: "Relacionamento comercial", description: "Atue com carteira autorizada, pedidos assistidos e regras transparentes de comissão." },
   { href: "/fornecedores", label: "Sou fornecedor", icon: Boxes, title: "Ofertas de parceiros homologados", description: "Apresente sua empresa para uma futura homologação e publicação de produtos próprios." },
 ] as const;
 
@@ -33,12 +32,12 @@ export default function HomePage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-lime">Distribuidora própria + marketplace B2B</p>
             <h1 id="home-title" className="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-6xl">Um novo caminho para abastecer seu negócio.</h1>
             <p className="mt-5 max-w-2xl text-sm font-medium leading-relaxed text-white/80 sm:text-lg">
-              Estamos preparando uma plataforma para conectar compradores, representantes e fornecedores autorizados,
+              Estamos preparando uma plataforma para conectar compradores e fornecedores autorizados,
               com ofertas da própria Provisio e de parceiros homologados.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/compradores" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-lime px-5 py-3 text-sm font-extrabold text-forest-deep focus-visible:ring-4 focus-visible:ring-white/40">
-                Conhecer a proposta <ArrowRight size={16} aria-hidden />
+                Sou comprador <ArrowRight size={16} aria-hidden />
               </Link>
               <Link href="/como-funciona" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/15 px-5 py-3 text-sm font-extrabold text-white focus-visible:ring-4 focus-visible:ring-white/40">
                 Como funciona
@@ -50,7 +49,7 @@ export default function HomePage() {
         <section className="mt-12" aria-labelledby="profiles-title">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Para cada perfil</p>
           <h2 id="profiles-title" className="mt-2 text-2xl font-black tracking-tight text-forest-deep sm:text-3xl">Escolha como participar.</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
             {profiles.map(({ href, label, icon: Icon, title, description }) => (
               <article key={href} className="flex flex-col rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70">
                 <div className="grid size-12 place-items-center rounded-2xl bg-lime-soft text-forest"><Icon size={24} aria-hidden /></div>

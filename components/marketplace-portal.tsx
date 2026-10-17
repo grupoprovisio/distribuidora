@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BarChart3, Boxes, ClipboardList, FileText, Handshake, MapPin, ShieldCheck, ShoppingCart, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Boxes, ClipboardList, FileText, MapPin, ShieldCheck, ShoppingCart } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
 
-type Portal = "comprador" | "vendedor" | "fornecedor";
+type Portal = "comprador" | "fornecedor";
 const content = {
   comprador: { title: "Área do comprador", eyebrow: "Operação de compras", intro: "Organize catálogo, cotações e pedidos para sua empresa.", theme: "forest" as const, cards: [[ShoppingCart, "Catálogo autorizado", "Encontre produtos e ofertas homologadas.", "/app/comprador/catalogo"], [FileText, "Cotações", "Compare respostas internas sem misturar fornecedores.", "/app/comprador/cotacoes"], [ClipboardList, "Pedidos", "Acompanhe pedidos e subpedidos por organização.", "/app/comprador/pedidos"]], links: [["/compradores", "Como funciona"]] },
-  vendedor: { title: "Área do vendedor", eyebrow: "Operação comercial", intro: "Acompanhe carteira, leads e pedidos assistidos com autorização.", theme: "plum" as const, cards: [[UsersRound, "Minha carteira", "Veja somente clientes atribuídos.", "/app/vendedor/carteira"], [Handshake, "Leads e cotações", "Organize oportunidades e próximos passos.", "/app/vendedor/leads"], [BarChart3, "Comissões", "Consulte lançamentos previstos e devidos.", "/app/vendedor/comissoes"]], links: [["/vendedores", "Conhecer atuação"]] },
   fornecedor: { title: "Área do fornecedor", eyebrow: "Operação de oferta", intro: "Gerencie catálogo, ofertas e pedidos da sua organização.", theme: "terra" as const, cards: [[Boxes, "Catálogo", "Mantenha SKUs e embalagens autorizados.", "/app/fornecedor/catalogo"], [MapPin, "Regiões e prazos", "Defina onde sua operação atende.", "/app/fornecedor/operacao"], [ShieldCheck, "Homologação", "Acompanhe documentos e aprovação de ofertas.", "/app/fornecedor/homologacao"]], links: [["/fornecedores", "Ver requisitos"]] },
 } as const;
 

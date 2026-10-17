@@ -4,7 +4,6 @@ import { WRAP } from "@/lib/ui";
 
 const LINKS = [
   { href: "/compradores", label: "Sou comprador" },
-  { href: "/vendedores", label: "Sou vendedor" },
   { href: "/fornecedores", label: "Sou fornecedor" },
   { href: "/produtos", label: "Catálogo autorizado" },
   { href: "/como-funciona", label: "Como funciona" },

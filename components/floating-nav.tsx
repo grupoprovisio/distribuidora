@@ -27,7 +27,7 @@ export function FloatingNav() {
     <>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <nav aria-label="Navegação principal" className="pointer-events-auto w-full max-w-lg rounded-full border border-line bg-paper/95 p-1.5 shadow-float backdrop-blur-xl">
-          <ul className="grid grid-cols-6">
+          <ul className="grid grid-cols-5">
             {items.map((item) => {
               const Icon = item.icon;
               const active = isActive(pathname, item);
@@ -64,7 +64,7 @@ export function FloatingNav() {
             <nav aria-label="Páginas da plataforma" className="mt-6 grid gap-2">
               {[
                 ["/", "Início"], ["/produtos", "Catálogo autorizado"],
-                ["/compradores", "Sou comprador"], ["/vendedores", "Sou vendedor"], ["/fornecedores", "Sou fornecedor"],
+                ["/compradores", "Sou comprador"], ["/fornecedores", "Sou fornecedor"],
                 ["/como-funciona", "Como funciona"], ["/contato", "Contato"],
               ].map(([href, label]) => (
                 <Link key={href} href={href} onClick={() => setOpen(false)}

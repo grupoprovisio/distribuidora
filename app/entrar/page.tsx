@@ -22,7 +22,7 @@ export default function EntrarPage() {
           <p className="mt-5 text-xs font-black uppercase tracking-[0.16em] text-terra">Acesso empresarial</p>
           <h1 className="mt-2 text-3xl font-black text-forest-deep">Entre na sua conta</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Acesso para compradores, fornecedores e equipe comercial homologados.
+            Acesso para compradores e fornecedores homologados.
             A criação e aprovação de usuários são controladas pela administração.
           </p>
           {enabled ? <MarketplaceLoginForm /> :

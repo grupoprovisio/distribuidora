@@ -1,4 +1,4 @@
-import { Boxes, BriefcaseBusiness, Building2, House, PackageCheck } from "lucide-react";
+import { Boxes, Building2, House, PackageCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; also?: string[]; badge?: "list" | "account" };
@@ -10,7 +10,6 @@ export const NAV_LEFT: NavItem[] = [
 ];
 export const NAV_RIGHT: NavItem[] = [
   { href: "/compradores", label: "Comprador", icon: Building2 },
-  { href: "/vendedores", label: "Vendedor", icon: BriefcaseBusiness },
   { href: "/fornecedores", label: "Fornecedor", icon: PackageCheck },
 ];
 /** Scanner legado desativado na navegação até utilizar exclusivamente SKUs homologados. */
