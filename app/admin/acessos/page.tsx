@@ -17,7 +17,7 @@ const states={users:["active","pending","blocked"],orgs:["approved","pending","s
   members:["active","invited","revoked"],caps:["approved","pending","revoked"]} as const;
 
 export default async function AccessAdminPage(){
-  await requireMarketplacePortal("admin");
+  const access=await requireMarketplacePortal("admin");
   const client=await createClient();
   const [profiles,orgs,members,caps]=await Promise.all([
     client.from("profiles").select("id,display_name,status").order("created_at",{ascending:false}).limit(100),
@@ -70,13 +70,13 @@ export default async function AccessAdminPage(){
             <div><strong className="text-sm text-forest">{org.legal_name}</strong>
               <p className="mt-1 text-xs text-muted">{org.kind} · {org.is_platform_owned?"Plataforma · ":""}{org.id}</p>
             </div>
-            <form action={setOrganizationStatus} className={formClass}>
+            {org.is_platform_owned ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Organização central protegida</span> : <form action={setOrganizationStatus} className={formClass}>
               <input type="hidden" name="organization_id" value={org.id}/>
               <select name="status" defaultValue={org.status} className={inputClass}>
                 {states.orgs.map(v=><option key={v} value={v}>{v}</option>)}
               </select>
               <button className={buttonClass}>Salvar</button>
-            </form>
+            </form>}
           </div>
         </div>)}
       </div>
@@ -88,12 +88,12 @@ export default async function AccessAdminPage(){
       <div className="mt-5 space-y-3">{users.map(user=><div key={user.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line p-4">
         <div className="min-w-0"><strong className="text-sm text-forest">{user.display_name}</strong>
           <p className="mt-1 break-all text-xs text-muted">{user.id}</p></div>
-        <form action={setProfileStatus} className={formClass}>
+        {user.id===access.userId ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Sua conta protegida</span> : <form action={setProfileStatus} className={formClass}>
           <input type="hidden" name="user_id" value={user.id}/>
           <select name="status" defaultValue={user.status} className={inputClass}>
             {states.users.map(v=><option key={v} value={v}>{v}</option>)}
           </select><button className={buttonClass}>Salvar</button>
-        </form>
+        </form>}
       </div>)}</div>
     </section>
 
@@ -115,13 +115,13 @@ export default async function AccessAdminPage(){
         <div><strong className="text-sm text-forest">{cap.capability}</strong>
           <p className="mt-1 break-all text-xs text-muted">{cap.organization_id}</p>
         </div>
-        <form action={setCapabilityStatus} className={formClass}>
+        {cap.capability==="PLATFORM_OPERATOR" ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Capacidade reservada</span> : <form action={setCapabilityStatus} className={formClass}>
           <input type="hidden" name="organization_id" value={cap.organization_id}/>
           <input type="hidden" name="capability" value={cap.capability}/>
           <select name="status" defaultValue={cap.status} className={inputClass}>
             {states.caps.map(v=><option key={v} value={v}>{v}</option>)}
           </select><button className={buttonClass}>Salvar</button>
-        </form>
+        </form>}
       </div>)}</div>
     </section>
 
@@ -150,12 +150,12 @@ export default async function AccessAdminPage(){
         <div><strong className="text-sm text-forest">{m.role}</strong>
           <p className="mt-1 break-all text-xs text-muted">Usuário {m.user_id} · Empresa {m.organization_id}</p>
         </div>
-        <form action={setMembershipStatus} className={formClass}>
+        {m.user_id===access.userId && m.role==="PLATFORM_ADMIN" ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Vínculo administrador protegido</span> : <form action={setMembershipStatus} className={formClass}>
           <input type="hidden" name="membership_id" value={m.id}/>
           <select name="status" defaultValue={m.status} className={inputClass}>
             {states.members.map(v=><option key={v} value={v}>{v}</option>)}
           </select><button className={buttonClass}>Salvar</button>
-        </form>
+        </form>}
       </div>)}</div>
     </section>
   </main>;
