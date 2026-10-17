@@ -191,3 +191,14 @@ test("marketplace login is invite-first and every private panel uses server auth
     assert.match(source,/force-dynamic/,pathname);
   }
 });
+
+
+test("VTEX legacy login becomes unavailable as soon as Supabase Auth is enabled", () => {
+  const accountPage=readFileSync(resolve(root,"app/(tabs)/conta/page.tsx"),"utf8");
+  assert.match(accountPage,/if \(supabaseAuthEnabled\(\)\) redirect\("\/app"\)/);
+  for(const route of ["app/api/auth/send/route.ts","app/api/auth/verify/route.ts"]) {
+    const source=readFileSync(resolve(root,route),"utf8");
+    assert.match(source,/if \(supabaseAuthEnabled\(\)\)/,route);
+    assert.match(source,/status: 410/,route);
+  }
+});
