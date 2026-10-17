@@ -195,6 +195,10 @@ test("marketplace login is invite-first and every private panel uses server auth
 
 test("VTEX legacy login becomes unavailable as soon as Supabase Auth is enabled", () => {
   const accountPage=readFileSync(resolve(root,"app/(tabs)/conta/page.tsx"),"utf8");
+  const adminLogin=readFileSync(resolve(root,"app/admin/login/page.tsx"),"utf8");
+  assert.match(adminLogin,/redirect\("\/entrar"\)/);
+  assert.doesNotMatch(adminLogin,/type="password"/);
+
   assert.match(accountPage,/if \(supabaseAuthEnabled\(\)\) redirect\("\/app"\)/);
   for(const route of ["app/api/auth/send/route.ts","app/api/auth/verify/route.ts"]) {
     const source=readFileSync(resolve(root,route),"utf8");
