@@ -6,6 +6,7 @@ export type CsvImportPreview = { rows: CsvOfferRow[]; errors: CsvImportError[]; 
 
 const authorized = new Set<OfferSourceType>(["SUPPLIER_CSV_AUTHORIZED", "MANUAL_AUTHORIZED", "PLATFORM_STOCK"]);
 const units = new Set(["un", "kg", "l"]);
+const regionCode = /^[A-Z]{2}(?:-[A-Z0-9]{2,8})?$/;
 
 function splitLine(line: string) {
   const values: string[] = [];
@@ -37,13 +38,14 @@ export function previewAuthorizedCsv(csv: string, sourceType: OfferSourceType = 
     const value = (field: string) => values[index[field]] ?? "";
     const row = { line: lineNumber, supplierSku: value("supplier_sku"), productName: value("product_name"), baseUnit: value("base_unit") as CsvOfferRow["baseUnit"], packQuantity: Number(value("pack_quantity")), packUnit: value("pack_unit"), basePriceMinor: Number(value("base_price_minor")), minQuantity: Number(value("min_quantity")), regions: value("regions").split("|").map((region) => region.trim()).filter(Boolean), sourceType };
     for (const [field, valid, message] of [
-      ["supplier_sku", row.supplierSku.length > 0, "SKU obrigatório."],
-      ["product_name", row.productName.length > 0, "Nome obrigatório."],
+      ["supplier_sku", row.supplierSku.length > 0 && row.supplierSku.length <= 100, "SKU obrigatório (até 100 caracteres)."],
+      ["product_name", row.productName.length > 0 && row.productName.length <= 200, "Nome obrigatório (até 200 caracteres)."],
       ["base_unit", units.has(row.baseUnit), "Unidade deve ser un, kg ou l."],
-      ["pack_quantity", Number.isFinite(row.packQuantity) && row.packQuantity > 0, "Quantidade da embalagem deve ser positiva."],
-      ["base_price_minor", Number.isInteger(row.basePriceMinor) && row.basePriceMinor >= 0, "Preço deve ser inteiro em centavos."],
-      ["min_quantity", Number.isInteger(row.minQuantity) && row.minQuantity > 0, "Quantidade mínima deve ser positiva."],
-      ["regions", row.regions.length > 0, "Informe ao menos uma região."],
+      ["pack_quantity", Number.isFinite(row.packQuantity) && row.packQuantity > 0 && row.packQuantity <= 1000000, "Quantidade da embalagem inválida."],
+      ["pack_unit", units.has(row.packUnit), "Unidade da embalagem deve ser un, kg ou l."],
+      ["base_price_minor", Number.isSafeInteger(row.basePriceMinor) && row.basePriceMinor >= 0, "Preço deve ser um inteiro seguro em centavos."],
+      ["min_quantity", Number.isSafeInteger(row.minQuantity) && row.minQuantity > 0, "Quantidade mínima deve ser um inteiro positivo."],
+      ["regions", row.regions.length > 0 && row.regions.every((region) => regionCode.test(region)), "Região inválida (ex.: SP ou BR-SP)."],
     ] as [string, boolean, string][]) if (!valid) errors.push({ line: lineNumber, field, message });
     if (row.supplierSku && rows.some((existing) => existing.supplierSku === row.supplierSku)) errors.push({ line: lineNumber, field: "supplier_sku", message: "SKU duplicado na prévia." });
     if (!errors.some((error) => error.line === lineNumber)) rows.push(row);
