@@ -107,5 +107,5 @@ test("verified PLATFORM_ADMIN needs active org and capability",async()=>{
   context.mfaError=true;
   await assert.rejects(requireMarketplacePortal("admin"),/REDIRECT:\/seguranca\/mfa/);
   context.mfaError=false;context.capStatus="revoked";
-  await assert.rejects(requireMarketplacePortal("admin"),/REDIRECT:\/acesso-restrito/);
+  await assert.rejects(requireMarketplacePortal("admin"),/REDIRECT:\/acesso-pendente/);
 });
