@@ -387,11 +387,7 @@ textarea {
 }
 
 
-/* Regras visuais preservadas das landings Provisio anteriores. */
-.animate-text-rise {
-  animation: text-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
+/* Preservação das animações e dos detalhes das páginas premium Provisio. */
 @keyframes home-brand-marquee {
   from {
     transform: translateX(-50%);
@@ -599,6 +595,8 @@ textarea {
   .audience-page aside:hover,
   .audience-page main a:hover {
     transform: none;
+  }
+}
 .profile-link::before {
   content: "";
   position: absolute;
