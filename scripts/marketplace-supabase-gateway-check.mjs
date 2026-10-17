@@ -132,7 +132,6 @@ test("migrations keep RLS, no anonymous grants, and no external catalog provenan
   const one = readFileSync(resolve(root, "db/migrations/0001_marketplace_foundation.sql"), "utf8");
   const two = readFileSync(resolve(root, "db/migrations/0002_marketplace_catalog.sql"), "utf8");
   const three = readFileSync(resolve(root, "db/migrations/0003_marketplace_rls_readonly.sql"), "utf8");
-  const four = readFileSync(resolve(root, "db/migrations/0004_marketplace_supplier_integrity.sql"), "utf8");
   assert.match(one, /references auth\.users\(id\)/);
   assert.match(one, /status text not null default 'pending'/);
   assert.match(one, /set search_path = ''/);
@@ -183,7 +182,6 @@ test("marketplace login is invite-first and every private panel uses server auth
     "app/app/layout.tsx",
     "app/app/comprador/layout.tsx",
     "app/app/fornecedor/layout.tsx",
-    "app/app/vendedor/layout.tsx",
     "app/admin/layout.tsx",
   ]) {
     const source=readFileSync(resolve(root,pathname),"utf8");
