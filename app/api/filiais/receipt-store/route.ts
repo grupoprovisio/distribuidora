@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { receiptStore } from "@/lib/receipt";
 
 /**
@@ -5,6 +6,7 @@ import { receiptStore } from "@/lib/receipt";
  * Filial onde a compra da nota foi feita (primeiro item) e as próximas dela.
  */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const address = (new URL(request.url).searchParams.get("address") ?? "").trim();
   if (address.length < 8 || address.length > 200) return Response.json({ error: "Endereço inválido." }, { status: 400 });
 

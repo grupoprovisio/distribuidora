@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { supabaseAuthEnabled } from "@/lib/supabase/config";
 import { cookies } from "next/headers";
 import { ACCOUNT_COOKIE } from "@/lib/account";
@@ -19,6 +20,7 @@ function readPending(raw?: string): Pending | null {
 
 /** Passo 2: troca e-mail + código pela sessão da Distribuidora, guardada em cookie httpOnly. */
 export async function POST(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   // Durante a homologacao Supabase, nunca emitir tokens do sistema VTEX legado.
   if (supabaseAuthEnabled()) {
     return Response.json({ error: "Utilize o acesso empresarial da Provisio." }, { status: 410 });

@@ -1,9 +1,11 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { skuPrices } from "@/lib/atacadao";
 
 const SELLER = /^atacadaobr\d{1,4}$/;
 
 /** GET /api/catalog/prices?seller=atacadaobr60&ids=13743,9925 -> preço a 1 un por SKU (null = indisponível na filial). */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const p = new URL(request.url).searchParams;
   const seller = p.get("seller") ?? "atacadaobr60";
   const ids = [...new Set((p.get("ids") ?? "").split(",").filter(Boolean))];

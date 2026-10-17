@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { lookupProduct } from "@/lib/atacadao";
 
 const SELLER = /^atacadaobr\d{1,4}$/;
@@ -8,6 +9,7 @@ const SELLER = /^atacadaobr\d{1,4}$/;
  * (+ mesmo produto nas outras filiais, se `sellers` vier preenchido).
  */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const params = new URL(request.url).searchParams;
 
   const ean = (params.get("ean") ?? "").trim();

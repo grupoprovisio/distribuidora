@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { catalogFacets, catalogSearch, type CatalogQuery } from "@/lib/atacadao";
 import { CATALOG_SORTS, type CatalogResponse } from "@/lib/catalog-types";
 
@@ -9,6 +10,7 @@ const SLUG = /^[a-z0-9-]{1,80}$/;
  * Catálogo real da filial, com preços e degraus de atacado. As promoções ficam em /api/promos.
  */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const p = new URL(request.url).searchParams;
   const invalid = () => Response.json({ ok: false, reason: "invalid" }, { status: 400 });
 

@@ -1,3 +1,4 @@
+import { legacyComparatorBlockedResponse, legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { promoList, promoOverview, type PromoSort } from "@/lib/promos";
 
 const SELLER = /^atacadaobr\d{1,4}$/;
@@ -10,6 +11,7 @@ const SORTS: PromoSort[] = ["pct", "save", "price", "near"];
  * Promoções reais da filial (coleções, departamentos e quantidades vêm das APIs da Distribuidora).
  */
 export async function GET(request: Request) {
+  if (legacyComparatorIsDisabled()) return legacyComparatorBlockedResponse();
   const p = new URL(request.url).searchParams;
   const invalid = () => Response.json({ ok: false, reason: "invalid" }, { status: 400 });
 
