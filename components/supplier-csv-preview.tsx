@@ -2,7 +2,7 @@
 
 import { useState, type ChangeEvent } from "react";
 import { ArrowDownToLine, FileCheck2, FileWarning, UploadCloud } from "lucide-react";
-import { previewAuthorizedCsv, type CsvImportPreview } from "@/lib/marketplace/csv-import";
+import { exportCsvValidationErrors, previewAuthorizedCsv, type CsvImportPreview } from "@/lib/marketplace/csv-import";
 
 const COLUMNS=["supplier_sku","product_name","base_unit","pack_quantity","pack_unit","base_price_minor","min_quantity","regions"] as const;
 const EXAMPLE="SKU-001,Farinha de trigo,kg,1,kg,1250,5,SP|RJ";
@@ -66,6 +66,11 @@ export function SupplierCsvPreview() {
       </div>
       {result.errors.length>0&&<section aria-labelledby="csv-errors" className="mt-6 rounded-2xl border border-sand bg-sand/30 p-5">
         <h4 id="csv-errors" className="text-base font-black text-forest-deep">Correções necessárias</h4>
+        <a
+          download="correcoes_catalogo_provisio.csv"
+          href={"data:text/csv;charset=utf-8,"+encodeURIComponent(exportCsvValidationErrors(result.errors))}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-extrabold text-white hover:bg-forest-deep focus-visible:ring-2 focus-visible:ring-forest"
+        ><ArrowDownToLine size={16} aria-hidden/> Baixar relatório de erros</a>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-ink">
           {result.errors.slice(0,30).map((item,index)=><li key={index}>Linha {item.line}, coluna <strong>{item.field}</strong>: {item.message}</li>)}
         </ul>

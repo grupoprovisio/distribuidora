@@ -161,3 +161,12 @@ export function previewAuthorizedCsv(csv: string, sourceType: OfferSourceType = 
   }
   return {rows,errors,accepted:errors.length===0 && rows.length>0,sourceType};
 }
+
+
+/** Exporta erros em CSV UTF-8 para correção local; nenhum dado é enviado ao servidor. */
+export function exportCsvValidationErrors(errors: readonly CsvImportError[]): string {
+  const cell=(v:string|number)=>'"'+String(v).replace(/"/g,'""')+'"';
+  return "\uFEFFlinha,campo,erro\n"+errors.map(error=>
+    [cell(error.line),cell(error.field),cell(error.message)].join(",")
+  ).join("\n")+"\n";
+}
