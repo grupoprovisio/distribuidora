@@ -21,8 +21,9 @@ export function MarketplaceMfaForm() {
       try {
         const {data,error}=await createClient().auth.mfa.listFactors();
         if(error) throw error;
-        if(mounted && data.totp?.length) {
-          setFactor({factorId:data.totp[0].id});
+        const verified = data.totp?.find(item => item.status === "verified");
+        if(mounted && verified) {
+          setFactor({factorId:verified.id});
           setEnrolled(true);
         }
       }catch{
@@ -36,7 +37,18 @@ export function MarketplaceMfaForm() {
     if(busy)return;
     setBusy(true);setError("");
     try{
-      const result=await createClient().auth.mfa.enroll({factorType:"totp",friendlyName:"Provisio Administração"});
+      const supabase = createClient();
+      // Inscricoes incompletas podem ficar no Auth apos atualizar a pagina.
+      // Nunca removemos fatores ja verificados; eles exigem AAL2 para serem desativados.
+      const existing = await supabase.auth.mfa.listFactors();
+      if (existing.error) throw existing.error;
+      for (const pending of existing.data.all ?? []) {
+        if (pending.status === "unverified" && pending.factor_type === "totp") {
+          const cleanup = await supabase.auth.mfa.unenroll({factorId:pending.id});
+          if (cleanup.error) throw cleanup.error;
+        }
+      }
+      const result=await supabase.auth.mfa.enroll({factorType:"totp",friendlyName:"Provisio Administração"});
       if(result.error)throw result.error;
       setFactor({factorId:result.data.id,qr:result.data.totp.qr_code,secret:result.data.totp.secret});
       setEnrolled(false);
