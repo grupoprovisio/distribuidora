@@ -22,9 +22,14 @@ create table auth.sessions (
   not_after timestamptz
 );
 create function auth.jwt() returns jsonb language sql stable
-as $$
- select coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb,'{}'::jsonb);
-$$;
+as $
+ select coalesce(
+   nullif(current_setting('request.jwt.claims',true),'')::jsonb,
+   (select jsonb_build_object('session_id',s.id::text,'aal',s.aal)
+      from auth.sessions s where s.user_id = (select auth.uid()) limit 1),
+   '{}'::jsonb
+ );
+$;
 
 -- Instala um runner de assertions SEM SECURITY DEFINER: RLS continua efetivo.
 create schema test;
