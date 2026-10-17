@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BadgeCheck, FilterX, Package, Search, ShieldAlert } from "lucide-react";
+import { FilterX, Package, Search, ShieldAlert } from "lucide-react";
 
 export type SupplierCatalogRow = {
   id: string;
