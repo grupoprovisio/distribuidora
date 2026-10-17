@@ -244,6 +244,19 @@ select test.expect_rejected(
 select test.expect_rejected(
  'update public.organization_capabilities set status=''revoked'' where organization_id=''10000000-0000-4000-8000-000000000004'' and capability=''PLATFORM_OPERATOR''');
 
+-- A empresa operadora e o proprio superadmin nunca podem ser
+-- desativados via browser, mesmo com segundo fator confirmado.
+select test.expect_rejected(
+ 'update public.profiles set status=''blocked'' where id=''00000000-0000-4000-8000-000000000006''');
+select test.expect_rejected(
+ 'update public.organizations set status=''suspended'' where id=''10000000-0000-4000-8000-000000000004''');
+select test.expect_rejected(
+ 'update public.organization_members set status=''revoked'' where organization_id=''10000000-0000-4000-8000-000000000004'' and user_id=''00000000-0000-4000-8000-000000000006''');
+select test.assert_count(
+  (select count(*) from public.profiles where id='00000000-0000-4000-8000-000000000006' and status='active'),1,
+  'own admin profile remains active');
+
+
 
 reset role;
 update auth.sessions set not_after=now()-interval '1 second'
