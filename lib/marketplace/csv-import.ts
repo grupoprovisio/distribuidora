@@ -141,9 +141,9 @@ export function previewAuthorizedCsv(csv: string, sourceType: OfferSourceType = 
     if (name.length === 0 || name.length > 200) fail(record.line,"product_name","Nome obrigatório (até 200 caracteres).");
     if (!units.has(base)) fail(record.line,"base_unit","Unidade deve ser un, kg ou l.");
     if (!units.has(packUnit)) fail(record.line,"pack_unit","Unidade de embalagem deve ser un, kg ou l.");
-    if (!Number.isFinite(pack) || pack <= 0 || pack>1000000) fail(record.line,"pack_quantity","Quantidade da embalagem inválida.");
-    if (!Number.isSafeInteger(minor) || minor<0) fail(record.line,"base_price_minor","Preço deve ser inteiro seguro em centavos.");
-    if (!Number.isSafeInteger(minimum) || minimum<=0) fail(record.line,"min_quantity","Quantidade mínima deve ser um inteiro positivo.");
+    if (!value("pack_quantity") || !Number.isFinite(pack) || pack <= 0 || pack>1000000) fail(record.line,"pack_quantity","Quantidade da embalagem inválida.");
+    if (!value("base_price_minor") || !Number.isSafeInteger(minor) || minor<0) fail(record.line,"base_price_minor","Preço deve ser inteiro seguro em centavos.");
+    if (!value("min_quantity") || !Number.isSafeInteger(minimum) || minimum<=0) fail(record.line,"min_quantity","Quantidade mínima deve ser um inteiro positivo.");
     if (!normalizedRegions.length || normalizedRegions.some(code=>!regionCode.test(code))
       || new Set(normalizedRegions).size!==normalizedRegions.length) {
       fail(record.line,"regions","Regiões inválidas ou duplicadas (ex.: SP|RJ).");
