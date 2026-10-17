@@ -105,6 +105,7 @@ export default async function MarketplaceAdminPage() {
           <div className="mt-5 grid gap-3">
             {[
               {href:"/admin/acessos",title:"Empresas e permissões",detail:"Aprovar perfis, organizações, vínculos e capacidades."},
+              {href:"/admin/marketplace/homologacoes",title:"Fila de homologações",detail:"Veja pendências reais de empresas, usuários e acessos antes de tomar uma decisão."},
               {href:"/app/fornecedor",title:"Operação do fornecedor",detail:"Acesso condicionado à capacidade de fornecedor no Supabase."},
               {href:"/produtos",title:"Catálogo autorizado",detail:"Visualize a vitrine institucional, sem ofertas externas."},
             ].map(({href,title,detail})=><Link href={href} key={href} className="flex items-center justify-between gap-4 rounded-2xl border border-line p-4 hover:bg-lime-soft">
