@@ -1,0 +1,115 @@
+name: Marketplace Supabase foundation checks
+
+on:
+  push:
+    branches:
+      - feat/provisio-supabase-fundacao-20261015
+  pull_request:
+    paths:
+      - "db/migrations/**"
+      - "app/**"
+      - "components/**"
+      - "lib/supabase/**"
+      - "proxy.ts"
+      - "lib/marketplace/**"
+      - "app/api/marketplace/supabase/**"
+      - "scripts/marketplace-supabase-gateway-check.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/marketplace-supabase.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MARKETPLACE_SUPABASE_API_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Generate Next.js route types
+        run: npx next typegen
+      - name: Production dependency security audit
+        run: npm audit --omit=dev --audit-level=high
+      - name: Static type checking
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Marketplace domain tests
+        run: npm run test:marketplace
+      - name: Supabase foundation tests (without credentials)
+        run: npm run test:supabase-foundation
+      - name: Auth role and MFA server-side authorization tests
+        run: node --test scripts/marketplace-auth-authorization-check.mjs
+      - name: Production Next.js build with features off
+        env:
+          MARKETPLACE_AUTH_ENABLED: "false"
+        run: npm run build
+      - name: Smoke tests for locked-down entry and portals
+        env:
+          MARKETPLACE_AUTH_ENABLED: "false"
+        run: |
+          set -euo pipefail
+          npm run start -- -p 3100 > /tmp/provisio-next.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://localhost:3100/entrar; then break; fi
+            sleep 1
+          done
+          curl -fsS http://localhost:3100/entrar | grep -q 'O acesso empresarial está em preparação'
+          curl -sSI http://localhost:3100/app | grep -i 'location: /entrar'
+          curl -sSI http://localhost:3100/admin/marketplace | grep -i 'location: /entrar'
+
+
+  database-rls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Execute real PostgreSQL RLS checks
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGDATABASE: postgres
+          PGUSER: postgres
+          PGPASSWORD: ci-only-password
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/bootstrap.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0001_marketplace_foundation.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0002_marketplace_catalog.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0003_marketplace_rls_readonly.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0004_marketplace_supplier_integrity.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0005_marketplace_fk_indexes.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0006_marketplace_access_governance.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0007_marketplace_admin_mfa_access.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0008_marketplace_platform_bootstrap_guard.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0009_private_access_audit_deny.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0010_marketplace_live_session_enforcement.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0011_marketplace_breakglass_continuity.sql
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-rls.sql
