@@ -1,4 +1,4 @@
-# PLANO DE EXECUÇÃO PARA CODEX — DISTRIBUIDORA + MARKETPLACE B2B HÍBRIDO
+> **ATUALIZAÇÃO DE ESCOPO — 17/10/2026**: O produto passa a ter SOMENTE os perfis públicos **Sou comprador** e **Sou fornecedor**, incluindo os dois painéis. Todo conteúdo deste documento relativo a **Sou vendedor, representantes comerciais, carteiras e comissões de vendedores está revogado** e NÃO DEVE SER IMPLEMENTADO. O modelo híbrido de distribuidora própria + fornecedores terceiros permanece. Leia antes `docs/marketplace/11-escopo-dois-perfis-20261017.md` para as regras vigentes. Não eliminar migrations ou dados legados de forma destrutiva.\n\n---\n\n# PLANO DE EXECUÇÃO PARA CODEX — DISTRIBUIDORA + MARKETPLACE B2B HÍBRIDO
 
 **Versão:** 1.0 — 08/10/2026  
 **Repositório:** https://github.com/grupoprovisio/distribuidora.git  
