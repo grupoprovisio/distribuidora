@@ -43,7 +43,8 @@ export async function getMarketplaceAccess() {
     .map(cap=>`${cap.organization_id}:${cap.capability}`));
   const allowed = (Object.keys(PORTAL_ACCESS) as Portal[]).filter(portal => {
     const { capability, roles } = PORTAL_ACCESS[portal];
-    return members.some(member=>approvedOrgs.has(member.organization_id)
+    return members.some(member=>member.status === "active"
+      && approvedOrgs.has(member.organization_id)
       && activeCaps.has(`${member.organization_id}:${capability}`)
       && roles.includes(member.role as Role));
   });
@@ -53,7 +54,7 @@ export async function getMarketplaceAccess() {
 export async function requireMarketplaceLogin() {
   if (!supabaseAuthEnabled()) redirect("/entrar");
   const access = await getMarketplaceAccess();
-  if (!access) {
+  if (!access || access.allowed.length === 0) {
     // Ausencia de sessao e falta de homologacao sao estados diferentes.
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
