@@ -385,3 +385,240 @@ textarea {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+
+/* Preservação das animações e dos detalhes das páginas premium Provisio. */
+@keyframes home-brand-marquee {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes home-highlight-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.home-brand-window {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+}
+
+.home-brand-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 0.75rem;
+  animation: home-brand-marquee 36s linear infinite;
+}
+
+.home-brand-window:hover .home-brand-track {
+  animation-play-state: paused;
+}
+
+.home-brand-name {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  border-radius: 9999px;
+  background: var(--color-canvas);
+  padding: 0.5rem 1rem;
+  color: var(--color-forest-deep);
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.home-highlight-card {
+  animation: home-highlight-enter 0.28s ease-out both;
+}
+
+.home-highlight-window {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+}
+
+.home-highlight-track {
+  display: flex;
+  width: max-content;
+  animation: home-highlight-marquee var(--home-highlight-duration, 52s) linear infinite;
+}
+
+.home-highlight-group {
+  display: flex;
+  flex: none;
+  gap: 1rem;
+  padding-right: 1rem;
+}
+
+.home-highlight-group .home-highlight-card {
+  flex: 0 0 min(82vw, 22rem);
+}
+
+@media (min-width: 640px) {
+  .home-highlight-group .home-highlight-card {
+    flex-basis: min(31vw, 22rem);
+  }
+}
+
+.home-highlight-window:hover .home-highlight-track,
+.home-highlight-window:focus-within .home-highlight-track {
+  animation-play-state: paused;
+}
+
+@keyframes home-highlight-enter {
+  from {
+    opacity: 0.72;
+    transform: translateY(5px);
+  }
+}
+
+.home-step-timer > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: var(--color-lime);
+  animation: home-step-progress linear forwards;
+}
+
+@keyframes audience-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.audience-page > section {
+  animation: audience-section-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.audience-page > section:nth-of-type(2) {
+  animation-delay: 70ms;
+}
+
+.audience-page > section:nth-of-type(3) {
+  animation-delay: 140ms;
+}
+
+.audience-page > section:nth-of-type(4) {
+  animation-delay: 210ms;
+}
+
+.audience-page > section:nth-of-type(5) {
+  animation-delay: 280ms;
+}
+
+.audience-page article,
+.audience-page aside {
+  transition:
+    transform 240ms ease,
+    box-shadow 240ms ease,
+    border-color 240ms ease;
+}
+
+.audience-page main a {
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.audience-page main input,
+.audience-page main textarea {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.audience-page main input:focus,
+.audience-page main textarea:focus {
+  border-color: var(--color-forest);
+  box-shadow: 0 0 0 4px rgb(185 227 107 / 0.3);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .audience-page article:hover,
+  .audience-page aside:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -20px rgb(8 54 45 / 0.35);
+  }
+
+  .audience-page main a:hover {
+    transform: translateY(-2px);
+  }
+
+  .audience-page main > section:first-of-type > div[aria-hidden="true"] {
+    transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .audience-page main > section:first-of-type:hover > div[aria-hidden="true"] {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes home-step-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-text-rise,
+  .home-highlight-card,
+  .home-highlight-track,
+  .home-brand-track,
+  .home-step-timer > span,
+  .audience-page > section {
+    animation: none;
+  }
+  .audience-page article,
+  .audience-page aside,
+  .audience-page main a,
+  .audience-page main input,
+  .audience-page main textarea {
+    transition: none;
+  }
+  .audience-page article:hover,
+  .audience-page aside:hover,
+  .audience-page main a:hover {
+    transform: none;
+  }
+}
+.profile-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.72) 48%, transparent 60%);
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.profile-link {
+  transition: transform 200ms ease;
+}
+.profile-link:hover {
+  transform: scale(1.04);
+}
+.profile-link:hover::before {
+  animation: glass-sheen 1.2s ease-in-out;
+}
+.profile-link:active {
+  transform: scale(1.02);
+}

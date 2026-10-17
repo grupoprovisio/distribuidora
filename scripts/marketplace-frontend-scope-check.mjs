@@ -33,8 +33,8 @@ test("Nenhuma interface ou rota de vendedor publico permanece ativa", () => {
 
 test("A homepage e a navegacao contêm apenas comprador e fornecedor", () => {
   const home=file("app/(tabs)/page.tsx"),nav=file("lib/nav.ts");
-  assert.match(home,/href: "\/compradores"/);
-  assert.match(home,/href: "\/fornecedores"/);
+  assert.match(home,/href(?::\s*|=)"\/compradores"/);
+  assert.match(home,/href(?::\s*|=)"\/fornecedores"/);
   assert.match(nav,/href: "\/compradores"/);
   assert.match(nav,/href: "\/fornecedores"/);
 });
@@ -94,4 +94,22 @@ test("Rotas de comparacao externa nao executam as integracoes legadas", () => {
     assert.ok(file(pathname).includes("legacyComparatorBlockedResponse()"),pathname);
   }
   assert.ok(file("lib/marketplace/legacy-block.ts").includes("status: 410"));
+});
+
+test("Páginas premium preservam textos, imagens e cards principais sem consulta a preços de terceiros", () => {
+  const home = file("app/(tabs)/page.tsx");
+  const buyer = file("app/compradores/page.tsx");
+  const supplier = file("app/fornecedores/page.tsx");
+  const showcase = file("components/home-marketplace-showcase.tsx");
+  assert.match(home, /Tudo para o seu negócio continuar vendendo/);
+  assert.match(showcase, /Uma rotina de compras mais simples para o seu negócio/);
+  assert.match(buyer, /Sua cozinha merece uma compra/);
+  assert.match(supplier, /Seu produto merece chegar a/);
+  assert.match(home, /<HomeMarketplaceShowcase\s*\/>/);
+  assert.match(buyer, /<MarketplaceLeadForm role="comprador"/);
+  assert.match(supplier, /<MarketplaceLeadForm role="fornecedor"/);
+  assert.doesNotMatch(home + showcase, /useCatalog\(|getDepartments\(|CatalogSection|PromoStrip/);
+  for (const asset of ["public/images/fornecedores/chef-hero.png", "public/images/fornecedores/parceria-cozinha.png", "public/images/provisio/chef-retrato.png"]) {
+    assert.ok(existsSync(path.join(root,asset)), `Imagem ausente: ${asset}`);
+  }
 });

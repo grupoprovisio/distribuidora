@@ -1,83 +1,30 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ArrowUpRight, Mail } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 
-type Role = "comprador" | "fornecedor";
-const DESTINATION = "contato@grupoprovisio.com";
-const messages = {
-  comprador: { title: "Converse sobre sua operação", label: "Tenho interesse em comprar", subject: "Interesse B2B — Sou comprador", detail: "Conte quais produtos, volumes e região você precisa atender." },
-  fornecedor: { title: "Apresente sua empresa fornecedora", label: "Tenho interesse em fornecer", subject: "Parceria B2B — Sou fornecedor", detail: "Conte quais produtos e regiões sua empresa atende." },
+type Props = { role: "comprador" | "fornecedor" };
+
+const copy = {
+  comprador: { title: "Conte sobre sua operação", button: "Solicitar acesso", note: "Cadastro demonstrativo: nenhum dado é enviado nesta etapa." },
+  fornecedor: { title: "Apresente sua empresa", button: "Entrar na fila de homologação", note: "Demonstração local: não enviamos documentos nem dados para terceiros." },
 } as const;
 
-export function MarketplaceLeadForm({ role }: { role: Role }) {
-  const config = messages[role];
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-
-  function submit(event: FormEvent<HTMLFormElement>) {
+export function MarketplaceLeadForm({ role }: Props) {
+  const [prepared, setPrepared] = useState(false);
+  const text = copy[role];
+  if (prepared) return <div className="rounded-[2rem] bg-lime-soft p-7 ring-1 ring-lime" role="status"><CheckCircle2 className="text-forest" size={28} aria-hidden /><h2 className="mt-4 text-2xl font-black text-forest-deep">Rascunho de e-mail preparado.</h2><p className="mt-2 text-sm font-medium leading-relaxed text-forest/75">Nada foi enviado automaticamente. Confira seu aplicativo de e-mail e envie a mensagem quando estiver pronto.</p><button type="button" onClick={() => setPrepared(false)} className="mt-5 text-sm font-extrabold text-forest underline underline-offset-4">Preencher novamente</button></div>;
+  return <form onSubmit={(event) => {
     event.preventDefault();
-    setError("");
-    setNotice("");
-    if (!name.trim() || !company.trim() || !email.trim() || !message.trim()) {
-      setError("Preencha os quatro campos antes de preparar sua mensagem.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Informe um e-mail válido para que possamos responder.");
-      return;
-    }
-    const body = [
-      config.subject, "",
-      "Nome: " + name.trim(),
-      "Empresa: " + company.trim(),
-      "E-mail de retorno: " + email.trim(), "",
-      message.trim(),
-    ].join("\n");
-    const url = "mailto:" + DESTINATION + "?subject=" +
-      encodeURIComponent(config.subject) + "&body=" + encodeURIComponent(body);
-    setNotice("Seu aplicativo de e-mail deverá abrir. Revise e envie a mensagem: nada foi enviado automaticamente.");
-    window.location.assign(url);
-  }
-
-  return (
-    <section aria-labelledby="interest-title" className="grid overflow-hidden rounded-[2rem] bg-paper shadow-card ring-1 ring-line/70 lg:grid-cols-[minmax(0,1fr)_17rem]">
-      <div className="p-6 sm:p-9">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Primeiro contato</p>
-        <h2 id="interest-title" className="mt-2 text-2xl font-black tracking-tight text-forest-deep sm:text-3xl">{config.title}</h2>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">{config.detail}</p>
-        <form noValidate onSubmit={submit} className="mt-7 grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-extrabold text-forest">Seu nome
-            <input value={name} onChange={e => setName(e.target.value)} autoComplete="name" maxLength={120} className="min-h-12 rounded-xl border border-line bg-canvas px-4 text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-forest" />
-          </label>
-          <label className="grid gap-2 text-sm font-extrabold text-forest">E-mail profissional
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" maxLength={254} className="min-h-12 rounded-xl border border-line bg-canvas px-4 text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-forest" />
-          </label>
-          <label className="grid gap-2 text-sm font-extrabold text-forest sm:col-span-2">Empresa
-            <input value={company} onChange={e => setCompany(e.target.value)} autoComplete="organization" maxLength={150} className="min-h-12 rounded-xl border border-line bg-canvas px-4 text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-forest" />
-          </label>
-          <label className="grid gap-2 text-sm font-extrabold text-forest sm:col-span-2">Sua necessidade
-            <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4} maxLength={1800} className="min-h-32 resize-none rounded-xl border border-line bg-canvas px-4 py-3 text-base font-medium text-ink focus-visible:outline-2 focus-visible:outline-forest" />
-          </label>
-          {error ? <p role="alert" className="rounded-xl bg-blush p-3 text-sm font-semibold text-wine sm:col-span-2">{error}</p> : null}
-          {notice ? <p role="status" className="rounded-xl bg-lime-soft p-3 text-sm font-semibold text-forest sm:col-span-2">{notice}</p> : null}
-          <button type="submit" className="inline-flex min-h-12 w-fit items-center justify-center gap-2 rounded-full bg-forest px-6 text-sm font-extrabold text-white transition-colors hover:bg-forest-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:col-span-2">
-            Preparar e-mail <ArrowUpRight size={17} aria-hidden />
-          </button>
-        </form>
-      </div>
-      <aside className="flex flex-col justify-between gap-5 bg-lime-soft p-6 sm:p-9">
-        <div>
-          <span className="inline-grid size-12 place-items-center rounded-2xl bg-paper text-forest"><Mail size={22} aria-hidden /></span>
-          <h3 className="mt-5 text-xl font-black text-forest-deep">Contato sem compromisso</h3>
-          <p className="mt-3 text-sm leading-relaxed text-forest">Esta etapa abre um rascunho no seu aplicativo de e-mail. Não cria cadastro, pedido nem cobrança.</p>
-        </div>
-        <a href={"mailto:" + DESTINATION} className="break-all text-sm font-extrabold text-forest underline underline-offset-4">{DESTINATION}</a>
-      </aside>
-    </section>
-  );
+    const fields = new FormData(event.currentTarget);
+    const name = String(fields.get("name") || "").trim();
+    const email = String(fields.get("email") || "").trim();
+    const company = String(fields.get("company") || "").trim();
+    const message = String(fields.get("message") || "").trim();
+    if (!name || !email || !company || !message) return;
+    const subject = role === "comprador" ? "Interesse B2B — Sou comprador" : "Parceria B2B — Sou fornecedor";
+    const body = ["Nome: " + name, "E-mail: " + email, "Empresa: " + company, "", message].join("\n");
+    window.location.href = "mailto:contato@grupoprovisio.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    setPrepared(true);
+  }} className="rounded-[2rem] bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-8"><p className="text-xs font-black uppercase tracking-[0.14em] text-terra">Próximo passo</p><h2 className="mt-2 text-2xl font-black tracking-tight text-forest-deep">{text.title}</h2><p className="mt-2 text-sm font-medium text-muted">{text.note}</p><div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="text-sm font-extrabold">Nome<input required name="name" autoComplete="name" className="mt-1 h-11 w-full rounded-2xl border border-line bg-canvas px-4 outline-none focus-visible:ring-4 focus-visible:ring-lime/50" /></label><label className="text-sm font-extrabold">E-mail<input required type="email" name="email" autoComplete="email" className="mt-1 h-11 w-full rounded-2xl border border-line bg-canvas px-4 outline-none focus-visible:ring-4 focus-visible:ring-lime/50" /></label><label className="text-sm font-extrabold sm:col-span-2">Empresa<input required name="company" autoComplete="organization" className="mt-1 h-11 w-full rounded-2xl border border-line bg-canvas px-4 outline-none focus-visible:ring-4 focus-visible:ring-lime/50" /></label><label className="text-sm font-extrabold sm:col-span-2">O que você precisa?<textarea required name="message" rows={4} className="mt-1 w-full resize-none rounded-2xl border border-line bg-canvas px-4 py-3 outline-none focus-visible:ring-4 focus-visible:ring-lime/50" /></label></div><button type="submit" className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-forest px-6 text-sm font-extrabold text-white transition-colors hover:bg-forest-deep focus-visible:ring-4 focus-visible:ring-forest/30 active:scale-95">{text.button}<ArrowRight size={16} aria-hidden /></button></form>;
 }
