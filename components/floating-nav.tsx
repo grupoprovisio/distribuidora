@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NAV_LEFT, NAV_RIGHT, type NavItem } from "@/lib/nav";
 
 const items = [...NAV_LEFT, ...NAV_RIGHT];
@@ -15,12 +15,27 @@ function isActive(path: string, item: NavItem) {
 export function FloatingNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const keydown = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    const panel = dialogRef.current;
+    panel?.querySelector<HTMLElement>("a, button")?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setOpen(false); return; }
+      if (event.key !== "Tab" || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
     document.addEventListener("keydown", keydown);
-    return () => document.removeEventListener("keydown", keydown);
+    return () => {
+      document.removeEventListener("keydown", keydown);
+      triggerRef.current?.focus();
+    };
   }, [open]);
 
   return (
@@ -42,7 +57,7 @@ export function FloatingNav() {
               );
             })}
             <li>
-              <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menu" aria-expanded={open}
+              <button type="button" ref={triggerRef} onClick={() => setOpen(true)} aria-label="Abrir menu" aria-expanded={open}
                 className="flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-full text-[10px] font-bold text-forest hover:bg-lime-soft focus-visible:ring-2 focus-visible:ring-forest/50 sm:min-h-16 sm:text-xs">
                 <Menu size={20} aria-hidden /><span>Menu</span>
               </button>
@@ -53,7 +68,7 @@ export function FloatingNav() {
       {open && (
         <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Menu da Provisio">
           <button type="button" aria-label="Fechar menu" onClick={() => setOpen(false)} className="absolute inset-0 bg-forest-deep/45 backdrop-blur-sm" />
-          <aside className="absolute inset-y-0 right-0 flex w-[min(88vw,22rem)] flex-col bg-paper p-6 shadow-float">
+          <aside ref={dialogRef} className="absolute inset-y-0 right-0 flex w-[min(88vw,22rem)] flex-col bg-paper p-6 shadow-float">
             <div className="flex items-center justify-between border-b border-line pb-5">
               <h2 className="text-xl font-black text-forest-deep">Grupo Provisio</h2>
               <button type="button" onClick={() => setOpen(false)} aria-label="Fechar menu"
