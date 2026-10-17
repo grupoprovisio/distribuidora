@@ -3,15 +3,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAuthEnabled } from "@/lib/supabase/config";
 
-export type Portal = "comprador" | "fornecedor" | "vendedor" | "admin";
+export type Portal = "comprador" | "fornecedor" | "admin";
 type Role = "ORG_ADMIN" | "BUYER" | "REQUESTER" | "APPROVER" | "FINANCE" |
-  "READER" | "SUPPLIER_ADMIN" | "SELLER" | "PLATFORM_ADMIN";
+  "READER" | "SUPPLIER_ADMIN" | "PLATFORM_ADMIN";
 type Capability = "BUYER" | "SUPPLIER" | "PLATFORM_OPERATOR";
 
 const PORTAL_ACCESS: Record<Portal, { capability: Capability; roles: Role[] }> = {
   comprador: { capability: "BUYER", roles: ["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","PLATFORM_ADMIN"] },
   fornecedor: { capability: "SUPPLIER", roles: ["ORG_ADMIN","SUPPLIER_ADMIN","PLATFORM_ADMIN"] },
-  vendedor: { capability: "SUPPLIER", roles: ["SELLER","PLATFORM_ADMIN"] },
   admin: { capability: "PLATFORM_OPERATOR", roles: ["PLATFORM_ADMIN"] },
 };
 
