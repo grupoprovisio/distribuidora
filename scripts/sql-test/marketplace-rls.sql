@@ -7,6 +7,14 @@ insert into auth.users (id, raw_user_meta_data) values
 ('00000000-0000-4000-8000-000000000004', '{"full_name":"Revogado"}'),
 ('00000000-0000-4000-8000-000000000005', '{"full_name":"Pendente","role":"PLATFORM_ADMIN"}');
 
+-- Toda leitura B2B exige um registro de sessao Auth correspondente ao JWT.
+insert into auth.sessions (id,user_id,aal,not_after) values
+('70000000-0000-4000-8000-000000000011','00000000-0000-4000-8000-000000000001','aal1',now()+interval '1 day'),
+('70000000-0000-4000-8000-000000000012','00000000-0000-4000-8000-000000000002','aal1',now()+interval '1 day'),
+('70000000-0000-4000-8000-000000000013','00000000-0000-4000-8000-000000000003','aal1',now()+interval '1 day'),
+('70000000-0000-4000-8000-000000000014','00000000-0000-4000-8000-000000000004','aal1',now()+interval '1 day'),
+('70000000-0000-4000-8000-000000000015','00000000-0000-4000-8000-000000000005','aal1',now()+interval '1 day');
+
 select test.assert_count((select count(*) from public.profiles where status = 'pending'), 5, 'new users require explicit approval');
 update public.profiles set status='active'
 where id in (
@@ -244,6 +252,19 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',false);
 select set_config('request.jwt.claims','{"aal":"aal2","session_id":"70000000-0000-4000-8000-000000000001"}',false);
 select test.expect_permission_denied('insert into public.organizations(legal_name,kind) values (''Expired AAL2 session'',''BUYER'')');
+reset role;
+
+-- Um JWT antigo nao pode consultar fornecedor B apos a sessao ser removida.
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000012"}',false);
+select test.assert_count((select count(*) from public.offers),1,'valid supplier B session sees offer');
+reset role;
+delete from auth.sessions
+where id='70000000-0000-4000-8000-000000000012';
+set role authenticated;
+select test.assert_count((select count(*) from public.offers),0,'revoked session loses RLS access immediately');
+select test.assert_count((select count(*) from public.profiles),0,'revoked JWT cannot read own profile');
 reset role;
 
 select 'PASS: supabase marketplace isolation database suite' as result;
