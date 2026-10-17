@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Boxes } from "lucide-react";
+import { ArrowLeft, Boxes, FileSpreadsheet } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SupplierCatalogBrowser, type SupplierCatalogRow } from "@/components/supplier-catalog-browser";
@@ -67,6 +67,9 @@ export default async function SupplierCatalogPage() {
           Acompanhe seus produtos, embalagens e ofertas cadastradas, sem acessar catálogos de outros fornecedores.
         </p>
       </div>
+      <Link href="/app/fornecedor/importar" className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-extrabold text-white transition hover:bg-forest-deep focus-visible:ring-2 focus-visible:ring-forest">
+        <FileSpreadsheet size={17} aria-hidden/> Pré-validar planilha CSV
+      </Link>
       {error ? <section role="alert" className="rounded-[2rem] border border-line bg-paper p-7">
         <Boxes size={27} className="text-terra" aria-hidden />
         <h2 className="mt-4 text-xl font-black text-forest-deep">Não foi possível consultar o catálogo</h2>
