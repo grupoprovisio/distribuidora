@@ -72,3 +72,26 @@ test("O roadmap prioriza os dois perfis", () => {
   assert.match(plan,/Sou comprador/);
   assert.match(plan,/Sou fornecedor/);
 });
+
+test("Rotas de comparacao externa nao executam as integracoes legadas", () => {
+  for (const pathname of [
+    "app/(tabs)/buscar/page.tsx", "app/(tabs)/categorias/page.tsx",
+    "app/(tabs)/ofertas/page.tsx", "app/(tabs)/promocoes/page.tsx",
+    "app/(tabs)/lista/page.tsx", "app/produto/[id]/page.tsx",
+    "app/scan/page.tsx", "app/checkout/page.tsx"
+  ]) {
+    assert.match(file(pathname),/redirect\\("\\/produtos"\\)/, pathname);
+  }
+  const handlers = [
+    "app/api/catalog/route.ts", "app/api/catalog/prices/route.ts",
+    "app/api/promos/route.ts", "app/api/lookup/route.ts",
+    "app/api/list/compare/route.ts", "app/api/suggest/route.ts",
+    "app/api/filiais/nearest/route.ts", "app/api/receipt/route.ts",
+    "app/api/auth/send/route.ts", "app/api/auth/verify/route.ts"
+  ];
+  for (const pathname of handlers) {
+    assert.match(file(pathname),/legacyComparatorIsDisabled\\(\\)/,pathname);
+    assert.match(file(pathname),/legacyComparatorBlockedResponse\\(\\)/,pathname);
+  }
+  assert.match(file("lib/marketplace/legacy-block.ts"),/status: 410/);
+});

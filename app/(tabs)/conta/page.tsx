@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseAuthEnabled } from "@/lib/supabase/config";
+import { legacyComparatorIsDisabled } from "@/lib/marketplace/legacy-block";
 import { cookies } from "next/headers";
 import { Building2, ChevronRight, CreditCard, Heart, QrCode, ShoppingBasket, SlidersHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -27,6 +28,8 @@ export default async function ContaPage() {
   // Ao habilitar marketplace, a conta unica passa a ser a identidade Supabase.
   // O antigo login VTEX permanece somente enquanto a flag estiver desligada.
   if (supabaseAuthEnabled()) redirect("/app");
+  // Nunca reativar identidade VTEX nem preferências de comparação na plataforma B2B.
+  if (legacyComparatorIsDisabled()) redirect("/entrar");
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const result = token ? await getProfile(token) : undefined;
 
