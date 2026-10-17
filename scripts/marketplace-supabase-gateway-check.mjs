@@ -197,6 +197,11 @@ test("VTEX legacy login becomes unavailable as soon as Supabase Auth is enabled"
   const accountPage=readFileSync(resolve(root,"app/(tabs)/conta/page.tsx"),"utf8");
   const adminLogin=readFileSync(resolve(root,"app/admin/login/page.tsx"),"utf8");
   assert.match(adminLogin,/redirect\("\/entrar"\)/);
+  const rootProxy=readFileSync(resolve(root,"proxy.ts"),"utf8");
+  assert.match(rootProxy,/pathname.startsWith\("\/conta\/"\)/);
+  assert.match(rootProxy,/NextResponse.redirect\(new URL\("\/app"/);
+  assert.match(rootProxy,/MARKETPLACE_AUTH_ENABLED=false/);
+
   assert.doesNotMatch(adminLogin,/type="password"/);
 
   assert.match(accountPage,/if \(supabaseAuthEnabled\(\)\) redirect\("\/app"\)/);
