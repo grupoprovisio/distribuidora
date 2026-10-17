@@ -47,6 +47,8 @@ jobs:
         run: npm run test:marketplace
       - name: Supabase foundation tests (without credentials)
         run: npm run test:supabase-foundation
+      - name: Auth role and MFA server-side authorization tests
+        run: node --test scripts/marketplace-auth-authorization-check.mjs
       - name: Production Next.js build with features off
         env:
           MARKETPLACE_AUTH_ENABLED: "false"
