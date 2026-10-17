@@ -140,7 +140,7 @@ export default async function AccessAdminPage(){
         </label>
         <label className="flex flex-col gap-1 text-xs font-bold text-muted">Papel
           <select name="role" required className={inputClass}>
-            {["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","SUPPLIER_ADMIN","SELLER"].map(role=>
+            {["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","SUPPLIER_ADMIN"].map(role=>
               <option key={role} value={role}>{role}</option>)}
           </select>
         </label>

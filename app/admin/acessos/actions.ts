@@ -82,7 +82,7 @@ export async function addMembership(data:FormData) {
   const user_id=id(data,"user_id");
   const role=field(data,"role",30);
   // Nunca conceder PLATFORM_ADMIN por este formulario.
-  if(!enumIs(role,["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","SUPPLIER_ADMIN","SELLER"] as const)) {
+  if(!enumIs(role,["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","SUPPLIER_ADMIN"] as const)) {
     throw new Error("Papel invalido");
   }
   const result=await client.from("organization_members").insert({
