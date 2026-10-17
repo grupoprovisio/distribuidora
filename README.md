@@ -12,7 +12,7 @@ Plataforma B2B híbrida em desenvolvimento: **distribuidora própria + fornecedo
 - Banco Supabase do projeto: referência `xprvdquocenfqvnokmmi`
 - Stack: Next.js 16, React 19, TypeScript, Tailwind CSS 4 e Supabase SSR/Auth/Postgres.
 
-O sistema **ainda não está pronto para compras reais**. Cadastro público transacional, checkout, repasses e pedidos dependem de homologação. Dados reais não devem ser inventados para demonstração.
+O sistema **ainda não está pronto para compras reais**. CSV no portal do fornecedor permanece uma pré-validação local, sem publicação ou alteração do banco. O catálogo do comprador usa apenas leituras protegidas por RLS e continua sem ofertas até a homologação comercial. Cadastro público transacional, checkout, repasses e pedidos dependem de homologação. Dados reais não devem ser inventados para demonstração.
 
 ## Organização do produto
 
@@ -21,8 +21,8 @@ O sistema **ainda não está pronto para compras reais**. Cadastro público tran
 | Institucional | `/`, `/compradores`, `/fornecedores`, `/como-funciona` | Páginas e jornadas front-end |
 | Catálogo público | `/produtos`, `/produtos/[slug]` | Sem publicação até backend aprovado |
 | Comprador | `/app/comprador`, `/app/comprador/catalogo`, `/app/comprador/cotacoes`, `/app/comprador/pedidos` | Perfil protegido; compras em preparação |
-| Fornecedor | `/app/fornecedor`, `/app/fornecedor/catalogo`, `/app/fornecedor/operacao`, `/app/fornecedor/homologacao` | Perfil protegido; catálogo, operação e homologação somente leitura |
-| Administração | `/admin`, `/admin/marketplace`, `/admin/acessos` | Gestão restrita e MFA |
+| Fornecedor | `/app/fornecedor`, `/app/fornecedor/catalogo`, `/app/fornecedor/importar`, `/app/fornecedor/operacao`, `/app/fornecedor/homologacao` | Perfil protegido, catálogo próprio, operações e validação de CSV local |
+| Administração | `/admin`, `/admin/marketplace`, `/admin/marketplace/homologacoes`, `/admin/acessos` | Gestão restrita, fila real de homologações e MFA |
 | Login | `/entrar`, `/auth/callback`, `/recuperar-acesso`, `/seguranca/mfa` | Supabase, conforme flag e aprovação |
 
 **Não desenvolver a função Sou vendedor**, representantes, carteiras ou comissões comerciais; esse escopo foi cancelado. Identificadores técnicos de fornecedor (`supplier`/`seller`) usados na operação do marketplace são conceitos distintos do perfil comercial aposentado.
