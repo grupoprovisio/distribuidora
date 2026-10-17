@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/provisio-supabase-fundacao-20261015
+      - feat/b2b-comprador-fornecedor-frontend-20261017
   pull_request:
     paths:
       - "db/migrations/**"
@@ -45,6 +46,8 @@ jobs:
         run: npm run lint
       - name: Marketplace domain tests
         run: npm run test:marketplace
+      - name: Buyer and supplier frontend scope tests
+        run: npm run test:frontend-scope
       - name: Supabase foundation tests (without credentials)
         run: npm run test:supabase-foundation
       - name: Auth role and MFA server-side authorization tests
