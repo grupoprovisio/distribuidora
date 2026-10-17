@@ -1,30 +1,63 @@
 import assert from "node:assert/strict";
+import { previewAuthorizedCsv } from "../lib/marketplace/csv-import.ts";
 
-const csv = "supplier_sku,product_name,base_unit,pack_quantity,pack_unit,base_price_minor,min_quantity,regions\nSUP-001,Produto local,un,1,un,1250,2,SP|RJ";
-const [header, row] = csv.split("\n");
-assert.equal(header.split(",").length, 8);
-assert.equal(row.includes("SUP-001"), true);
-assert.equal(["ATACADAO_EXTERNAL", "VTEX_SCRAPE"].includes("SUPPLIER_CSV_AUTHORIZED"), false);
-assert.equal(Number("1250") >= 0, true);
-console.log("marketplace-csv-check: OK — contrato CSV autorizado e origem externa não aceita");
+const columns="supplier_sku,product_name,base_unit,pack_quantity,pack_unit,base_price_minor,min_quantity,regions";
+const data="SUP-001,Produto local,un,1,un,1250,2,SP|RJ";
+const file=(content,header=columns)=>header+"\n"+content;
+const valid=previewAuthorizedCsv(file(data));
+assert.equal(valid.accepted,true);
+assert.equal(valid.rows.length,1);
+assert.equal(valid.rows[0].basePriceMinor,1250);
+assert.deepEqual(valid.rows[0].regions,["SP","RJ"]);
 
+for(const [target,source,field] of [
+  [",1,un,1250",",1,caixa,1250","pack_unit"],
+  ["SP|RJ","SP|INVALID_REGION","regions"],
+  ["1250","12.50","base_price_minor"],
+  ["SUP-001","", "supplier_sku"]
+]){
+  const result=previewAuthorizedCsv(file(data.replace(target,source)));
+  assert.equal(result.accepted,false,field);
+  assert.ok(result.errors.some(error=>error.field===field),field);
+}
+assert.equal(previewAuthorizedCsv(file(data),"VTEX_SCRAPE").accepted,false);
+assert.equal(previewAuthorizedCsv(file(data),"ATACADAO_EXTERNAL").accepted,false);
+assert.equal(previewAuthorizedCsv(file(data),"UNVERIFIED_EXTERNAL").accepted,false);
 
-// Node 24 supports type stripping for .ts; test the same validator used by the client.
-const { previewAuthorizedCsv } = await import("../lib/marketplace/csv-import.ts");
-const preview = previewAuthorizedCsv(csv);
-assert.equal(preview.accepted, true, "authorized CSV should be valid");
-assert.equal(preview.rows.length, 1);
-assert.equal(preview.rows[0].basePriceMinor, 1250);
-const invalidPack = previewAuthorizedCsv(csv.replace(",1,un,1250", ",1,caixa,1250"));
-assert.equal(invalidPack.accepted, false);
-assert.ok(invalidPack.errors.some(error => error.field === "pack_unit"));
-const invalidRegion = previewAuthorizedCsv(csv.replace("SP|RJ", "SP|INVALID_REGION"));
-assert.equal(invalidRegion.accepted, false);
-assert.ok(invalidRegion.errors.some(error => error.field === "regions"));
-const fractionalPrice = previewAuthorizedCsv(csv.replace("1250", "12.50"));
-assert.equal(fractionalPrice.accepted, false);
-assert.ok(fractionalPrice.errors.some(error => error.field === "base_price_minor"));
-const external = previewAuthorizedCsv(csv, "VTEX_SCRAPE");
-assert.equal(external.accepted, false);
-assert.ok(external.errors.some(error => error.field === "sourceType"));
-console.log("marketplace-csv-check: real CSV preview validation passed");
+// Importações do Google Planilhas podem conter separador ; e nomes com vírgula.
+const semicolon=previewAuthorizedCsv("supplier_sku;product_name;base_unit;pack_quantity;pack_unit;base_price_minor;min_quantity;regions\nA;Farinha, especial;kg;1;kg;2300;1;SP|RJ");
+assert.equal(semicolon.accepted,true);
+assert.equal(semicolon.rows[0].productName,"Farinha, especial");
+
+// CSV válido com aspas escapadas e quebras de linha dentro do nome.
+const complex=previewAuthorizedCsv(file('A,"Molho ""especial"", tomates\nfrescos",kg,1,kg,1699,1,BR-SP\nB,Arroz,kg,1,kg,2500,1,SP'));
+assert.equal(complex.accepted,true,JSON.stringify(complex.errors));
+assert.equal(complex.rows[0].line,2);
+assert.equal(complex.rows[1].line,4);
+assert.equal(complex.rows[0].productName,'Molho "especial", tomates\nfrescos');
+
+// Proteções contra truncamento, aspas malformadas e inconsistência estrutural.
+const malformed=previewAuthorizedCsv(file('A,"Campo sem fechamento,kg,1,kg,1699,1,SP'));
+assert.equal(malformed.accepted,false);
+assert.ok(malformed.errors.some(error=>error.field==="csv"));
+const shortRow=previewAuthorizedCsv(file("A,Arroz,kg,1,kg,2500,1"));
+assert.equal(shortRow.accepted,false);
+assert.ok(shortRow.errors.some(error=>error.field==="csv"));
+assert.equal(previewAuthorizedCsv(columns+"\n").accepted,false);
+assert.equal(previewAuthorizedCsv("").accepted,false);
+assert.equal(previewAuthorizedCsv(file(data,columns.replace("supplier_sku,","product_name,"))).accepted,false);
+
+// SKU duplicado deve ser bloqueado mesmo quando a primeira linha tem erro.
+const duplicate=previewAuthorizedCsv(file("A,Produto,kg,0,kg,1000,1,SP\n a ,Outro,kg,1,kg,1200,1,RJ"));
+assert.equal(duplicate.accepted,false);
+assert.ok(duplicate.errors.some(error=>error.field==="supplier_sku"&&error.line===3));
+
+// Converter zero vazio para número não gera preços falsos, pois zero é permitido,
+// mas um campo de preço vazio NÃO deve ser tratado como 0 na importação.
+const rejectedOutside=previewAuthorizedCsv(file(data.replace(",1250,",",999999999999999999999999,")));
+assert.equal(rejectedOutside.accepted,false);
+assert.ok(rejectedOutside.errors.some(error=>error.field==="base_price_minor"));
+const tooLarge=previewAuthorizedCsv(columns+"\n"+data.repeat(140000));
+assert.equal(tooLarge.accepted,false);
+assert.ok(tooLarge.errors.some(error=>error.field==="csv"));
+console.log("marketplace-csv-check: CSV robusto com cabeçalho, aspas, separadores, linhas e segurança OK");
