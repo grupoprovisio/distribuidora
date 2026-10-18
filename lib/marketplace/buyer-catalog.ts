@@ -33,17 +33,22 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   if(!allowedRegion.data?.length)return {...empty,regionNotAuthorized:true};
   const now = new Date().toISOString();
   const offset = (page - 1) * PAGE_SIZE;
+  // Filter by selected delivery region BEFORE paginating; a buyer may be
+  // entitled to multiple UFs, but this page must not mix their offers.
+  // PostgREST's !inner embed makes the region predicate part of the SQL query.
+  // range() is inclusive, so PAGE_SIZE+1 checks whether the next page exists.
   const query = await client.from("offers")
-    .select("id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from,valid_to")
+    .select("id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from,valid_to,offer_regions!inner(region_code)")
+    .in("offer_regions.region_code",regionCodes)
     .eq("status","approved").lte("valid_from",now)
     .or("valid_to.is.null,valid_to.gt." + now)
     .order("created_at",{ascending:false}).range(offset,offset+PAGE_SIZE);
   if (query.error) return {...empty,error:true};
-  const offers=(query.data??[]).filter(o=>SOURCES.has(o.source_type)
+  const hasMore=(query.data?.length??0)>PAGE_SIZE;
+  const visible=(query.data??[]).slice(0,PAGE_SIZE).filter(o=>SOURCES.has(o.source_type)
     && o.status==="approved" && o.valid_from<=now && (!o.valid_to || o.valid_to>now)
     && Number.isSafeInteger(o.base_price_minor) && o.base_price_minor>=0);
-  const visible=offers.slice(0,PAGE_SIZE);
-  if (!visible.length) return {...empty,hasMore:offers.length>PAGE_SIZE};
+  if (!visible.length) return {...empty,hasMore};
   const ids=visible.map(o=>o.id);
   const skuIds=[...new Set(visible.map(o=>o.supplier_product_id))];
   const orgIds=[...new Set(visible.map(o=>o.supplier_org_id))];
@@ -56,7 +61,7 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   ]);
   if ([skus,orgs,regions,inventory,capabilities].some(q=>q.error)) return {...empty,error:true};
   const productIds=[...new Set((skus.data??[]).map(s=>s.product_id))];
-  if (!productIds.length) return {...empty,hasMore:offers.length>PAGE_SIZE};
+  if (!productIds.length) return {...empty,hasMore};
   const products=await client.from("products").select("id,slug,name,status").in("id",productIds).eq("status","active");
   if (products.error) return {...empty,error:true};
   const prodMap=new Map((products.data??[]).map(p=>[p.id,p]));
@@ -80,5 +85,5 @@ export async function buyerCatalog(client: Client, region: string, page: number)
       priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity
     });
   }
-  return {items,error:false,hasMore:offers.length>PAGE_SIZE};
+  return {items,error:false,hasMore};
 }
