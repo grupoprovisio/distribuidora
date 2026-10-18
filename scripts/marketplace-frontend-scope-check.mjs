@@ -141,3 +141,16 @@ test("Home, Sou comprador, Sou fornecedor, cards e fotos mantêm a identidade vi
     assert.equal(actual,expectedSha,"A identidade aprovada mudou sem autorização: "+filename);
   }
 });
+
+
+test("Catálogo privado filtra a UF antes da paginação e detecta a próxima página", () => {
+  const source=file("lib/marketplace/buyer-catalog.ts");
+  assert.match(source,/offer_regions!inner\(region_code\)/);
+  assert.match(source,/\.in\("offer_regions\.region_code",regionCodes\)/);
+  assert.match(source,/\.range\(offset,offset\+PAGE_SIZE\)/);
+  assert.match(source,/const hasMore=\(query\.data\?\.length\?\?0\)>PAGE_SIZE/);
+  assert.doesNotMatch(source,/hasMore:offers\.length>PAGE_SIZE/);
+  assert.match(source,/page<1000/);
+  assert.match(source,/buyer_delivery_regions/);
+  assert.doesNotMatch(source,/SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|sb_secret_[A-Za-z0-9]/);
+});
