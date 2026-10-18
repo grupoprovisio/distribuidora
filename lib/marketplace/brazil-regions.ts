@@ -4,10 +4,11 @@
  * Uma oferta marcada como "BR" indica cobertura nacional e pode atender BR-SP.
  * Não adivinhar cobertura de outros países/regiões.
  */
-const STATES = new Set([
+export const UF_CODES = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
   "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
-]);
+] as const;
+const STATES = new Set<string>(UF_CODES);
 
 export function allowedBuyerRegionCodes(raw: string): string[] {
   const code=raw.trim().toUpperCase();

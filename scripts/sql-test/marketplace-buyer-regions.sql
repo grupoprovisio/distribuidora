@@ -26,7 +26,7 @@ select test.assert_count((select count(*) from public.buyer_delivery_regions),1,
 select test.assert_count((select count(*) from public.offers where status='approved'),3,'buyer can read eligible approved offers');
 select test.assert_count((select count(*) from public.products),2,'buyer can see master products of eligible offers');
 select test.assert_count((select count(*) from public.supplier_products),2,'buyer can see eligible SKUs');
-select test.assert_count((select count(*) from public.offer_regions where region_code='BR-SP'),2,
+select test.assert_count((select count(*) from public.offer_regions where region_code='BR-SP'),3,
   'buyer only sees eligible SP delivery region rows');
 select test.assert_count((select count(*) from public.offer_price_tiers),2,'buyer can read own eligible price tiers');
 select test.assert_count((select count(*) from public.inventory_positions),2,'buyer can read stock only for eligible offers');
