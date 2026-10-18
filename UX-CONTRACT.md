@@ -24,3 +24,12 @@ Site público com dois perfis: comprador e fornecedor. Rotas canônicas `/compra
 - Homepage, navegação, rodapé, sitemap, metadados, páginas públicas e redirecionamento de portal sem vendedor.
 - Rotas desativadas não exibem páginas de vendedor.
 - Compile e lint devem ser executados em ambiente com dependências instaladas antes do merge.
+
+## Consulta comercial do comprador por região (18/10/2026)
+- Só empresa com capacidade BUYER aprovada, vínculo ativo e região previamente autorizada por administrador com MFA recebe ofertas comerciais de terceiros.
+- Região é um direito empresarial armazenado no Supabase; o campo digitado no navegador jamais concede permissão.
+- Uma oferta visível precisa de produto mestre ativo, SKU aprovado, fornecedor e capacidade aprovados, vigência e quantidade disponível suficientes e pelo menos uma região compatível.
+- `BR` significa cobertura nacional de uma **oferta**, não acesso irrestrito a qualquer região; compradores continuam obrigados a ter UF de entrega autorizada.
+- Em falta de região autorizada, a interface distingue “região não liberada” de “nenhuma oferta homologada”; erros não expõem lista parcialmente carregada.
+- Permissões de região são concedidas/revogadas em Administração > Acessos e empresas mediante validação do servidor e RLS. Revogação exige confirmação explícita e é imediatamente refletida no banco.
+- Busca local ou mudança de região não gera pedido, separação de estoque ou cobrança. Nenhuma página pública é alterada.
