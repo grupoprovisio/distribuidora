@@ -121,9 +121,10 @@ export async function createPendingOffer(_previous:Feedback,data:FormData):Promi
   if(!skuId||base_price_minor===null||base_price_minor<=0||min_quantity===null||min_quantity<1
     ||!stateCodes.has(normalized))return failed("Informe SKU homologado, preço positivo em centavos, mínimo e UF válidos.");
   if(end&&!/^\d{4}-\d{2}-\d{2}$/.test(end))return failed("Data final inválida.");
-  const valid_to=end?new Date(end+"T23:59:59.999Z").toISOString():null;
-  if(valid_to && (Number.isNaN(Date.parse(valid_to)) || Date.parse(valid_to)<=Date.now()))
-    return failed("A validade final deve estar no futuro.");
+  const endTime=end?Date.parse(end+"T23:59:59.999Z"):null;
+  if(endTime!==null && (!Number.isFinite(endTime) || endTime<=Date.now()))
+    return failed("A validade final deve ser uma data real no futuro.");
+  const valid_to=endTime!==null?new Date(endTime).toISOString():null;
   const sku=await db.from("supplier_products").select("id,supplier_org_id,status").eq("id",skuId).maybeSingle();
   if(sku.error||!sku.data||sku.data.status!=="approved")return failed("A oferta exige um SKU aprovado.");
   const inserted=await db.from("offers").insert({
