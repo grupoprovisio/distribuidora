@@ -102,3 +102,30 @@ export async function addCapability(data:FormData) {
   if(result.error||!result.data?.length)throw new Error("Capacidade nao autorizada");
   revalidatePath("/admin/acessos");
 }
+
+/** Only an MFA-verified platform admin may approve regional visibility. */
+export async function addBuyerRegion(data:FormData) {
+  const client=await authorizedClient();
+  const buyer_org_id=id(data,"buyer_org_id");
+  const region_code=field(data,"region_code",5).toUpperCase();
+  if(!/^BR-(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/.test(region_code))
+    throw new Error("Regiao brasileira invalida.");
+  const result=await client.from("buyer_delivery_regions")
+    .insert({buyer_org_id,region_code}).select("buyer_org_id");
+  if(result.error||!result.data?.length)throw new Error("Nao foi possivel liberar a regiao. Confira a aprovacao da empresa e os vinculos.");
+  revalidatePath("/admin/acessos");
+  revalidatePath("/app/comprador/catalogo");
+}
+export async function revokeBuyerRegion(data:FormData) {
+  const client=await authorizedClient();
+  const buyer_org_id=id(data,"buyer_org_id");
+  const region_code=field(data,"region_code",5).toUpperCase();
+  if(field(data,"confirm",10)!=="revogar")throw new Error("Confirmacao obrigatoria.");
+  if(!/^BR-[A-Z]{2}$/.test(region_code))throw new Error("Regiao invalida.");
+  const result=await client.from("buyer_delivery_regions")
+    .delete().eq("buyer_org_id",buyer_org_id).eq("region_code",region_code)
+    .select("buyer_org_id");
+  if(result.error||!result.data?.length)throw new Error("Nao foi possivel revogar a regiao.");
+  revalidatePath("/admin/acessos");
+  revalidatePath("/app/comprador/catalogo");
+}

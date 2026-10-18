@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
 import { createClient } from "@/lib/supabase/server";
 import { myMarketplaceOrganizations } from "@/lib/marketplace/my-organizations";
-import { buyerCatalog } from "@/lib/marketplace/buyer-catalog";
+import { buyerCatalog, type BuyerCatalogResult } from "@/lib/marketplace/buyer-catalog";
 import { BuyerCatalogBrowser } from "@/components/buyer-catalog-browser";
 
 export const metadata:Metadata={title:"Catálogo empresarial · Provisio",robots:{index:false,follow:false}};
@@ -18,7 +18,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   const page=/^[0-9]{1,4}$/.test(params.pagina??"1")?Math.min(1000,Math.max(1,Number(params.pagina??"1"))):1;
   // Both helpers independently verify the authenticated user and enforce RLS.
   const summary=await myMarketplaceOrganizations("comprador");
-  const catalog=!summary.error && summary.organizations.length
+  const catalog:BuyerCatalogResult=!summary.error && summary.organizations.length
     ? await buyerCatalog(await createClient(),region,page)
     : {items:[],error:summary.error,hasMore:false};
   const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1);
@@ -43,6 +43,9 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
         {catalog.error ? <div role="alert" className="p-8">
           <ShieldAlert size={28} className="text-terra" aria-hidden/>
           <h2 className="mt-4 text-lg font-black text-forest-deep">Consulta indisponível</h2><p className="mt-2 text-sm text-muted">Verifique sua sessão, sua permissão de comprador ou o código da região.</p>
+        </div> : catalog.regionNotAuthorized ? <div role="status" className="p-8">
+          <h2 className="text-lg font-black text-forest-deep">Região ainda não autorizada para sua empresa</h2>
+          <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
         </div> : <BuyerCatalogBrowser items={catalog.items} region={region}/>}

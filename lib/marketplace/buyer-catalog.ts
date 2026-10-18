@@ -13,7 +13,7 @@ export type PrivateOffer = {
   priceMinor: number;
   minQuantity: number;
 };
-export type BuyerCatalogResult = { items: PrivateOffer[]; error: boolean; hasMore: boolean };
+export type BuyerCatalogResult = { items: PrivateOffer[]; error: boolean; hasMore: boolean; regionNotAuthorized?: boolean };
 const SOURCES = new Set(["MANUAL_AUTHORIZED","SUPPLIER_CSV_AUTHORIZED","SUPPLIER_API_AUTHORIZED","PLATFORM_STOCK"]);
 const PAGE_SIZE = 24;
 
@@ -22,6 +22,15 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const empty: BuyerCatalogResult = { items: [], error: false, hasMore: false };
   const regionCodes=allowedBuyerRegionCodes(region);
   if (!regionCodes.length || !Number.isSafeInteger(page) || page < 1 || page > 1000) return {...empty,error:true};
+  // A local buyer must hold an active organization entitlement for this
+  // specific delivery region. Global offers marked "BR" are still scoped here.
+  const normalized=region.trim().toUpperCase();
+  const uf=normalized.startsWith("BR-")?normalized.slice(3):normalized;
+  if(normalized==="BR" || !/^[A-Z]{2}$/.test(uf)) return {...empty,error:true};
+  const allowedRegion=await client.from("buyer_delivery_regions")
+    .select("buyer_org_id").eq("region_code","BR-"+uf).limit(1);
+  if(allowedRegion.error)return {...empty,error:true};
+  if(!allowedRegion.data?.length)return {...empty,regionNotAuthorized:true};
   const now = new Date().toISOString();
   const offset = (page - 1) * PAGE_SIZE;
   const query = await client.from("offers")

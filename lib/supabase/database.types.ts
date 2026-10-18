@@ -16,6 +16,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      buyer_delivery_regions: {
+        Row: {
+          buyer_org_id: string
+          region_code: string
+          created_at: string
+        }
+        Insert: {
+          buyer_org_id: string
+          region_code: string
+          created_at?: string
+        }
+        Update: {
+          buyer_org_id?: string
+          region_code?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyer_delivery_regions_buyer_org_id_fkey"
+            columns: ["buyer_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_positions: {
         Row: {
           available_quantity: number
