@@ -15,8 +15,11 @@ async function currentReadiness(){
   // AdminLayout requires active PLATFORM_ADMIN + MFA AAL2. All queries use RLS.
   const client=await createClient();
   const now=new Date().toISOString();
-  const result=await Promise.all([
-    client.from("organizations").select("id",{head:true,count:"exact"}).eq("kind","PLATFORM_OPERATOR").eq("is_platform_owned",true).eq("status","approved"),
+  const platformQueryPromise=client.from("organizations")
+    .select("id,legal_name,trade_name,tax_id")
+    .eq("kind","PLATFORM_OPERATOR").eq("is_platform_owned",true)
+    .eq("status","approved").limit(1);
+  const countsQueryPromise=Promise.all([
     client.from("organizations").select("id",{head:true,count:"exact"}).eq("kind","BUYER").eq("status","approved"),
     client.from("organization_capabilities").select("organization_id",{head:true,count:"exact"}).eq("capability","BUYER").eq("status","approved"),
     client.from("organization_capabilities").select("organization_id",{head:true,count:"exact"}).eq("capability","SUPPLIER").eq("status","approved"),
@@ -26,11 +29,14 @@ async function currentReadiness(){
     client.from("offers").select("id",{head:true,count:"exact"}).eq("status","approved").lte("valid_from",now).or("valid_to.is.null,valid_to.gt."+now),
     client.from("buyer_delivery_regions").select("buyer_org_id",{head:true,count:"exact"})
   ]);
-  if(result.some(item=>item.error || item.count === null))return null;
-  const counts=result.map(item=>item.count??0);
-  const [platform,buyerOrg,buyerCap,supplierCap,products,skus,stock,offers,regions]=counts;
+  const [platformQuery,countQueries]=await Promise.all([platformQueryPromise,countsQueryPromise]);
+  if(platformQuery.error || countQueries.some(item=>item.error || item.count === null))return null;
+  const platformData=platformQuery.data??[];
+  const platform=platformData.length;
+  const testOnly=platformData.some(o=>o.tax_id===null || /homologa[cç][aã]o|sem cnpj|ambiente de testes/i.test(o.legal_name));
+  const [buyerOrg,buyerCap,supplierCap,products,skus,stock,offers,regions]=countQueries.map(item=>item.count??0);
   const steps:CountItem[]=[
-    {label:"Organização operadora",count:platform,href:"/admin/acessos",what:"Precisa da identidade jurídica real e de administrador com MFA.",ready:platform>0},
+    {label:"Organização operadora",count:platform,href:"/admin/acessos",what:"Para homologação, a organização de testes pode permanecer sem CNPJ. Para operar comercialmente, será necessária regularização jurídica.",ready:platform>0},
     {label:"Empresa compradora homologada",count:buyerOrg,href:"/admin/acessos",what:"Empresa de cliente aprovada para a área de compras.",ready:buyerOrg>0},
     {label:"Capacidade de comprador aprovada",count:buyerCap,href:"/admin/acessos",what:"Vínculo comercial BUYER aprovado em alguma organização.",ready:buyerCap>0},
     {label:"Capacidade de fornecedor aprovada",count:supplierCap,href:"/admin/acessos",what:"Distribuidora própria ou fornecedor parceiro com autorização SUPPLIER.",ready:supplierCap>0},
@@ -40,7 +46,7 @@ async function currentReadiness(){
     {label:"Ofertas aprovadas e vigentes",count:offers,href:"/admin/marketplace/catalogo",what:"Preços aprovados na janela de validade atual; a oferta ainda deve atender às regras de região e estoque.",ready:offers>0},
     {label:"Regiões de comprador autorizadas",count:regions,href:"/admin/acessos",what:"UF liberada por um administrador para uma empresa compradora.",ready:regions>0},
   ];
-  return {steps,ready:steps.every(x=>x.ready)};
+  return {steps,ready:steps.every(x=>x.ready),testOnly};
 }
 
 export default async function ReadinessPage(){
@@ -63,6 +69,10 @@ export default async function ReadinessPage(){
           </p>
         </div>
       </div>
+      {snapshot?.testOnly ? <section role="status" aria-label="Ambiente exclusivo de homologação" className="mt-7 rounded-2xl border border-line bg-sand p-5 text-sm leading-relaxed text-forest">
+        <p className="font-black text-forest-deep">Ambiente de homologação — sem CNPJ</p>
+        <p className="mt-2">A organização operadora ainda é de testes. Você pode preparar produtos, SKUs e ofertas para validar o fluxo, mas este indicador não comprova regularização jurídica nem autoriza emissão fiscal, pagamentos ou transações comerciais reais.</p>
+      </section> : null}
       {!snapshot?<section role="alert" className="mt-8 rounded-3xl border border-line bg-paper p-7">
         <ShieldAlert size={26} className="text-terra" aria-hidden/>
         <h2 className="mt-4 text-lg font-black text-forest-deep">Verificação indisponível</h2>
@@ -76,7 +86,7 @@ export default async function ReadinessPage(){
             </div>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold">
               {snapshot.ready?<CheckCircle2 size={18} aria-hidden/>:<LockKeyhole size={18} aria-hidden/>}
-              {snapshot.ready?"Pré-requisitos cadastrais presentes":"Cadastro comercial ainda incompleto"}
+              {snapshot.ready?"Pré-requisitos para testes presentes":"Preparação de cadastro em andamento"}
             </span>
           </div>
           <div role="progressbar" aria-label="Etapas cadastrais atendidas" aria-valuemin={0} aria-valuemax={snapshot.steps.length} aria-valuenow={completed}
@@ -84,7 +94,7 @@ export default async function ReadinessPage(){
             <div className="h-full rounded-full bg-lime" style={{width:(100*completed/snapshot.steps.length)+"%"}}/>
           </div>
           <p className="mt-4 text-xs leading-relaxed text-white/75">
-            Esta verificação é cadastral, não substitui testes reais de login, isolamento entre empresas, frete, pedidos, pagamentos e emissão fiscal.
+            Este checklist confirma apenas registros cadastrais, não a conformidade fiscal. Mesmo 9/9 não libera vendas: login com MFA, isolamento entre empresas, entregas, pedidos e pagamentos exigem homologação independente.
           </p>
         </section>
         <ol className="mt-7 grid gap-3 md:grid-cols-2">

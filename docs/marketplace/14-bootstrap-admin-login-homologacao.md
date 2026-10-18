@@ -1,4 +1,4 @@
-# Provisio | Ativação segura do primeiro administrador e login
+> **ATUALIZAÇÃO — 18/10/2026:** o bootstrap foi realizado e conferido no projeto Supabase da Provisio. Existe uma organização operadora de **homologação sem CNPJ** (`tax_id=NULL`) e uma organização compradora interna de testes, ambas associadas à conta confirmada `contato@grupoprovisio.com`. A operadora possui `PLATFORM_ADMIN`, a compradora interna possui `ORG_ADMIN` e autorização regional `BR-SP`. **Não execute novamente a SQL de criação inicial abaixo:** ela é apenas referência histórica. A conta ainda não tem MFA verificado, o catálogo ainda não contém produtos e o acesso Vercel ao time `grupoprovisio` ainda retorna 403. Login de produção não foi homologado e pagamentos continuam desativados.\n\n# Provisio | Ativação segura do primeiro administrador e login
 
 **Estado em 16/10/2026:** projeto Supabase `xprvdquocenfqvnokmmi` ativo, 0 usuários, 0 organizações, migrations 0001-0008 aplicadas, regras RLS ativadas. Não existe conta com `PLATFORM_ADMIN`. Código em PR #4, ainda não integrado à main. **Não há login habilitado em produção.**
 
