@@ -48,7 +48,7 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const visible=(query.data??[]).slice(0,PAGE_SIZE).filter(o=>SOURCES.has(o.source_type)
     && o.status==="approved" && o.valid_from<=now && (!o.valid_to || o.valid_to>now)
     && Number.isSafeInteger(o.base_price_minor) && o.base_price_minor>=0);
-  if (!visible.length) return {...empty,hasMore};
+  if (!visible.length) return {...empty,hasMore:hasMore&&page<1000};
   const ids=visible.map(o=>o.id);
   const skuIds=[...new Set(visible.map(o=>o.supplier_product_id))];
   const orgIds=[...new Set(visible.map(o=>o.supplier_org_id))];
@@ -61,7 +61,7 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   ]);
   if ([skus,orgs,regions,inventory,capabilities].some(q=>q.error)) return {...empty,error:true};
   const productIds=[...new Set((skus.data??[]).map(s=>s.product_id))];
-  if (!productIds.length) return {...empty,hasMore};
+  if (!productIds.length) return {...empty,hasMore:hasMore&&page<1000};
   const products=await client.from("products").select("id,slug,name,status").in("id",productIds).eq("status","active");
   if (products.error) return {...empty,error:true};
   const prodMap=new Map((products.data??[]).map(p=>[p.id,p]));
@@ -85,5 +85,5 @@ export async function buyerCatalog(client: Client, region: string, page: number)
       priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity
     });
   }
-  return {items,error:false,hasMore};
+  return {items,error:false,hasMore:hasMore&&page<1000};
 }
