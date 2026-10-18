@@ -45,7 +45,8 @@ export default async function SupplierCatalogPage({searchParams}:{searchParams:P
     ||(offers.data?.length??0)>1000;
   const byProduct=new Map((products.data??[]).map(product=>[product.id,product]));
   const byOrganization=new Map((organizations.data??[]).map(org=>[org.id,org]));
-  const bySupplierProduct=new Map<string,NonNullable<typeof offers.data>>();
+  type OfferRow={id:string;supplier_org_id:string;supplier_product_id:string;base_price_minor:number;min_quantity:number;status:string;source_type:string};
+  const bySupplierProduct=new Map<string,OfferRow[]>();
   for(const offer of offers.data??[]){
     const key=offer.supplier_product_id+":"+offer.supplier_org_id;
     const current=bySupplierProduct.get(key)??[];
@@ -71,7 +72,7 @@ export default async function SupplierCatalogPage({searchParams}:{searchParams:P
     };
   });
   const total=supplierProducts.count??0;
-  const hasNext=page*PAGE_SIZE<total;
+  const hasNext=page<1000 && page*PAGE_SIZE<total;
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="terra" title="Meu catálogo" backHref="/app/fornecedor" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
