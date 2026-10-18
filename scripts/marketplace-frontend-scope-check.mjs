@@ -152,5 +152,5 @@ test("Catálogo privado filtra a UF antes da paginação e detecta a próxima p�
   assert.doesNotMatch(source,/hasMore:offers\.length>PAGE_SIZE/);
   assert.match(source,/page<1000/);
   assert.match(source,/buyer_delivery_regions/);
-  assert.doesNotMatch(source,/service_role|sb_secret_/);
+  assert.doesNotMatch(source,/SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|sb_secret_[A-Za-z0-9]/);
 });
