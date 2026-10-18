@@ -34,7 +34,7 @@ function statusTone(status: string) {
   return "bg-blush text-wine";
 }
 
-export function SupplierCatalogBrowser({ rows }: { rows: SupplierCatalogRow[] }) {
+export function SupplierCatalogBrowser({ rows, page, total }: { rows: SupplierCatalogRow[]; page: number; total: number }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const filtered = useMemo(() => {
@@ -50,9 +50,9 @@ export function SupplierCatalogBrowser({ rows }: { rows: SupplierCatalogRow[] })
     <>
       <section aria-label="Resumo do catálogo" className="grid gap-3 sm:grid-cols-3">
         {[
-          { label: "Produtos vinculados", value: rows.length },
-          { label: "Aguardando homologação", value: rows.filter(row => row.status === "pending").length },
-          { label: "Ofertas aprovadas", value: rows.reduce((acc,row) => acc + row.approvedOffers, 0) },
+          { label: "SKUs nesta página", value: rows.length },
+          { label: "Pendentes nesta página", value: rows.filter(row => row.status === "pending").length },
+          { label: "Ofertas aprovadas nesta página", value: rows.reduce((acc,row) => acc + row.approvedOffers, 0) },
         ].map(metric => <article key={metric.label} className="rounded-2xl border border-line bg-paper p-5">
           <p className="text-xs font-bold uppercase tracking-wider text-muted">{metric.label}</p>
           <p className="mt-3 text-3xl font-black tabular-nums text-forest-deep">{metric.value}</p>
@@ -63,7 +63,7 @@ export function SupplierCatalogBrowser({ rows }: { rows: SupplierCatalogRow[] })
         <div className="border-b border-line p-5 sm:p-7">
           <h2 id="supplier-catalog-title" className="text-xl font-black text-forest-deep">Produtos da sua organização</h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-            Dados reais, somente leitura, limitados pelas permissões do seu usuário. O catálogo público permanece separado até a homologação das ofertas.
+            Dados reais, somente leitura, limitados pelas permissões do seu usuário. Busca e filtros se aplicam somente aos 30 SKUs carregados nesta página. O catálogo público permanece separado até homologação.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <label className="flex flex-1 flex-col gap-1.5 text-xs font-extrabold text-forest" htmlFor="supplier-product-search">
@@ -86,6 +86,7 @@ export function SupplierCatalogBrowser({ rows }: { rows: SupplierCatalogRow[] })
             </label>
           </div>
         </div>
+        <p className="px-5 py-3 text-xs font-semibold text-muted" role="status">Página {page} · {total} SKUs autorizados no total · {filtered.length} resultado(s) nos filtros desta página</p>
         {filtered.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[730px] border-collapse text-left">
@@ -125,7 +126,7 @@ export function SupplierCatalogBrowser({ rows }: { rows: SupplierCatalogRow[] })
             </h3>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted">
               {rows.length
-                ? "Ajuste a busca ou a situação selecionada para visualizar seus produtos."
+                ? "Ajuste os filtros ou navegue para outra página. A busca considera apenas os SKUs desta página."
                 : "Após a homologação, os produtos e as ofertas autorizadas da sua organização aparecerão aqui. Não são exibidos dados de outros fornecedores."}
             </p>
             {rows.length ? <button type="button" onClick={() => { setSearch(""); setStatus("all"); }}
