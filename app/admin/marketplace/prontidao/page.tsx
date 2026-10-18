@@ -15,8 +15,11 @@ async function currentReadiness(){
   // AdminLayout requires active PLATFORM_ADMIN + MFA AAL2. All queries use RLS.
   const client=await createClient();
   const now=new Date().toISOString();
-  const result=await Promise.all([
-    client.from("organizations").select("id,legal_name,trade_name,tax_id").eq("kind","PLATFORM_OPERATOR").eq("is_platform_owned",true).eq("status","approved").limit(1),
+  const platformQueryPromise=client.from("organizations")
+    .select("id,legal_name,trade_name,tax_id")
+    .eq("kind","PLATFORM_OPERATOR").eq("is_platform_owned",true)
+    .eq("status","approved").limit(1);
+  const countsQueryPromise=Promise.all([
     client.from("organizations").select("id",{head:true,count:"exact"}).eq("kind","BUYER").eq("status","approved"),
     client.from("organization_capabilities").select("organization_id",{head:true,count:"exact"}).eq("capability","BUYER").eq("status","approved"),
     client.from("organization_capabilities").select("organization_id",{head:true,count:"exact"}).eq("capability","SUPPLIER").eq("status","approved"),
@@ -26,7 +29,7 @@ async function currentReadiness(){
     client.from("offers").select("id",{head:true,count:"exact"}).eq("status","approved").lte("valid_from",now).or("valid_to.is.null,valid_to.gt."+now),
     client.from("buyer_delivery_regions").select("buyer_org_id",{head:true,count:"exact"})
   ]);
-  const [platformQuery,...countQueries]=result;
+  const [platformQuery,countQueries]=await Promise.all([platformQueryPromise,countsQueryPromise]);
   if(platformQuery.error || countQueries.some(item=>item.error || item.count === null))return null;
   const platformData=platformQuery.data??[];
   const platform=platformData.length;
