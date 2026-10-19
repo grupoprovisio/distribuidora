@@ -188,6 +188,9 @@ begin
   end if;
   select * into v_order from public.purchase_orders where buyer_org_id=buyer_id and checkout_key=idem;
   if found then
+    if not marketplace_private.has_active_capability(buyer_id,'BUYER') then
+      raise exception 'buyer_not_authorized' using errcode='42501';
+    end if;
     if v_order.quote_request_id<>request_ref or v_order.proposal_id<>proposal_ref
       or v_order.created_by is distinct from (select auth.uid()) then
       raise exception 'idempotency_conflict' using errcode='22023';
