@@ -86,7 +86,7 @@ export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
     weight: 8,
     completed: 7,
     delivered: "Fluxo versionado de RFQ real e proposta com RLS, idempotência, interfaces comprador/fornecedor e testes SQL descartáveis.",
-    remaining: "Aplicar migração em homologação, validar Preview autenticado e evoluir comparativo/múltiplas propostas."
+    remaining: "Aplicar migração em homologação, validar Preview autenticado e evoluir comparativo/múltiplas propostas.",
     href: "/app/comprador/cotacoes",
   },
   {
@@ -94,8 +94,8 @@ export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
     title: "Pedidos, checkout e acompanhamento",
     weight: 8,
     completed: 4,
-    delivered: "Checkout versionado cria solicitação de pedido pendente, sem pagamento ou reserva, com totais inteiros e isolamento de fornecedor."
-    remaining: "Confirmação do fornecedor, reserva, entregas, carrinho múltiplo, gateway de pagamento e Preview autenticado."
+    delivered: "Checkout versionado cria solicitação de pedido pendente, sem pagamento ou reserva, com totais inteiros e isolamento de fornecedor.",
+    remaining: "Confirmação do fornecedor, reserva, entregas, carrinho múltiplo, gateway de pagamento e Preview autenticado.",
     href: "/app/comprador/pedidos",
   },
   {
@@ -103,8 +103,8 @@ export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
     title: "Qualidade visual e testes E2E",
     weight: 6,
     completed: 2,
-    delivered: "RLS, RFQ e checkout exercitados em PostgreSQL descartável; testes de código e CI configurados."
-    remaining: "Concluir smoke/build, validar responsividade e executar jornadas autenticadas no Preview Vercel bloqueado por 403."
+    delivered: "RLS, RFQ e checkout exercitados em PostgreSQL descartável; testes de código e CI configurados.",
+    remaining: "Concluir smoke/build, validar responsividade e executar jornadas autenticadas no Preview Vercel bloqueado por 403.",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
