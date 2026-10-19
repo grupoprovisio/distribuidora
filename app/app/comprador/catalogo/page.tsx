@@ -48,7 +48,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
           <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
-        </div> : <BuyerCatalogBrowser items={catalog.items} region={region}/>}
+        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} transactionsEnabled={process.env.MARKETPLACE_TRANSACTIONS_ENABLED==="true"}/>}
         <nav aria-label="Paginação do catálogo" className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 text-sm font-bold text-forest">
           <span>Página {page}</span><div className="flex gap-2">
             {page>1 && <Link href={prevUrl} className="rounded-full bg-paper px-4 py-3 ring-1 ring-line">Anterior</Link>}
