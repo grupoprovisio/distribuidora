@@ -154,3 +154,34 @@ test("Catálogo privado filtra a UF antes da paginação e detecta a próxima p�
   assert.match(source,/buyer_delivery_regions/);
   assert.doesNotMatch(source,/SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|sb_secret_[A-Za-z0-9]/);
 });
+
+
+test("Painel de progresso define 100 pontos, sem confundir front-end com operacao real", () => {
+  const progress=file("lib/marketplace/frontend-progress.ts");
+  const weights=[...progress.matchAll(/\bweight:\s*(\d+),/g)].map(match=>Number(match[1]));
+  const completed=[...progress.matchAll(/\bcompleted:\s*(\d+),/g)].map(match=>Number(match[1]));
+  assert.equal(weights.length,10,"Deve existir uma revisao de dez frentes");
+  assert.equal(weights.reduce((sum,value)=>sum+value,0),100);
+  assert.equal(weights.length,completed.length);
+  for(let i=0;i<weights.length;i++){
+    assert.ok(completed[i]>=0 && completed[i]<=weights[i],"Conclusao deve estar entre zero e o peso");
+  }
+  const page=file("app/admin/marketplace/progresso/page.tsx");
+  assert.match(page,/FRONTEND_PERCENT/);
+  assert.match(page,/role="progressbar"/);
+  assert.match(page,/Revisao|Revisão|revisão|revisao/);
+  assert.match(page,/comercial|operações|operacoes/i);
+  assert.match(file("components/admin-nav.tsx"),/\/admin\/marketplace\/progresso/);
+  assert.match(file("app/admin/layout.tsx"),/requireMarketplacePortal\("admin"\)/);
+});
+
+test("O comprador prepara cotacao privada sem criar pedido ou enviar informacoes ao backend", () => {
+  const page=file("app/app/comprador/cotacoes/page.tsx");
+  const draft=file("components/buyer-quote-draft.tsx");
+  assert.match(page,/BuyerQuoteDraft/);
+  assert.match(file("app/app/comprador/layout.tsx"),/requireMarketplacePortal\("comprador"\)/);
+  assert.match(draft,/mailto:contato@grupoprovisio.com/);
+  assert.match(draft,/navigator\.clipboard\.writeText/);
+  assert.match(draft,/Nenhum dado será enviado ou salvo|Nenhum dado será enviado|não foi criado pedido|Não foi criado pedido/i);
+  assert.doesNotMatch(draft,/fetch\s*\(|\.from\(\s*["'](orders|quotes|payments)["']\s*\)|localStorage|sessionStorage/);
+});
