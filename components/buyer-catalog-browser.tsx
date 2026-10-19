@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { FilterX, PackageSearch, Search, ShieldCheck } from "lucide-react";
 import type { PrivateOffer } from "@/lib/marketplace/buyer-catalog";
 
@@ -55,6 +56,7 @@ export function BuyerCatalogBrowser({ items, region }: { items: PrivateOffer[]; 
         <p className="mt-2 text-xs text-muted">SKU: {item.sku} · Embalagem: {item.pack}</p>
         <p className="mt-5 text-2xl font-black tabular-nums text-forest-deep">{currency.format(item.priceMinor/100)}</p>
         <p className="mt-2 text-sm text-muted">Quantidade mínima: {item.minQuantity} · Região: {region}</p>
+        <Link href={"/app/comprador/cotacoes?oferta="+encodeURIComponent(item.id)+"&regiao="+encodeURIComponent(region)} className="mt-4 inline-flex min-h-11 items-center rounded-full bg-forest px-5 text-sm font-extrabold text-white hover:bg-forest-deep">Solicitar cotação</Link>
         <p className="mt-4 flex items-center gap-2 text-xs font-semibold text-forest">
           <ShieldCheck size={16} aria-hidden/> Oferta aprovada
         </p>
