@@ -3,13 +3,17 @@ import { AppHeader } from "@/components/app-header";
 import { BuyerQuoteDraft } from "@/components/buyer-quote-draft";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
+import { myMarketplaceOrganizations } from "@/lib/marketplace/my-organizations";
+import { TransactionConsole } from "@/components/marketplace-transaction-console";
 
 export const metadata: Metadata = {
   title: "Preparar cotação · Comprador · Provisio",
   robots: { index: false, follow: false },
 };
 
-export default function BuyerQuotesPage() {
+export default async function BuyerQuotesPage({searchParams}:{searchParams:Promise<{oferta?:string;regiao?:string}>}) {
+  const params=await searchParams;
+  const organizations=await myMarketplaceOrganizations("comprador");
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="forest" title="Cotações" backHref="/app/comprador" showListButton={false} />
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
@@ -19,6 +23,8 @@ export default function BuyerQuotesPage() {
         Prepare os dados de sua necessidade de abastecimento. O envio automático, a negociação e o acompanhamento de propostas estarão disponíveis somente após a homologação do marketplace.
       </p>
       <BuyerQuoteDraft />
+      {organizations.error?<p role="alert" className="mt-6 rounded-2xl bg-sand p-5 text-sm text-forest">Não foi possível consultar as empresas autorizadas.</p>:
+       <TransactionConsole mode="buyer-quotes" organizations={organizations.organizations} initialOffer={params.oferta??""} initialRegion={params.regiao??"SP"} />}
     </main>
     <SiteFooter />
   </div>;
