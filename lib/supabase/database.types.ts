@@ -16,6 +16,132 @@ export type Database = {
   }
   public: {
     Tables: {
+      quote_requests: {
+        Row: {
+          id: string
+          buyer_org_id: string
+          supplier_org_id: string
+          offer_id: string
+          created_by: string
+          request_key: string
+          quantity: number
+          region_code: string
+          notes: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          buyer_org_id: string
+          supplier_org_id: string
+          offer_id: string
+          created_by: string
+          request_key: string
+          quantity: number
+          region_code: string
+          notes?: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          buyer_org_id?: string
+          supplier_org_id?: string
+          offer_id?: string
+          created_by?: string
+          request_key?: string
+          quantity?: number
+          region_code?: string
+          notes?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      quote_proposals: {
+        Row: {
+          id: string
+          quote_request_id: string
+          supplier_org_id: string
+          proposed_by: string
+          unit_price_minor: number
+          expires_at: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          quote_request_id: string
+          supplier_org_id: string
+          proposed_by: string
+          unit_price_minor: number
+          expires_at: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          quote_request_id?: string
+          supplier_org_id?: string
+          proposed_by?: string
+          unit_price_minor?: number
+          expires_at?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      purchase_orders: {
+        Row: {
+          id: string
+          buyer_org_id: string
+          supplier_org_id: string
+          quote_request_id: string
+          proposal_id: string
+          offer_id: string
+          created_by: string
+          checkout_key: string
+          quantity: number
+          region_code: string
+          unit_price_minor: number
+          total_price_minor: number
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          buyer_org_id: string
+          supplier_org_id: string
+          quote_request_id: string
+          proposal_id: string
+          offer_id: string
+          created_by: string
+          checkout_key: string
+          quantity: number
+          region_code: string
+          unit_price_minor: number
+          total_price_minor: number
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          buyer_org_id?: string
+          supplier_org_id?: string
+          quote_request_id?: string
+          proposal_id?: string
+          offer_id?: string
+          created_by?: string
+          checkout_key?: string
+          quantity?: number
+          region_code?: string
+          unit_price_minor?: number
+          total_price_minor?: number
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       buyer_delivery_regions: {
         Row: {
           buyer_org_id: string
