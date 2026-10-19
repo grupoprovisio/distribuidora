@@ -84,7 +84,7 @@ export function TransactionConsole({
     }finally{setLoading(false);}
   },[mode]);
 
-  useEffect(()=>{void refresh();},[refresh]);
+  useEffect(()=>{void Promise.resolve().then(refresh);},[refresh]);
 
   async function submit(payload:Record<string,unknown>,success:string) {
     setError("");setNotice("");setBusy(true);
@@ -189,7 +189,7 @@ export function TransactionConsole({
             <p className="mt-1">Total proposto: {money(proposal.unit_price_minor*quote.quantity)} · Válida até {date(proposal.expires_at)}</p>
           </div>:<p className="mt-3 text-sm text-muted">Aguardando proposta do fornecedor.</p>}
           {mode==="buyer_quotes" && quote.status==="submitted" && proposal &&
-            new Date(proposal.expires_at).getTime()>Date.now()&&<button type="button" disabled={busy}
+            <button type="button" disabled={busy}
             onClick={()=>checkout(quote,proposal)} className="mt-4 min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Solicitar pedido sem pagamento</button>}
           {mode==="supplier_quotes"&&!proposal&&quote.status==="submitted"&&<div className="mt-5 grid gap-3 sm:grid-cols-2">
             <label className={label}>Preço unitário (R$)
