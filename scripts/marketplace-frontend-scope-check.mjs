@@ -185,3 +185,14 @@ test("O comprador prepara cotacao privada sem criar pedido ou enviar informacoes
   assert.match(draft,/Nenhum dado será enviado ou salvo|Nenhum dado será enviado|não foi criado pedido|Não foi criado pedido/i);
   assert.doesNotMatch(draft,/fetch\s*\(|\.from\(\s*["'](orders|quotes|payments)["']\s*\)|localStorage|sessionStorage/);
 });
+
+
+test("Contato comercial nao apresenta telefone ou email ficticios nem simula envio", () => {
+  const page=file("app/contato/page.tsx");
+  const form=file("components/contact-form.tsx");
+  assert.match(page,/contato@grupoprovisio\.com/);
+  assert.match(form,/mailto:/);
+  assert.match(form,/Nenhum dado é enviado automaticamente/);
+  assert.doesNotMatch(page,/\(00\)\s*00000-0000|comercial@distribuidora\.com/);
+  assert.doesNotMatch(form,/track\("generate_lead"|fetch\s*\(|setSent\(/);
+});
