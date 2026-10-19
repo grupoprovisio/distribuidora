@@ -8,7 +8,7 @@
 ## Progresso ponderado de implementação
 O painel em `/admin/marketplace/progresso` está atrás do layout administrativo (autorização de operador de plataforma + MFA). Sua fonte versionada é `lib/marketplace/frontend-progress.ts`.
 
-**73% de implementação editorialmente estimada; 27% restante.** Este número é uma avaliação manual dos arquivos e funcionalidades visíveis, e **não** o percentual de funcionalidades comprovadamente aprovadas por E2E, clientes piloto, ou sistemas em produção.
+**80% de implementação editorialmente estimada na branch PR #25; 20% restante.** Este número é uma avaliação manual dos arquivos e funcionalidades visíveis, e **não** o percentual de funcionalidades comprovadamente aprovadas por E2E, clientes piloto, ou sistemas em produção.
 
 | Frente | Pontos entregues | Peso máximo | Falta principal |
 | --- | ---: | ---: | --- |
@@ -19,10 +19,10 @@ O painel em `/admin/marketplace/progresso` está atrás do layout administrativo
 | Portal do fornecedor | 10 | 12 | permissões e escrita comercial aprovada |
 | Catálogo do comprador | 11 | 14 | ofertas homologadas e testes cross-tenant reais |
 | Administração/cadastro | 10 | 12 | testes humanos MFA e validações reais |
-| Cotação | 4 | 8 | persistência RFQ e propostas |
-| Pedidos/checkout | 2 | 8 | carrinho, checkout, subpedidos e entregas |
-| Testes visuais e E2E | 0 | 6 | execução em Preview |
-| **Total** | **73** | **100** | **27 pontos restantes** |
+| Cotação | 7 | 8 | RFQ/propostas versionadas; faltam testes E2E Preview e negociação ampliada |
+| Pedidos/checkout | 4 | 8 | checkout registra solicitação pendente; faltam confirmação, pagamento, reserva e entregas |
+| Testes visuais e E2E | 2 | 6 | SQL com RLS, lint e typecheck concluídos; falta E2E autenticado |
+| **Total** | **80** | **100** | **20 pontos restantes** |
 
 ## Avanços desta branch
 1. Painel de progresso de 0% a 100%, com pesos, pontuação, evidência implementada, pendências, links de navegação e indicação clara de que o ambiente comercial não está liberado.
@@ -39,3 +39,6 @@ O painel em `/admin/marketplace/progresso` está atrás do layout administrativo
 
 ## Segurança e política de publicação
 Não foram realizadas migrações, bootstrap, mudanças de RLS, writes Supabase, alteração de dados reais, merge ou deploy. Estas mudanças são uma proposta de revisão em branch isolada.
+
+## Evolução PR #25
+A pontuação mudou de 73 para 80 após registrar a migração 0016 e implementar cotação, proposta, solicitação de pedido e testes SQL em banco descartável. Isso é uma estimativa de **código versionado**, não serviço ativo no Supabase remoto. O build/testes automatizados foram aprovados no CI; o Preview autenticado continua bloqueado por HTTP 403 na equipe Vercel. Pagamentos reais e reservas permanecem desligados.
