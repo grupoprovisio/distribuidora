@@ -1,12 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FilterX, PackageSearch, Search, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, FilterX, PackageSearch, Search, ShieldCheck } from "lucide-react";
 import type { PrivateOffer } from "@/lib/marketplace/buyer-catalog";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-export function BuyerCatalogBrowser({ items, region }: { items: PrivateOffer[]; region: string }) {
+export function BuyerCatalogBrowser({ items, region, transactionsEnabled = false }: { items: PrivateOffer[]; region: string; transactionsEnabled?: boolean }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");
   const shown = useMemo(() => {
@@ -58,6 +59,10 @@ export function BuyerCatalogBrowser({ items, region }: { items: PrivateOffer[]; 
         <p className="mt-4 flex items-center gap-2 text-xs font-semibold text-forest">
           <ShieldCheck size={16} aria-hidden/> Oferta aprovada
         </p>
+        {transactionsEnabled&&<Link href={"/app/comprador/cotacoes?oferta="+encodeURIComponent(item.id)+"&regiao="+encodeURIComponent(region.startsWith("BR-")?region:"BR-"+region)}
+          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-extrabold text-white focus-visible:outline-2 focus-visible:outline-forest">
+          Solicitar cotação <ArrowRight size={16} aria-hidden/>
+        </Link>}
       </article>)}
     </div> : <div className="px-6 py-12 text-center">
       {search ? <FilterX size={29} className="mx-auto text-forest" aria-hidden/> : <PackageSearch size={29} className="mx-auto text-forest" aria-hidden/>}
