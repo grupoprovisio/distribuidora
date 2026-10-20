@@ -14,7 +14,7 @@ export type FrontendMilestone = {
   href: string;
 };
 
-export const FRONTEND_PROGRESS_REVIEWED_AT = "19/10/2026";
+export const FRONTEND_PROGRESS_REVIEWED_AT = "20/10/2026";
 
 export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
   {
@@ -57,9 +57,9 @@ export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
     id: "fornecedor",
     title: "Painel do fornecedor",
     weight: 12,
-    completed: 10,
-    delivered: "Catálogo privado paginado, prévia de CSV, operação e homologação com leitura protegida.",
-    remaining: "Testar com fornecedor piloto e habilitar edição controlada de ofertas quando aprovada.",
+    completed: 11,
+    delivered: "Catálogo e CSV, homologação, cotações, propostas e ações autorizadas para confirmar/recusar pedidos e reservar estoque.",
+    remaining: "Homologar fornecedor piloto com sessão real e manter edição comercial sob revisão autorizada.",
     href: "/app/fornecedor",
   },
   {
@@ -93,18 +93,18 @@ export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
     id: "pedidos",
     title: "Pedidos, checkout e acompanhamento",
     weight: 8,
-    completed: 4,
-    delivered: "Checkout versionado cria solicitação de pedido pendente, sem pagamento ou reserva, com totais inteiros e isolamento de fornecedor.",
-    remaining: "Confirmação do fornecedor, reserva, entregas, carrinho múltiplo, gateway de pagamento e Preview autenticado.",
+    completed: 6,
+    delivered: "Checkout cria solicitação pendente, confirmação reserva estoque com transação atômica; recusas, cancelamentos e liberações são idempotentes.",
+    remaining: "Frete, expedição, conciliação, carrinho múltiplo, gateway de pagamento e testes de Preview autenticado.",
     href: "/app/comprador/pedidos",
   },
   {
     id: "validacao",
     title: "Qualidade visual e testes E2E",
     weight: 6,
-    completed: 2,
-    delivered: "RLS, RFQ e checkout exercitados em PostgreSQL descartável; testes de código e CI configurados.",
-    remaining: "Concluir smoke/build, validar responsividade e executar jornadas autenticadas no Preview Vercel bloqueado por 403.",
+    completed: 3,
+    delivered: "Migrações 0001-0017, isolamento, cotação, checkout, reserva e cancelamento testados em Postgres 17 descartável; CI com lint, TS e build.",
+    remaining: "Homologar login/MFA, funcionalidades ativas e responsividade em Preview Vercel (atualmente bloqueado por 403).",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
