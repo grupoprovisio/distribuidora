@@ -94,6 +94,19 @@ export async function POST(request: Request) {
       result=response;
       break;
     }
+    case "order_transition": {
+      const action=body.transition;
+      const supplierAction=action==="supplier_confirm"||action==="supplier_reject"||action==="supplier_cancel";
+      if (!supplierAction && action!=="buyer_cancel") return invalid();
+      if (!access.allowed.includes(supplierAction?"fornecedor":"comprador"))
+        return json({ok:false,reason:"forbidden"},403);
+      if (!isUuid(body.orderId)) return invalid();
+      const response=await client.rpc("marketplace_transition_order",{
+        order_id:body.orderId,action,
+      });
+      result=response;
+      break;
+    }
     case "checkout": {
       if (!access.allowed.includes("comprador")) return json({ok:false,reason:"forbidden"},403);
       if (!isUuid(body.buyerOrgId)||!isUuid(body.quoteRequestId)||!isUuid(body.proposalId)||

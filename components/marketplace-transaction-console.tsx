@@ -32,6 +32,8 @@ const statusName=(value:string)=>({
   submitted:"Solicitada",converted:"Convertida em solicitação de pedido",
   cancelled:"Cancelada",proposed:"Proposta recebida",withdrawn:"Retirada",
   awaiting_supplier_confirmation:"Aguardando confirmação do fornecedor",
+  confirmed:"Confirmado pelo fornecedor · estoque reservado",
+  rejected:"Recusado pelo fornecedor",
 } as Record<string,string>)[value]??"Em análise";
 
 function parseCents(text:string) {
@@ -129,15 +131,32 @@ export function TransactionConsole({
   function checkout(quote:Quote,proposal:Proposal){
     if(!window.confirm("Enviar solicitação de pedido ao fornecedor? Não há pagamento, reserva de estoque ou pedido final confirmado."))return;
     void submit({action:"checkout",buyerOrgId:quote.buyer_org_id,
-      quoteRequestId:quote.id,proposalId:proposal.id,idempotencyKey:crypto.randomUUID()},
+      quoteRequestId:quote.id,proposalId:proposal.id,idempotencyKey:quote.id},
       "Solicitação de pedido registrada, aguardando confirmação do fornecedor.");
+  }
+
+  function transition(order:Order,action:"supplier_confirm"|"supplier_reject"|"supplier_cancel"|"buyer_cancel"){
+    const copy:Record<typeof action,string>={
+      supplier_confirm:"Confirmar o pedido e reservar unidades do estoque? Não há pagamento nem expedição.",
+      supplier_reject:"Recusar esta solicitação de pedido?",
+      supplier_cancel:"Cancelar o pedido confirmado e liberar a reserva de estoque?",
+      buyer_cancel:"Cancelar esta solicitação antes da confirmação do fornecedor?",
+    };
+    if(!window.confirm(copy[action]))return;
+    const success:Record<typeof action,string>={
+      supplier_confirm:"Pedido confirmado e unidades reservadas no estoque.",
+      supplier_reject:"Solicitação recusada, sem reserva de estoque.",
+      supplier_cancel:"Pedido cancelado e reserva de estoque liberada.",
+      buyer_cancel:"Solicitação cancelada antes da confirmação.",
+    };
+    void submit({action:"order_transition",transition:action,orderId:order.id},success[action]);
   }
 
   const label="block text-sm font-extrabold text-forest-deep";
   const field="mt-2 min-h-12 w-full rounded-xl border border-line bg-canvas px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-forest";
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-lime-soft p-4 text-sm text-forest">
-      <p className="flex items-center gap-2"><ShieldCheck size={18} aria-hidden /> Registros reais com permissão por empresa. <strong>Sem cobrança, nota fiscal, reserva ou confirmação automática de entrega.</strong></p>
+      <p className="flex items-center gap-2"><ShieldCheck size={18} aria-hidden /> Registros reais com permissão por empresa. <strong>Confirmação do fornecedor reserva estoque; não há cobrança, nota fiscal nem expedição automática.</strong></p>
       <button type="button" disabled={loading||busy} onClick={()=>void refresh()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-4 text-sm font-extrabold text-white disabled:opacity-50"><RefreshCw size={17} aria-hidden/> Atualizar</button>
     </div>
     {error&&<p role="alert" className="rounded-xl bg-sand p-4 text-sm font-bold text-forest-deep">{error}</p>}
@@ -206,7 +225,17 @@ export function TransactionConsole({
         <div className="flex flex-wrap justify-between gap-3"><strong className="text-forest-deep">Pedido #{order.id.slice(0,8)}</strong><span className="text-xs font-extrabold text-forest">{statusName(order.status)}</span></div>
         <p className="mt-3 text-sm text-muted">Quantidade: {order.quantity} · UF: {order.region_code} · Data: {date(order.created_at)}</p>
         <p className="mt-2 font-black text-forest-deep">{money(order.total_price_minor)}</p>
-        <p className="mt-2 text-xs text-muted">Solicitação pendente; sem pagamento processado, reserva ou emissão fiscal.</p>
+        <p className="mt-2 text-xs text-muted">Sem pagamento, emissão fiscal ou expedição. Estoque é reservado somente após confirmação do fornecedor.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {mode==="supplier_orders"&&order.status==="awaiting_supplier_confirmation"&&<>
+            <button type="button" disabled={busy} onClick={()=>transition(order,"supplier_confirm")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Confirmar e reservar</button>
+            <button type="button" disabled={busy} onClick={()=>transition(order,"supplier_reject")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Recusar solicitação</button>
+          </>}
+          {mode==="supplier_orders"&&order.status==="confirmed"&&
+            <button type="button" disabled={busy} onClick={()=>transition(order,"supplier_cancel")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Cancelar e liberar estoque</button>}
+          {mode==="buyer_orders"&&order.status==="awaiting_supplier_confirmation"&&
+            <button type="button" disabled={busy} onClick={()=>transition(order,"buyer_cancel")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Cancelar solicitação</button>}
+        </div>
       </li>)}</ul>:<p role="status" className="mt-6 rounded-2xl bg-canvas p-7 text-sm text-muted">Nenhuma solicitação de pedido encontrada.</p>)}
     </section>
   </div>;
