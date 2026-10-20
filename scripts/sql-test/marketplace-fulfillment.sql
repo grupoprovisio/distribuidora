@@ -4,7 +4,7 @@ reset role;
 -- (access denied). The generic bootstrap helper handles only 42501.
 create function test.expect_transition_denied(statement text)
 returns void language plpgsql security invoker set search_path=''
-as $
+as $guard$
 begin
   begin
     execute statement;
@@ -13,7 +13,7 @@ begin
   end;
   raise exception 'transition unexpectedly succeeded';
 end;
-$;
+$guard$;
 grant execute on function test.expect_transition_denied(text) to authenticated;
 
 -- The previous suite revokes buyer access deliberately; explicitly restore fixture.
