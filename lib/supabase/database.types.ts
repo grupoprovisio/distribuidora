@@ -107,6 +107,8 @@ export type Database = {
           total_price_minor: number
           status: string
           created_at: string
+          confirmed_at: string | null
+          closed_at: string | null
         }
         Insert: {
           id?: string
@@ -123,6 +125,8 @@ export type Database = {
           total_price_minor: number
           status?: string
           created_at?: string
+          confirmed_at?: string | null
+          closed_at?: string | null
         }
         Update: {
           id?: string
@@ -139,6 +143,8 @@ export type Database = {
           total_price_minor?: number
           status?: string
           created_at?: string
+          confirmed_at?: string | null
+          closed_at?: string | null
         }
         Relationships: []
       }
@@ -529,6 +535,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_transition_order: {
+        Args: { order_id: string; action: string }
+        Returns: string
+      }
       marketplace_create_quote: {
         Args: {
           buyer_org_id: string
