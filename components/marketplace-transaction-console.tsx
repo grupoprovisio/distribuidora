@@ -131,7 +131,7 @@ export function TransactionConsole({
   function checkout(quote:Quote,proposal:Proposal){
     if(!window.confirm("Enviar solicitação de pedido ao fornecedor? Não há pagamento, reserva de estoque ou pedido final confirmado."))return;
     void submit({action:"checkout",buyerOrgId:quote.buyer_org_id,
-      quoteRequestId:quote.id,proposalId:proposal.id,idempotencyKey:crypto.randomUUID()},
+      quoteRequestId:quote.id,proposalId:proposal.id,idempotencyKey:quote.id},
       "Solicitação de pedido registrada, aguardando confirmação do fornecedor.");
   }
 
