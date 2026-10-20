@@ -1,5 +1,21 @@
 -- Test new fulfillment on disposable PostgreSQL AFTER marketplace-transactional.sql.
 reset role;
+-- Transition rejections intentionally use SQLSTATE 22023 (invalid state) or 42501
+-- (access denied). The generic bootstrap helper handles only 42501.
+create function test.expect_transition_denied(statement text)
+returns void language plpgsql security invoker set search_path=''
+as $
+begin
+  begin
+    execute statement;
+  exception when insufficient_privilege or invalid_parameter_value or check_violation then
+    return;
+  end;
+  raise exception 'transition unexpectedly succeeded';
+end;
+$;
+grant execute on function test.expect_transition_denied(text) to authenticated;
+
 -- The previous suite revokes buyer access deliberately; explicitly restore fixture.
 update public.organization_members set status='active'
 where organization_id='10000000-0000-4000-8000-000000000003'
@@ -14,7 +30,7 @@ select test.assert_count((select count(*) from public.inventory_positions
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',false);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000012"}',false);
-select test.expect_rejected(
+select test.expect_transition_denied(
  'select public.marketplace_transition_order(
    (select id from public.purchase_orders where supplier_org_id=''10000000-0000-4000-8000-000000000001'' limit 1),
    ''supplier_confirm'')');
@@ -24,7 +40,7 @@ reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',false);
-select test.expect_rejected('select public.marketplace_transition_order(
+select test.expect_transition_denied('select public.marketplace_transition_order(
   (select id from public.purchase_orders limit 1),''supplier_confirm'')');
 select test.expect_permission_denied('update public.purchase_orders set status=''confirmed''');
 select test.expect_permission_denied('update public.inventory_positions set reserved_quantity=50');
@@ -54,7 +70,7 @@ select test.assert_count((select count(*) from marketplace_private.order_transit
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',false);
-select test.expect_rejected('select public.marketplace_transition_order(
+select test.expect_transition_denied('select public.marketplace_transition_order(
  (select id from public.purchase_orders where status=''confirmed'' limit 1),
  ''buyer_cancel'')');
 reset role;
