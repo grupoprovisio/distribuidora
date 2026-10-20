@@ -121,9 +121,11 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0014_marketplace_private_catalog_audit.sql
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0015_marketplace_buyer_region_entitlements.sql
           psql -X -v ON_ERROR_STOP=1 -f db/migrations/0016_marketplace_quotes_orders_checkout.sql
+          psql -X -v ON_ERROR_STOP=1 -f db/migrations/0017_marketplace_supplier_order_confirmation.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-rls.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-admin-catalog.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-admin-commercial-write.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-catalog-audit.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-buyer-regions.sql
           psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-transactional.sql
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/marketplace-fulfillment.sql
