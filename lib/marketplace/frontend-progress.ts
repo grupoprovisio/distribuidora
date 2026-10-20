@@ -14,7 +14,7 @@ export type FrontendMilestone = {
   href: string;
 };
 
-export const FRONTEND_PROGRESS_REVIEWED_AT = "19/10/2026";
+export const FRONTEND_PROGRESS_REVIEWED_AT = "20/10/2026";
 
 export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
   {
@@ -84,8 +84,8 @@ export const FRONTEND_MILESTONES: readonly FrontendMilestone[] = [
     id: "cotacoes",
     title: "Preparação de cotações",
     weight: 8,
-    completed: 4,
-    delivered: "Formulário privado prepara rascunho de solicitação por e-mail, sem gravação no banco.",
+    completed: 5,
+    delivered: "Formulário privado prepara rascunho de solicitação com até oito itens, quantidade e UF validada, sem gravação no banco.",
     remaining: "RFQ persistida, envio para fornecedores elegíveis e comparativo de respostas ainda não implementados.",
     href: "/app/comprador/cotacoes",
   },
