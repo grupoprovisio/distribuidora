@@ -33,7 +33,7 @@ const statusName=(value:string)=>({
   cancelled:"Cancelada",proposed:"Proposta recebida",withdrawn:"Retirada",
   awaiting_supplier_confirmation:"Aguardando confirmação do fornecedor",
   confirmed:"Confirmado pelo fornecedor · estoque reservado",
-  rejected:"Recusado pelo fornecedor",cancelled:"Cancelado",
+  rejected:"Recusado pelo fornecedor",
 } as Record<string,string>)[value]??"Em análise";
 
 function parseCents(text:string) {
