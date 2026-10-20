@@ -171,6 +171,31 @@ select test.assert_count((select count(*) from public.inventory_positions
 update public.inventory_positions set available_quantity=100
  where supplier_product_id='30000000-0000-4000-8000-000000000001';
 
+-- Buyer may cancel a pending request, never reserving stock; retries are safe.
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',false);
+select public.marketplace_transition_order(
+ (select id from public.purchase_orders where checkout_key='90000000-0000-4000-8000-000000000006'),
+ 'buyer_cancel');
+select public.marketplace_transition_order(
+ (select id from public.purchase_orders where checkout_key='90000000-0000-4000-8000-000000000006'),
+ 'buyer_cancel');
+reset role;
+select test.assert_count((select count(*) from public.purchase_orders
+ where checkout_key='90000000-0000-4000-8000-000000000006'
+ and status='cancelled'),1,'buyer cancellation persisted exactly once');
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000011"}',false);
+select test.expect_transition_denied('select public.marketplace_transition_order(
+ (select id from public.purchase_orders where checkout_key=''90000000-0000-4000-8000-000000000006''),
+ ''supplier_confirm'')');
+reset role;
+select test.assert_count((select count(*) from public.inventory_positions
+ where supplier_product_id='30000000-0000-4000-8000-000000000001'
+ and reserved_quantity=0),1,'buyer cancellation never reserved inventory');
+
 -- All direct changes and audit visibility denied to anon.
 set role anon;
 select test.expect_permission_denied(
