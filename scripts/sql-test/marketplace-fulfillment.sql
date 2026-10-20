@@ -128,6 +128,49 @@ select test.assert_count((select count(*) from public.inventory_positions
  where supplier_product_id='30000000-0000-4000-8000-000000000001'
  and reserved_quantity=0),1,'rejection has no inventory side effects');
 
+-- Inventory shrinks after checkout but before supplier confirmation: fail closed.
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',false);
+select public.marketplace_create_quote(
+ '10000000-0000-4000-8000-000000000003','40000000-0000-4000-8000-000000000001',10,
+ 'BR-SP','Controle de saldo','90000000-0000-4000-8000-000000000005');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000011"}',false);
+select public.marketplace_propose_quote(
+ (select id from public.quote_requests where request_key='90000000-0000-4000-8000-000000000005'),
+ 1500,now()+interval '7 days');
+reset role;
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',false);
+select public.marketplace_submit_checkout(
+ '10000000-0000-4000-8000-000000000003',
+ (select id from public.quote_requests where request_key='90000000-0000-4000-8000-000000000005'),
+ (select id from public.quote_proposals where quote_request_id=(
+   select id from public.quote_requests where request_key='90000000-0000-4000-8000-000000000005')),
+ '90000000-0000-4000-8000-000000000006');
+reset role;
+update public.inventory_positions set available_quantity=5
+ where supplier_product_id='30000000-0000-4000-8000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000011"}',false);
+select test.expect_transition_denied('select public.marketplace_transition_order(
+ (select id from public.purchase_orders where checkout_key=''90000000-0000-4000-8000-000000000006''),
+ ''supplier_confirm'')');
+reset role;
+select test.assert_count((select count(*) from public.purchase_orders
+ where checkout_key='90000000-0000-4000-8000-000000000006'
+ and status='awaiting_supplier_confirmation'),1,'insufficient stock leaves order pending');
+select test.assert_count((select count(*) from public.inventory_positions
+ where supplier_product_id='30000000-0000-4000-8000-000000000001'
+ and reserved_quantity=0),1,'insufficient stock did not create partial reservation');
+update public.inventory_positions set available_quantity=100
+ where supplier_product_id='30000000-0000-4000-8000-000000000001';
+
 -- All direct changes and audit visibility denied to anon.
 set role anon;
 select test.expect_permission_denied(
