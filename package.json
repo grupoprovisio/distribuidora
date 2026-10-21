@@ -36,7 +36,8 @@
     "test:marketplace": "node scripts/marketplace-domain-check.mjs && node scripts/marketplace-access-check.mjs && node scripts/marketplace-csv-check.mjs && node scripts/marketplace-order-check.mjs && node scripts/marketplace-operations-check.mjs && node scripts/marketplace-finance-check.mjs && npm run test:hardening",
     "test:hardening": "node --test scripts/marketplace-hardening-check.mjs",
     "test:supabase-foundation": "node --test scripts/marketplace-supabase-gateway-check.mjs",
-    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs"
+    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs",
+    "test:catalog-pricing": "node --experimental-strip-types --test scripts/marketplace-offer-pricing-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
