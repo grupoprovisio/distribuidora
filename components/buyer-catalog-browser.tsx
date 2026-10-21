@@ -55,6 +55,7 @@ export function BuyerCatalogBrowser({ items, region }: { items: PrivateOffer[]; 
         <p className="mt-2 text-xs text-muted">SKU: {item.sku} · Embalagem: {item.pack}</p>
         <p className="mt-5 text-2xl font-black tabular-nums text-forest-deep">{currency.format(item.priceMinor/100)}</p>
         <p className="mt-2 text-sm text-muted">Quantidade mínima: {item.minQuantity} · Região: {region}</p>
+        {item.tiers.length>0 && <div className="mt-3 rounded-xl border border-line p-3"><p className="text-xs font-extrabold text-forest">Preços por volume</p><ul className="mt-2 space-y-1 text-xs text-muted">{item.tiers.map(tier=><li key={tier.minQuantity}>A partir de {tier.minQuantity} embalagens: <strong>{currency.format(tier.unitPriceMinor/100)}</strong> por embalagem</li>)}</ul></div>}
         <p className="mt-4 flex items-center gap-2 text-xs font-semibold text-forest">
           <ShieldCheck size={16} aria-hidden/> Oferta aprovada
         </p>
