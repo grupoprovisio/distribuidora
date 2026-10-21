@@ -125,8 +125,8 @@ test("Páginas premium preservam textos, imagens e cards principais sem consulta
 test("Home, Sou comprador, Sou fornecedor, cards e fotos mantêm a identidade visual aprovada", () => {
   const approved = {
     "app/(tabs)/page.tsx": "7eb4cfbedff14c823789902f8dd86e4cd1a5fb43",
-    "app/compradores/page.tsx": "2e4808b7592f575eb1535860ecab231daec4a22b",
-    "app/fornecedores/page.tsx": "ab4e4a12a0b0e0ec7923f23444959d2d8d8fb474",
+    "app/compradores/page.tsx": "edbb5b6e225d8fbb3d47c6506cb8f9e2321a36b7",
+    "app/fornecedores/page.tsx": "345cf55361d222d3a8842f769665373c00dde019",
     "components/home-benefits.tsx": "b48c2e151075af25abea17fd570333bc6f826824",
     "components/home-marketplace-showcase.tsx": "fbdd63872fe17991822ebe927d0130582683f343",
     "components/marketplace-lead-form.tsx": "31699aad3b6b693c16342599a9a3e642f29aa0ea",
@@ -155,4 +155,17 @@ test("Catálogo privado filtra a UF antes da paginação e detecta a próxima p�
   assert.doesNotMatch(source,/SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|sb_secret_[A-Za-z0-9]/);
 });
 
- test("Ambos os portais possuem CTA visível para autenticação",()=>{for(const [p,role] of [["app/compradores/page.tsx","comprador"],["app/fornecedores/page.tsx","fornecedor"]]){assert.match(file(p),new RegExp('href="/entrar/'+role+'"'));assert.match(file(p),/Entrar na minha conta/);}});
+test("Menu lateral exibe Login em /entrar sem aviso demonstrativo no rodape", () => {
+  const nav = file("components/floating-nav.tsx");
+  assert.match(nav, /\["\/entrar", "Login"\]/);
+  assert.doesNotMatch(nav, /Plataforma comercial em desenvolvimento\. Nenhuma transa[cç][aã]o real est[aá] habilitada\./);
+});
+
+test("Formularios de interesse preservados sem CTA duplicado de login e sem aviso adicional", () => {
+  for (const [pathname, role] of [["app/compradores/page.tsx", "comprador"], ["app/fornecedores/page.tsx", "fornecedor"]]) {
+    const page = file(pathname);
+    assert.match(page, new RegExp('<MarketplaceLeadForm role="' + role + '"'));
+    assert.doesNotMatch(page, /Ja possui uma conta Provisio\?|Já possui uma conta Provisio\?|Entrar na minha conta/);
+    assert.doesNotMatch(page, /Esta etapa é uma demonstração local\. O formulário não envia dados nem habilita cadastros ou vendas reais\.|Esta é uma demonstração\. O formulário não envia dados; pedidos e cobranças reais ainda não estão habilitados\./);
+  }
+});
