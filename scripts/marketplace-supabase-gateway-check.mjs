@@ -209,3 +209,20 @@ test("VTEX legacy login becomes unavailable as soon as Supabase Auth is enabled"
     assert.match(source,/status: 410/,route);
   }
 });
+
+
+test("recuperacao de senha informa limite de e-mails e preserva sessao autenticada", () => {
+  const recovery = readFileSync(resolve(root,"components/marketplace-password-recovery.tsx"),"utf8");
+  const callback = readFileSync(resolve(root,"app/auth/callback/route.ts"),"utf8");
+  const password = readFileSync(resolve(root,"components/marketplace-password-update.tsx"),"utf8");
+  assert.match(recovery,/resetPasswordForEmail/);
+  assert.match(recovery,/over_email_send_rate_limit/);
+  assert.match(recovery,/status===429/);
+  assert.match(recovery,/\/redefinir-senha/);
+  assert.match(recovery,/auth\/callback\?flow=recovery/);
+  assert.match(callback,/exchangeCodeForSession/);
+  assert.match(callback,/flow === "recovery"/);
+  assert.match(password,/auth\.getUser\(\)/);
+  assert.match(password,/auth\.updateUser\(\{password:first\}\)/);
+  assert.doesNotMatch(recovery,/auth\.signUp\(/);
+});
