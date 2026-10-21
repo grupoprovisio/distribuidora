@@ -196,3 +196,16 @@ test("Contato comercial nao apresenta telefone ou email ficticios nem simula env
   assert.doesNotMatch(page,/\(00\)\s*00000-0000|comercial@distribuidora\.com/);
   assert.doesNotMatch(form,/track\("generate_lead"|fetch\s*\(|setSent\(/);
 });
+
+
+test("Preparacao de cotacao suporta varios itens e UFs legitimas sem backend", () => {
+  const draft=file("components/buyer-quote-draft.tsx");
+  assert.match(draft,/MAX_ITEMS\s*=\s*8/);
+  assert.match(draft,/fields\.items\.map\(/);
+  assert.match(draft,/addItem/);
+  assert.match(draft,/removeItem/);
+  assert.match(draft,/UF_CODES\.map\(/);
+  assert.match(draft,/UF_CODES\.some\(/);
+  assert.match(draft,/Nenhum dado será enviado ou salvo/);
+  assert.doesNotMatch(draft,/localStorage|sessionStorage|fetch\s*\(|setSent\(/);
+});
