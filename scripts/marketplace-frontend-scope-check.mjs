@@ -125,8 +125,8 @@ test("Páginas premium preservam textos, imagens e cards principais sem consulta
 test("Home, Sou comprador, Sou fornecedor, cards e fotos mantêm a identidade visual aprovada", () => {
   const approved = {
     "app/(tabs)/page.tsx": "7eb4cfbedff14c823789902f8dd86e4cd1a5fb43",
-    "app/compradores/page.tsx": "2599c7b969c7b89ab1d7c32e8d057cae50f93683",
-    "app/fornecedores/page.tsx": "af92a2f8ddc3fdbdcf63c0b4a75ee9d5458971c9",
+    "app/compradores/page.tsx": "2e4808b7592f575eb1535860ecab231daec4a22b",
+    "app/fornecedores/page.tsx": "ab4e4a12a0b0e0ec7923f23444959d2d8d8fb474",
     "components/home-benefits.tsx": "b48c2e151075af25abea17fd570333bc6f826824",
     "components/home-marketplace-showcase.tsx": "fbdd63872fe17991822ebe927d0130582683f343",
     "components/marketplace-lead-form.tsx": "31699aad3b6b693c16342599a9a3e642f29aa0ea",
@@ -154,3 +154,5 @@ test("Catálogo privado filtra a UF antes da paginação e detecta a próxima p�
   assert.match(source,/buyer_delivery_regions/);
   assert.doesNotMatch(source,/SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|sb_secret_[A-Za-z0-9]/);
 });
+
+ test("Ambos os portais possuem CTA visível para autenticação",()=>{for(const [p,role] of [["app/compradores/page.tsx","comprador"],["app/fornecedores/page.tsx","fornecedor"]]){assert.match(file(p),new RegExp('href="/entrar/'+role+'"'));assert.match(file(p),/Entrar na minha conta/);}});
