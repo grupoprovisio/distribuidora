@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: node --test scripts/marketplace-release-gates.test.mjs
       - run: npm run test:frontend-scope
+      - run: node --test scripts/marketplace-order-draft.test.mjs
       - run: npm run test:marketplace
       - run: npm run test:supabase-foundation
       - run: npm run lint
