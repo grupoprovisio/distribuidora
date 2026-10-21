@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
+import Link from "next/link";
 import { ArrowDownToLine, FileCheck2, FileWarning, UploadCloud } from "lucide-react";
 import { exportCsvValidationErrors, previewAuthorizedCsv, type CsvImportPreview } from "@/lib/marketplace/csv-import";
 
@@ -64,6 +65,7 @@ export function SupplierCsvPreview() {
           <p className="mt-2 text-sm text-muted">{result.rows.length} linhas válidas · {result.errors.length} problemas encontrados. Nenhuma oferta foi cadastrada.</p>
         </div>
       </div>
+      {result.accepted&&<Link href="/admin/marketplace/importar" className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-forest px-5 text-sm font-bold text-white">Salvar produtos no Supabase (administrador com MFA)</Link>}
       {result.errors.length>0&&<section aria-labelledby="csv-errors" className="mt-6 rounded-2xl border border-sand bg-sand/30 p-5">
         <h4 id="csv-errors" className="text-base font-black text-forest-deep">Correções necessárias</h4>
         <a
