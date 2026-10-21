@@ -220,3 +220,13 @@ test("Catálogo do fornecedor usa cartões no celular e tabela no desktop", () =
   assert.match(source, /row\.approvedOffers/);
   assert.match(source, /row\.supplierSku/);
 });
+
+
+test("Portais identificam estados reais de catálogo, rascunhos e pedidos", () => {
+  const portal = file("components/marketplace-portal.tsx");
+  assert.match(portal, /"\/app\/comprador\/catalogo", "Consulta autorizada"/);
+  assert.match(portal, /"\/app\/comprador\/cotacoes", "Rascunho local"/);
+  assert.match(portal, /"\/app\/comprador\/pedidos", "Em preparação"/);
+  assert.match(portal, /"\/app\/fornecedor\/operacao", "Consulta autorizada"/);
+  assert.match(portal, /item\.cards\.map\(\(\[Icon, title, text, href, status\]\)/);
+});
