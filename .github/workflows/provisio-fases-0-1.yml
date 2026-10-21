@@ -1,0 +1,38 @@
+name: Provisio | auditoria e site publico
+on:
+  push:
+    branches:
+      - docs/provisio-progresso-dois-perfis-20261020
+  pull_request:
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "scripts/**"
+      - "package*.json"
+      - ".github/workflows/provisio-fases-0-1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phases-0-1:
+    name: Auditoria e preservacao publica
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:frontend-scope
+      - run: npm run test:hardening
+      - run: npm run test:supabase-foundation
+      - run: npm run build
