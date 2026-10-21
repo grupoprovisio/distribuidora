@@ -86,9 +86,49 @@ export function SupplierCatalogBrowser({ rows, page, total }: { rows: SupplierCa
             </label>
           </div>
         </div>
-        <p className="px-5 py-3 text-xs font-semibold text-muted" role="status">Página {page} · {total} SKUs autorizados no total · {filtered.length} resultado(s) nos filtros desta página</p>
+        <p className="px-5 py-3 text-xs font-semibold text-muted" role="status" aria-live="polite">Página {page} · {total} SKUs autorizados no total · {filtered.length} resultado(s) nos filtros desta página</p>
         {filtered.length ? (
-          <div className="overflow-x-auto">
+          <>
+          <div className="grid gap-3 p-4 md:hidden" aria-label="Produtos desta página em cartões">
+            {filtered.map(row => (
+              <article key={row.id} className="min-w-0 rounded-2xl border border-line bg-canvas p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="break-words text-base font-black text-forest-deep">{row.productName}</h3>
+                    <p className="mt-1 break-words text-xs text-muted">{row.supplierName}</p>
+                  </div>
+                  <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-black ${statusTone(row.status)}`}>
+                    {labels[row.status] ?? row.status}
+                  </span>
+                </div>
+                <dl className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 border-t border-line pt-4 text-sm">
+                  <div className="min-w-0">
+                    <dt className="text-xs font-bold text-muted">SKU</dt>
+                    <dd className="mt-1 break-all font-extrabold text-forest">{row.supplierSku}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-xs font-bold text-muted">Embalagem</dt>
+                    <dd className="mt-1 break-words font-semibold text-ink">{row.packDescription}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-bold text-muted">Ofertas</dt>
+                    <dd className="mt-1 font-black tabular-nums text-forest-deep">{row.offerCount}</dd>
+                    <dd className="text-xs text-muted">{row.approvedOffers} aprovadas</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-bold text-muted">Preço base</dt>
+                    <dd className="mt-1 font-black tabular-nums text-forest-deep">
+                      {row.basePriceMinor === null ? "—" : money.format(row.basePriceMinor / 100)}
+                    </dd>
+                    <dd className="text-xs text-muted">
+                      {row.basePriceMinor === null ? "Sem oferta cadastrada" : `Mínimo ${row.minQuantity ?? 1} un.`}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[730px] border-collapse text-left">
               <thead><tr className="border-b border-line bg-canvas text-xs uppercase tracking-wide text-muted">
                 {["Produto / fornecedor","SKU e embalagem","Homologação","Ofertas","Preço base"].map(label =>
@@ -116,6 +156,7 @@ export function SupplierCatalogBrowser({ rows, page, total }: { rows: SupplierCa
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <div className="px-6 py-14 text-center">
             <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-lime-soft text-forest">
