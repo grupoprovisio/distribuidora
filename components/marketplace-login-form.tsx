@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Method = "senha" | "link";
 
-export function MarketplaceLoginForm() {
+export function MarketplaceLoginForm({portal}:{portal?:"comprador"|"fornecedor"}={}) {
   const router = useRouter();
   const [method, setMethod] = useState<Method>("senha");
   const [email, setEmail] = useState("");
@@ -28,7 +28,7 @@ export function MarketplaceLoginForm() {
         const result = await supabase.auth.signInWithPassword({ email: address, password });
         if (result.error) throw new Error("Não foi possível entrar. Confira os dados e tente novamente.");
         setPassword("");
-        router.replace("/app");
+        router.replace(portal === "comprador" ? "/app/comprador" : portal === "fornecedor" ? "/app/fornecedor" : "/app");
         router.refresh();
       } else {
         // Nunca cadastrar contas a partir da tela de login pública.
