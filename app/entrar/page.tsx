@@ -25,6 +25,7 @@ export default function EntrarPage() {
             Acesso para compradores e fornecedores homologados.
             A criação e aprovação de usuários são controladas pela administração.
           </p>
+          <nav aria-label="Escolha seu ambiente" className="mt-6 grid grid-cols-2 gap-3"><Link href="/entrar/comprador" className="rounded-xl bg-lime-soft p-4 text-center text-sm font-extrabold text-forest">Sou comprador</Link><Link href="/entrar/fornecedor" className="rounded-xl bg-lime-soft p-4 text-center text-sm font-extrabold text-forest">Sou fornecedor</Link></nav>
           {enabled ? <MarketplaceLoginForm /> :
             <p role="status" className="mt-7 rounded-2xl bg-sand px-4 py-4 text-sm font-semibold text-forest">
               O acesso empresarial está em preparação. Nenhuma conta ou pedido foi ativado.
