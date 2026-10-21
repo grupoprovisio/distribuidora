@@ -1,4 +1,4 @@
-# Provisio — Progresso do front-end (19/10/2026)
+# Provisio — Progresso do front-end (revisado em 20/10/2026)
 
 ## Escopo definitivo
 - Jornadas públicas e painéis: **Sou comprador** e **Sou fornecedor**.
@@ -29,7 +29,8 @@ O painel em `/admin/marketplace/progresso` está atrás do layout administrativo
 2. Área privada de cotação do comprador: formulário local com produto, quantidade, embalagem/unidade, UF, data desejada e observações; gera rascunho para copiar ou abrir no cliente de e-mail. Não grava pedido ou solicitação no banco, nem envia e-mail automaticamente.
 3. Contato institucional usa o endereço oficial `contato@grupoprovisio.com` e deixa de mostrar telefone falso, e-mail genérico e mensagem enganosa de sucesso. Formulário prepara e-mail e exige envio manual.
 4. Catálogo do fornecedor: visualização responsiva em cartões no celular, mantendo a tabela no desktop, inclusive situação, SKU, embalagem e preço, sem novas consultas ou permissões.
-5. Testes estáticos adicionados à suíte `test:frontend-scope` para pesos da pontuação, proteção administrativa, ausência de backend falso no rascunho e contato sem canal fictício.
+5. Portais privados identificam o estágio verdadeiro de cada módulo: consulta de dados autorizados, rascunho local ou fluxo ainda em preparação; nenhuma promessa de pedidos ativos ou jornada de vendedor.
+6. Testes estáticos adicionados à suíte `test:frontend-scope` para pesos da pontuação, proteção administrativa, ausência de backend falso no rascunho e contato sem canal fictício.
 
 ## Conferência da pontuação
 A pontuação da linha **Cotação** foi sincronizada com `lib/marketplace/frontend-progress.ts` (5/8); o relatório anterior registrava 4/8 por engano. O total de 74/100 reflete a soma do código e não significa homologação. Os cartões responsivos do fornecedor são avanço de apresentação e não alteram a pontuação manual de 10/12 dessa frente.
