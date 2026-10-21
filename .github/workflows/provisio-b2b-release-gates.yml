@@ -1,0 +1,26 @@
+name: Provisio B2B Release Gates
+on:
+  push:
+    branches:
+      - feat/provisio-readiness-b2b-20261021
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/marketplace-release-gates.test.mjs
+      - run: npm run test:frontend-scope
+      - run: npm run test:marketplace
+      - run: npm run test:supabase-foundation
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
