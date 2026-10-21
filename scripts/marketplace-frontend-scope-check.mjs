@@ -209,3 +209,14 @@ test("Preparacao de cotacao suporta varios itens e UFs legitimas sem backend", (
   assert.match(draft,/Nenhum dado será enviado ou salvo/);
   assert.doesNotMatch(draft,/localStorage|sessionStorage|fetch\s*\(|setSent\(/);
 });
+
+
+test("Catálogo do fornecedor usa cartões no celular e tabela no desktop", () => {
+  const source = file("components/supplier-catalog-browser.tsx");
+  assert.match(source, /grid gap-3 p-4 md:hidden/);
+  assert.match(source, /hidden overflow-x-auto md:block/);
+  assert.match(source, /aria-live="polite"/);
+  assert.match(source, /statusTone\(row\.status\)/);
+  assert.match(source, /row\.approvedOffers/);
+  assert.match(source, /row\.supplierSku/);
+});
