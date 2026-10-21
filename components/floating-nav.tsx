@@ -81,6 +81,7 @@ export function FloatingNav() {
                 ["/", "Início"], ["/produtos", "Catálogo autorizado"],
                 ["/compradores", "Sou comprador"], ["/fornecedores", "Sou fornecedor"],
                 ["/como-funciona", "Como funciona"], ["/contato", "Contato"],
+                ["/admin/marketplace", "ADM"],
               ].map(([href, label]) => (
                 <Link key={href} href={href} onClick={() => setOpen(false)}
                   className="rounded-2xl px-4 py-3 text-sm font-bold text-ink transition-colors hover:bg-lime-soft focus-visible:ring-2 focus-visible:ring-forest">
