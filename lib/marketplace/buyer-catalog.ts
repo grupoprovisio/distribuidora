@@ -12,6 +12,7 @@ export type PrivateOffer = {
   pack: string;
   priceMinor: number;
   minQuantity: number;
+  tiers: {minQuantity:number;unitPriceMinor:number}[];
 };
 export type BuyerCatalogResult = { items: PrivateOffer[]; error: boolean; hasMore: boolean; regionNotAuthorized?: boolean };
 const SOURCES = new Set(["MANUAL_AUTHORIZED","SUPPLIER_CSV_AUTHORIZED","SUPPLIER_API_AUTHORIZED","PLATFORM_STOCK"]);
@@ -52,14 +53,15 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const ids=visible.map(o=>o.id);
   const skuIds=[...new Set(visible.map(o=>o.supplier_product_id))];
   const orgIds=[...new Set(visible.map(o=>o.supplier_org_id))];
-  const [skus,orgs,regions,inventory,capabilities]=await Promise.all([
+  const [skus,orgs,regions,inventory,capabilities,priceTiers]=await Promise.all([
     client.from("supplier_products").select("id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status").in("id",skuIds).eq("status","approved"),
     client.from("organizations").select("id,legal_name,trade_name,kind,status").in("id",orgIds).eq("status","approved"),
     client.from("offer_regions").select("offer_id,region_code").in("offer_id",ids).in("region_code",regionCodes),
     client.from("inventory_positions").select("supplier_product_id,supplier_org_id,available_quantity,reserved_quantity").in("supplier_product_id",skuIds),
-    client.from("organization_capabilities").select("organization_id,capability,status").in("organization_id",orgIds).eq("capability","SUPPLIER").eq("status","approved")
+    client.from("organization_capabilities").select("organization_id,capability,status").in("organization_id",orgIds).eq("capability","SUPPLIER").eq("status","approved"),
+    client.from("offer_price_tiers").select("offer_id,min_quantity,unit_price_minor").in("offer_id",ids).limit(1001)
   ]);
-  if ([skus,orgs,regions,inventory,capabilities].some(q=>q.error)) return {...empty,error:true};
+  if ([skus,orgs,regions,inventory,capabilities,priceTiers].some(q=>q.error) || (priceTiers.data?.length??0)>1000) return {...empty,error:true};
   const productIds=[...new Set((skus.data??[]).map(s=>s.product_id))];
   if (!productIds.length) return {...empty,hasMore:hasMore&&page<1000};
   const products=await client.from("products").select("id,slug,name,status").in("id",productIds).eq("status","active");
@@ -82,7 +84,9 @@ export async function buyerCatalog(client: Client, region: string, page: number)
     items.push({
       id:offer.id,slug:product.slug,productName:product.name,supplier:org.trade_name||org.legal_name,
       sku:sku.supplier_sku,pack:String(sku.pack_quantity)+" "+sku.pack_unit,
-      priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity
+      priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity,
+      tiers:(priceTiers.data??[]).filter(t=>t.offer_id===offer.id && Number.isSafeInteger(t.unit_price_minor) && t.unit_price_minor>=0 && Number.isSafeInteger(t.min_quantity) && t.min_quantity>=offer.min_quantity)
+        .map(t=>({minQuantity:t.min_quantity,unitPriceMinor:t.unit_price_minor})).sort((a,b)=>a.minQuantity-b.minQuantity)
     });
   }
   return {items,error:false,hasMore:hasMore&&page<1000};
