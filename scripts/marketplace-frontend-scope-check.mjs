@@ -229,4 +229,7 @@ test("Portais identificam estados reais de catálogo, rascunhos e pedidos", () =
   assert.match(portal, /"\/app\/comprador\/pedidos", "Em preparação"/);
   assert.match(portal, /"\/app\/fornecedor\/operacao", "Consulta autorizada"/);
   assert.match(portal, /item\.cards\.map\(\(\[Icon, title, text, href, status\]\)/);
+  const orders = file("app/app/comprador/pedidos/page.tsx");
+  assert.doesNotMatch(orders, /vendedor|vendedora/i);
+  assert.match(orders, /homologação/);
 });
