@@ -62,8 +62,8 @@ reset role;
 select test.assert_count((select count(*) from marketplace_private.fulfillment_audit
  where to_status in ('separating','ready_to_dispatch','in_transit','delivered')),4,
  'each manual step logged once, retries idempotent');
-select test.assert_count((select count(*) from public.inventory_positions where supplier_product_id='30000000-0000-4000-8000-000000000001' and reserved_quantity=4),1,
- 'delivered request preserved historical reserve without unreviewed stock write');
+select test.assert_count((select count(*) from public.inventory_positions where supplier_product_id='30000000-0000-4000-8000-000000000001' and reserved_quantity=0 and available_quantity=96),1,
+ 'dispatch debits inventory and reservation exactly once');
 
 -- Buyer and unrelated supplier isolation via RLS.
 set role authenticated;
@@ -71,7 +71,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003'
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',false);
 select test.assert_count((select count(*) from public.order_fulfillments),1,'buyer sees own shipping state');
 select test.expect_transition_denied(
- 'select public.marketplace_advance_fulfillment((select id from public.order_fulfillments limit 1),''deliver'',null,null,null)');
+ 'select public.marketplace_advance_fulfillment((select id from public.purchase_orders where checkout_key=''90000000-0000-4000-8000-000000000008''),''deliver'',null,null,null)');
 reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',false);
