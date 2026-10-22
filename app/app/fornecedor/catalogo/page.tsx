@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Boxes, FileSpreadsheet } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SupplierCatalogBrowser, type SupplierCatalogRow } from "@/components/supplier-catalog-browser";
+import { SupplierProductRequest } from "@/components/supplier-product-request";
 import { createClient } from "@/lib/supabase/server";
 import { WRAP } from "@/lib/ui";
 
@@ -18,6 +19,13 @@ export default async function SupplierCatalogPage({searchParams}:{searchParams:P
   const page=/^[1-9][0-9]{0,3}$/.test(params.pagina??"1")
     ? Math.min(1000,Number(params.pagina??"1")):1;
   const client=await createClient();
+  const {data:{user}}=await client.auth.getUser();
+  const memberships=user?await client.from("organization_members").select("organization_id,role").eq("user_id",user.id).eq("status","active").in("role",["ORG_ADMIN","SUPPLIER_ADMIN","PLATFORM_ADMIN"]).limit(100):{data:[],error:null};
+  const requestOrgIds=(memberships.data??[]).map(m=>m.organization_id);
+  const requestOrgs=requestOrgIds.length?await client.from("organizations").select("id,trade_name,legal_name").in("id",requestOrgIds).eq("status","approved"):{data:[],error:null};
+  const requestCaps=requestOrgIds.length?await client.from("organization_capabilities").select("organization_id").in("organization_id",requestOrgIds).eq("capability","SUPPLIER").eq("status","approved"):{data:[],error:null};
+  const authorizedIds=new Set((requestCaps.data??[]).map(x=>x.organization_id));
+  const authorizedOrganizations=(requestOrgs.data??[]).filter(x=>authorizedIds.has(x.id)).map(x=>({id:x.id,name:x.trade_name||x.legal_name}));
   const from=(page-1)*PAGE_SIZE;
   const supplierProducts=await client.from("supplier_products")
     .select("id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status",{count:"exact"})
@@ -84,6 +92,7 @@ export default async function SupplierCatalogPage({searchParams}:{searchParams:P
           Acompanhe seus produtos, embalagens e ofertas cadastradas, sem acessar catálogos de outros fornecedores.
         </p>
       </div>
+      <SupplierProductRequest organizations={authorizedOrganizations}/>
       <Link href="/app/fornecedor/importar" className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-extrabold text-white transition hover:bg-forest-deep focus-visible:ring-2 focus-visible:ring-forest">
         <FileSpreadsheet size={17} aria-hidden/> Pré-validar planilha CSV
       </Link>
