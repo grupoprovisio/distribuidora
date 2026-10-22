@@ -12,7 +12,10 @@ export const metadata:Metadata={title:"Governança de acessos · Provisio",robot
 export const dynamic="force-dynamic";
 
 const formClass="flex flex-wrap items-end gap-2";
-const inputClass="min-h-10 rounded-xl border border-line bg-white px-3 text-sm text-forest";
+const statusLabels:Record<string,string>={active:"Ativo",pending:"Pendente",blocked:"Bloqueado",approved:"Aprovado",suspended:"Suspenso",invited:"Convidado",revoked:"Revogado"};
+const roleLabels:Record<string,string>={ORG_ADMIN:"Administrador da empresa",BUYER:"Comprador",REQUESTER:"Solicitante",APPROVER:"Aprovador",FINANCE:"Financeiro",READER:"Somente leitura",SUPPLIER_ADMIN:"Administrador do fornecedor",PLATFORM_ADMIN:"Administrador da plataforma"};
+const capabilityLabels:Record<string,string>={PLATFORM_OPERATOR:"Operadora da plataforma",SUPPLIER:"Fornecedor",BUYER:"Comprador"};
+const inputClass="min-h-10 max-w-full min-w-0 rounded-xl border border-line bg-white px-3 text-sm text-forest";
 const buttonClass="min-h-10 rounded-full bg-forest px-4 text-sm font-bold text-white hover:bg-forest-deep";
 const states={users:["active","pending","blocked"],orgs:["approved","pending","suspended"],
   members:["active","invited","revoked"],caps:["approved","pending","revoked"]} as const;
@@ -41,17 +44,17 @@ export default async function AccessAdminPage(){
 
   return <main className="mx-auto max-w-6xl px-5 py-8 pb-24">
     <Link href="/admin/marketplace" className="text-sm font-bold text-forest underline">← Administração</Link>
-    <p className="mt-7 text-xs font-black uppercase tracking-widest text-terra">Grupo Provisio · MFA obrigatório</p>
+    <p className="mt-7 text-xs font-black uppercase tracking-widest text-terra">Grupo Provisio · Verificação em duas etapas obrigatória</p>
     <h1 className="mt-2 text-3xl font-black text-forest-deep">Governança de acessos</h1>
     <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">
-      Gerencie contas existentes, organizações e permissões. Novos usuários são convidados pelo Supabase Auth.
+      Gerencie contas existentes, organizações e permissões. Novos usuários são convidados pela autenticação do Supabase.
       Nenhum cadastro público ou papel de administrador de plataforma pode ser criado nesta interface.
-      Todas as mudanças passam por RLS e auditoria privada.
+      Todas as mudanças passam pelas regras de segurança de acesso e auditoria privada.
     </p>
     <div className="mt-5">
       <a className="text-sm font-bold text-forest underline"
         href="https://supabase.com/dashboard/project/xprvdquocenfqvnokmmi/auth/users"
-        rel="noopener noreferrer" target="_blank">Convidar usuário pelo Supabase Auth ↗</a>
+        rel="noopener noreferrer" target="_blank">Convidar usuário pela autenticação do Supabase ↗</a>
     </div>
 
     <section className="mt-9 rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70" aria-labelledby="org-title">
@@ -74,12 +77,12 @@ export default async function AccessAdminPage(){
         {organizations.map(org=><div key={org.id} className="rounded-2xl border border-line p-4">
           <div className="flex flex-wrap justify-between gap-2">
             <div><strong className="text-sm text-forest">{org.legal_name}</strong>
-              <p className="mt-1 text-xs text-muted">{org.kind} · {org.is_platform_owned?"Plataforma · ":""}{org.id}</p>
+              <p className="mt-1 text-xs text-muted">{capabilityLabels[org.kind]??org.kind} · {org.is_platform_owned?"Plataforma · ":""}{org.id}</p>
             </div>
             {org.is_platform_owned ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Organização central protegida</span> : <form action={setOrganizationStatus} className={formClass}>
               <input type="hidden" name="organization_id" value={org.id}/>
               <select name="status" defaultValue={org.status} className={inputClass}>
-                {states.orgs.map(v=><option key={v} value={v}>{v}</option>)}
+                {states.orgs.map(v=><option key={v} value={v}>{statusLabels[v]??v}</option>)}
               </select>
               <button className={buttonClass}>Salvar</button>
             </form>}
@@ -118,7 +121,7 @@ export default async function AccessAdminPage(){
       </form>
       <div className="mt-5 space-y-3">{capabilities.map(cap=><div key={`${cap.organization_id}-${cap.capability}`}
         className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line p-4">
-        <div><strong className="text-sm text-forest">{cap.capability}</strong>
+        <div><strong className="text-sm text-forest">{capabilityLabels[cap.capability]??cap.capability}</strong>
           <p className="mt-1 break-all text-xs text-muted">{cap.organization_id}</p>
         </div>
         {cap.capability==="PLATFORM_OPERATOR" ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Capacidade reservada</span> : <form action={setCapabilityStatus} className={formClass}>
@@ -188,13 +191,13 @@ export default async function AccessAdminPage(){
         <label className="flex flex-col gap-1 text-xs font-bold text-muted">Papel
           <select name="role" required className={inputClass}>
             {["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","SUPPLIER_ADMIN"].map(role=>
-              <option key={role} value={role}>{role}</option>)}
+              <option key={role} value={role}>{roleLabels[role]??role}</option>)}
           </select>
         </label>
         <button className={buttonClass} disabled={!users.length||!organizations.length}>Criar convite interno</button>
       </form>
       <div className="mt-5 space-y-3">{membership.map(m=><div key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line p-4">
-        <div><strong className="text-sm text-forest">{m.role}</strong>
+        <div><strong className="text-sm text-forest">{roleLabels[m.role]??m.role}</strong>
           <p className="mt-1 break-all text-xs text-muted">Usuário {m.user_id} · Empresa {m.organization_id}</p>
         </div>
         {m.user_id===access.userId && m.role==="PLATFORM_ADMIN" ? <span className="rounded-xl bg-lime-soft px-3 py-2 text-xs font-bold text-forest">Vínculo administrador protegido</span> : <form action={setMembershipStatus} className={formClass}>
