@@ -1,0 +1,125 @@
+/**
+ * Revisão de escopo do Grupo Provisio (22/10/2026).
+ * As notas são estimativas auditáveis baseadas em QUATRO critérios por dimensão e setor:
+ * 0 = nenhum critério comprovado; 4 = os quatro critérios comprovados.
+ * Peso das áreas soma 100. Código, testes e produção nunca são intercambiáveis.
+ * Os dados do Supabase são consultados separadamente e não elevam automaticamente notas.
+ * As etapas de cotações/pedidos existem nesta branch de integração, mas não em produção.
+ */
+export type Priority = "P0" | "P1" | "P2" | "P3";
+export type ProgressDimension = "code" | "tests" | "production";
+export type ProjectArea = {
+  id: string;
+  name: string;
+  weight: number;
+  code: number;
+  tests: number;
+  production: number;
+  priority: Priority;
+  evidence: string;
+  next: string;
+  href: string;
+};
+export const REVIEW_DATE = "22/10/2026";
+export const MAX_CHECKPOINTS = 4;
+
+export const PROJECT_AREAS: readonly ProjectArea[] = [
+  {
+    id: "institucional", name: "Site institucional e duas jornadas", weight: 10,
+    code: 4, tests: 3, production: 2, priority: "P0",
+    evidence: "Início, Sou comprador e Sou fornecedor publicados. Links e acesso sem sessão validados na Vercel.",
+    next: "Retirar a suspensão clientHold do domínio no Squarespace e conferir celular, desktop e DNS.",
+    href: "/",
+  },
+  {
+    id: "autenticacao", name: "Login, recuperação e MFA", weight: 10,
+    code: 4, tests: 3, production: 2, priority: "P1",
+    evidence: "Supabase SSR, recuperação de senha, papéis e MFA. Sessão AAL2 administrativa verificada no banco.",
+    next: "Homologar login, recuperação e troca de perfil com duas identidades independentes em navegador.",
+    href: "/entrar",
+  },
+  {
+    id: "administracao", name: "ADM e governança comercial", weight: 10,
+    code: 4, tests: 3, production: 2, priority: "P1",
+    evidence: "Homologação de organizações, produto mestre, categorias, propostas de preço e pedidos de cadastro sob MFA.",
+    next: "Executar fluxo de homologação pelo navegador com administrador real e auditoria de ações.",
+    href: "/admin/marketplace",
+  },
+  {
+    id: "catalogo", name: "Produtos, fotos, categorias e estoque", weight: 16,
+    code: 4, tests: 3, production: 1, priority: "P1",
+    evidence: "Migrações 0016–0021 em Supabase Free, SQL RLS, importação CSV, conversão para WebP e Storage privado.",
+    next: "Cadastrar primeiro produto e oferta homologados; testar upload real, imagem, preços e estoque de ponta a ponta.",
+    href: "/admin/marketplace/prontidao",
+  },
+  {
+    id: "fornecedor", name: "Painel Sou Fornecedor", weight: 12,
+    code: 3, tests: 2, production: 1, priority: "P1",
+    evidence: "Catálogo por organização, solicitação de produto, estoque próprio e oferta de preço pendente.",
+    next: "Validar entrada, inserção, alteração e isolamento com fornecedor A e fornecedor B reais.",
+    href: "/app/fornecedor",
+  },
+  {
+    id: "comprador", name: "Painel Sou Comprador", weight: 10,
+    code: 3, tests: 2, production: 1, priority: "P1",
+    evidence: "Catálogo privado filtrado por região, fornecedor, estoque, vigência, preço e capacidade BUYER.",
+    next: "Testar oferta real aprovada com uma empresa compradora e uma UF autorizada.",
+    href: "/app/comprador",
+  },
+  {
+    id: "cotacoes", name: "Cotações e propostas (RFQ)", weight: 10,
+    code: 2, tests: 1, production: 0, priority: "P1",
+    evidence: "Fluxo preparado nesta branch, separado da produção; migração 0022 e interfaces protegidas por flag.",
+    next: "Aprovar testes RLS em PostgreSQL, testar com duas identidades e habilitar somente em Preview autenticado.",
+    href: "/app/comprador/cotacoes",
+  },
+  {
+    id: "pedidos", name: "Pedidos e reservas", weight: 10,
+    code: 2, tests: 1, production: 0, priority: "P2",
+    evidence: "Solicitação, confirmação, cancelamento e reserva atômica preparados na migração 0023, desativados por padrão.",
+    next: "Validar idempotência, reservas, cancelamentos e falta de estoque sem cobrança financeira.",
+    href: "/app/comprador/pedidos",
+  },
+  {
+    id: "logistica", name: "Entrega e acompanhamento logístico", weight: 4,
+    code: 0, tests: 0, production: 0, priority: "P2",
+    evidence: "Ainda não há integração de expedição, transportadora, prova de entrega ou rastreamento real.",
+    next: "Definir frete, prazos, separação, expedição, ocorrências e rastreabilidade de pedidos.",
+    href: "/como-funciona",
+  },
+  {
+    id: "financeiro", name: "Cobrança e documentos fiscais", weight: 4,
+    code: 0, tests: 0, production: 0, priority: "P3",
+    evidence: "Nenhum gateway de pagamento ou emissão fiscal habilitado; pedidos são exclusivamente preparatórios.",
+    next: "Definir modelo fiscal/comercial, gateway, conciliação, devoluções e contratos antes de cobrar.",
+    href: "/termos-marketplace",
+  },
+  {
+    id: "qualidade", name: "Segurança, CI e publicação", weight: 4,
+    code: 3, tests: 2, production: 1, priority: "P0",
+    evidence: "CI e build do catálogo aprovados; produção Vercel pronta, mas domínio suspenso e E2E comercial incompleto.",
+    next: "Testar a integração atual, revisar SQL/RLS e comprovar ponta a ponta no Preview antes do merge.",
+    href: "/admin/marketplace/prontidao",
+  },
+] as const;
+
+export const STAGE_WEIGHTS = { code: 45, tests: 30, production: 25 } as const;
+export const PROGRESS_DIMENSIONS: readonly ProgressDimension[] = ["code","tests","production"] as const;
+export function areaPercent(area: ProjectArea, dimension: ProgressDimension) {
+  return Math.round((area[dimension] / MAX_CHECKPOINTS) * 100);
+}
+export function totalPercent(dimension: ProgressDimension) {
+  const points = PROJECT_AREAS.reduce((sum, area) => sum + area.weight * area[dimension], 0);
+  const weights = PROJECT_AREAS.reduce((sum, area) => sum + area.weight, 0);
+  return Math.round(points / (weights * MAX_CHECKPOINTS) * 100);
+}
+export const TOTAL_PROGRESS = {
+  code: totalPercent("code"),
+  tests: totalPercent("tests"),
+  production: totalPercent("production"),
+} as const;
+export const OVERALL_PROGRESS = Math.round(
+  (TOTAL_PROGRESS.code * STAGE_WEIGHTS.code +
+   TOTAL_PROGRESS.tests * STAGE_WEIGHTS.tests +
+   TOTAL_PROGRESS.production * STAGE_WEIGHTS.production) / 100
+);

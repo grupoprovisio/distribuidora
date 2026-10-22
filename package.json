@@ -36,7 +36,7 @@
     "test:marketplace": "node scripts/marketplace-domain-check.mjs && node scripts/marketplace-access-check.mjs && node scripts/marketplace-csv-check.mjs && node scripts/marketplace-order-check.mjs && node scripts/marketplace-operations-check.mjs && node scripts/marketplace-finance-check.mjs && npm run test:hardening",
     "test:hardening": "node --test scripts/marketplace-hardening-check.mjs",
     "test:supabase-foundation": "node --test scripts/marketplace-supabase-gateway-check.mjs",
-    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs"
+    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs && node scripts/marketplace-project-progress-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
@@ -51,12 +51,12 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
+    "@types/node": "20.19.43",
+    "@types/react": "19.3.0",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "5.9.3"
   }
 }

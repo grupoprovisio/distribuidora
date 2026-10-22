@@ -58,6 +58,14 @@ As variáveis públicas necessárias são `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUB
 
 **Nenhum teste local, flag ou branch autoriza merge/deploy sem aprovação explícita.**
 
+### Evolução auditável e próximas entregas (22/10/2026)
+
+A página privada **Administração → Progresso do projeto** (`/admin/marketplace/progresso`) apresenta as 11 frentes de trabalho com percentuais de 0–100 para implementação, testes e validação em produção, além das prioridades e contagens reais consultadas no Supabase. São estimativas documentadas, não atestados automáticos de qualidade ou comercialização.
+
+As telas de cotações, propostas e pedidos com reserva de estoque foram reconciliadas em uma branch isolada, **ainda não publicadas**. As próximas migrações são `0022` e `0023` (não reutilizar `0016/0017` porque essas versões já correspondem ao catálogo aplicado). `MARKETPLACE_TRANSACTIONS_ENABLED` permanece `false` por padrão. Ver `docs/marketplace/34-progresso-dois-perfis-integracao-20261022.md` e as suites PostgreSQL de transações e isolamento.
+
+**P0:** domínio e credenciais/perfis independentes. **P1:** primeiro produto homologado com imagem e visibilidade do comprador; cotações e propostas em Preview. **P2:** pedidos e reservas, frete e expedição. **P3:** pagamentos e documentos fiscais, somente após regras comerciais e fiscais aprovadas.
+
 ## Documentação que deve orientar o Codex
 
 1. `docs/marketplace/11-escopo-dois-perfis-20261017.md` — **decisão vigente**.
