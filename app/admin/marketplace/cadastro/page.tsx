@@ -6,6 +6,7 @@ import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { AdminCommercialForms, type CatalogOption } from "@/components/admin-commercial-catalog-forms";
 import { ProductEditAndImage } from "@/components/product-edit-and-image";
+import { CatalogCategoryForms } from "@/components/catalog-category-forms";
 import { createClient } from "@/lib/supabase/server";
 import { WRAP } from "@/lib/ui";
 
@@ -21,6 +22,7 @@ export default async function CommercialCatalogRegistration() {
     db.from("supplier_products").select("id,product_id,supplier_org_id,supplier_sku,status").in("status",["pending","approved"]).limit(250),
     db.from("offers").select("id,supplier_product_id,base_price_minor,min_quantity,status").eq("status","pending").order("created_at",{ascending:false}).limit(250),
   ]);
+  const categories=await db.from("product_categories" as "products").select("id,name").order("name").limit(250);
   const error=[orgs,caps,products,skus,offers].some(item=>item.error);
   const supplierSet=new Set((caps.data??[]).map(x=>x.organization_id));
   const supplierOptions:CatalogOption[]=(orgs.data??[]).filter(x=>supplierSet.has(x.id)&&["SUPPLIER","PLATFORM_OPERATOR"].includes(x.kind))
@@ -56,7 +58,7 @@ export default async function CommercialCatalogRegistration() {
         {!supplierOptions.length&&<p className="mt-7 rounded-2xl bg-sand p-5 text-sm font-semibold text-[#5c3a06]">
           Nenhum fornecedor autorizado foi encontrado. Você pode criar produtos mestres como rascunho; para vincular SKUs, cadastre e aprove uma empresa fornecedora em Administração → Acessos e empresas.
         </p>}
-        <><AdminCommercialForms options={{suppliers:supplierOptions,products:allProducts,draftProducts,pendingSkus,approvedSkus,pendingOffers}}/><ProductEditAndImage products={products.data??[]}/></>
+        <><AdminCommercialForms options={{suppliers:supplierOptions,products:allProducts,draftProducts,pendingSkus,approvedSkus,pendingOffers}}/><ProductEditAndImage products={products.data??[]}/>{!categories.error&&<CatalogCategoryForms categories={categories.data??[]} products={products.data??[]}/>}</>
       </>}
       <p className="mt-8 rounded-2xl border border-line bg-paper p-5 text-sm leading-relaxed text-muted">
         Para encontrar registros novos após cada cadastro ou aprovação, atualize esta página. Os seletores exibem no máximo 250 itens por etapa. A operação comercial de pedidos e pagamentos permanece bloqueada até homologação.
