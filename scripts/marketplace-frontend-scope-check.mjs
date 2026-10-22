@@ -154,3 +154,82 @@ test("Catálogo privado filtra a UF antes da paginação e detecta a próxima p�
   assert.match(source,/buyer_delivery_regions/);
   assert.doesNotMatch(source,/SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY|sb_secret_[A-Za-z0-9]/);
 });
+
+
+test("Painel de progresso define 100 pontos, sem confundir front-end com operacao real", () => {
+  const progress=file("lib/marketplace/frontend-progress.ts");
+  const weights=[...progress.matchAll(/\bweight:\s*(\d+),/g)].map(match=>Number(match[1]));
+  const completed=[...progress.matchAll(/\bcompleted:\s*(\d+),/g)].map(match=>Number(match[1]));
+  assert.equal(weights.length,10,"Deve existir uma revisao de dez frentes");
+  assert.equal(weights.reduce((sum,value)=>sum+value,0),100);
+  assert.equal(weights.length,completed.length);
+  for(let i=0;i<weights.length;i++){
+    assert.ok(completed[i]>=0 && completed[i]<=weights[i],"Conclusao deve estar entre zero e o peso");
+  }
+  const page=file("app/admin/marketplace/progresso/page.tsx");
+  assert.match(page,/FRONTEND_PERCENT/);
+  assert.match(page,/role="progressbar"/);
+  assert.match(page,/Revisao|Revisão|revisão|revisao/);
+  assert.match(page,/comercial|operações|operacoes/i);
+  assert.match(file("components/admin-nav.tsx"),/\/admin\/marketplace\/progresso/);
+  assert.match(file("app/admin/layout.tsx"),/requireMarketplacePortal\("admin"\)/);
+});
+
+test("O comprador prepara cotacao privada sem criar pedido ou enviar informacoes ao backend", () => {
+  const page=file("app/app/comprador/cotacoes/page.tsx");
+  const draft=file("components/buyer-quote-draft.tsx");
+  assert.match(page,/BuyerQuoteDraft/);
+  assert.match(file("app/app/comprador/layout.tsx"),/requireMarketplacePortal\("comprador"\)/);
+  assert.match(draft,/mailto:contato@grupoprovisio.com/);
+  assert.match(draft,/navigator\.clipboard\.writeText/);
+  assert.match(draft,/Nenhum dado será enviado ou salvo|Nenhum dado será enviado|não foi criado pedido|Não foi criado pedido/i);
+  assert.doesNotMatch(draft,/fetch\s*\(|\.from\(\s*["'](orders|quotes|payments)["']\s*\)|localStorage|sessionStorage/);
+});
+
+
+test("Contato comercial nao apresenta telefone ou email ficticios nem simula envio", () => {
+  const page=file("app/contato/page.tsx");
+  const form=file("components/contact-form.tsx");
+  assert.match(page,/contato@grupoprovisio\.com/);
+  assert.match(form,/mailto:/);
+  assert.match(form,/Nenhum dado é enviado automaticamente/);
+  assert.doesNotMatch(page,/\(00\)\s*00000-0000|comercial@distribuidora\.com/);
+  assert.doesNotMatch(form,/track\("generate_lead"|fetch\s*\(|setSent\(/);
+});
+
+
+test("Preparacao de cotacao suporta varios itens e UFs legitimas sem backend", () => {
+  const draft=file("components/buyer-quote-draft.tsx");
+  assert.match(draft,/MAX_ITEMS\s*=\s*8/);
+  assert.match(draft,/fields\.items\.map\(/);
+  assert.match(draft,/addItem/);
+  assert.match(draft,/removeItem/);
+  assert.match(draft,/UF_CODES\.map\(/);
+  assert.match(draft,/UF_CODES\.some\(/);
+  assert.match(draft,/Nenhum dado será enviado ou salvo/);
+  assert.doesNotMatch(draft,/localStorage|sessionStorage|fetch\s*\(|setSent\(/);
+});
+
+
+test("Catálogo do fornecedor usa cartões no celular e tabela no desktop", () => {
+  const source = file("components/supplier-catalog-browser.tsx");
+  assert.match(source, /grid gap-3 p-4 md:hidden/);
+  assert.match(source, /hidden overflow-x-auto md:block/);
+  assert.match(source, /aria-live="polite"/);
+  assert.match(source, /statusTone\(row\.status\)/);
+  assert.match(source, /row\.approvedOffers/);
+  assert.match(source, /row\.supplierSku/);
+});
+
+
+test("Portais identificam estados reais de catálogo, rascunhos e pedidos", () => {
+  const portal = file("components/marketplace-portal.tsx");
+  assert.match(portal, /"\/app\/comprador\/catalogo", "Consulta autorizada"/);
+  assert.match(portal, /"\/app\/comprador\/cotacoes", "Rascunho local"/);
+  assert.match(portal, /"\/app\/comprador\/pedidos", "Em preparação"/);
+  assert.match(portal, /"\/app\/fornecedor\/operacao", "Consulta autorizada"/);
+  assert.match(portal, /item\.cards\.map\(\(\[Icon, title, text, href, status\]\)/);
+  const orders = file("app/app/comprador/pedidos/page.tsx");
+  assert.doesNotMatch(orders, /vendedor|vendedora/i);
+  assert.match(orders, /homologação/);
+});

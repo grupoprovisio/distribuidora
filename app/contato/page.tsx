@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { ContactForm } from "@/components/contact-form";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Contato · Distribuidora" };
-
-const CHANNELS = [
-  { icon: MessageCircle, label: "WhatsApp comercial", value: "Fale com a equipe", className: "bg-lime-soft text-forest" },
-  { icon: Phone, label: "Telefone", value: "(00) 00000-0000", className: "bg-sand text-terra" },
-  { icon: Mail, label: "E-mail", value: "comercial@distribuidora.com", className: "bg-mist text-forest" },
-];
 
 export default function ContactPage() {
   return (
@@ -21,16 +15,16 @@ export default function ContactPage() {
         <section className="max-w-2xl">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-plum">Estamos por perto</p>
           <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight text-forest-deep sm:text-5xl">Vamos conversar sobre sua operação.</h1>
-          <p className="mt-4 text-base font-medium leading-relaxed text-muted sm:text-lg">Escolha o canal mais conveniente para pedir uma cotação, tirar dúvidas sobre entrega ou falar com o comercial.</p>
+          <p className="mt-4 text-base font-medium leading-relaxed text-muted sm:text-lg">Para pedir uma cotação, tirar dúvidas sobre entregas ou apresentar sua empresa, prepare uma mensagem para o e-mail comercial do Grupo Provisio.</p>
         </section>
-        <section className="mt-10 grid gap-3 sm:grid-cols-3" aria-label="Canais de atendimento">
-          {CHANNELS.map(({ icon: Icon, label, value, className }) => (
-            <article key={label} className="rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70">
-              <span className={`grid size-11 place-items-center rounded-2xl ${className}`}><Icon size={21} aria-hidden /></span>
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.12em] text-muted">{label}</p>
-              <p className="mt-2 text-sm font-extrabold text-ink">{value}</p>
-            </article>
-          ))}
+        <section className="mt-10" aria-label="Canal oficial de contato">
+          <a href="mailto:contato@grupoprovisio.com" className="flex min-h-24 flex-wrap items-center gap-4 rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70 transition hover:bg-lime-soft focus-visible:outline-2 focus-visible:outline-forest">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-lime-soft text-forest"><Mail size={21} aria-hidden /></span>
+            <span className="min-w-0"><span className="block text-xs font-black uppercase tracking-wider text-muted">E-mail oficial</span>
+              <span className="mt-2 block break-all text-base font-extrabold text-forest-deep">contato@grupoprovisio.com</span>
+              <span className="mt-1 block text-xs font-medium text-muted">Abre seu aplicativo de e-mail, sem envio automático</span>
+            </span>
+          </a>
         </section>
         <section className="mt-10 rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-8">
           <h2 className="text-xl font-extrabold">Para agilizar o atendimento</h2>
