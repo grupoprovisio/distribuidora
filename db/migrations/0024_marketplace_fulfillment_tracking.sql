@@ -96,6 +96,23 @@ begin
  if (v_ship.status='separating' and p_action='mark_ready')
     or (v_ship.status='ready_to_dispatch' and p_action='dispatch')
     or (v_ship.status='in_transit' and p_action='deliver') then
+   -- Expedir retira do estoque real a mesma quantidade que estava reservada.
+   -- Apenas o despacho executa o lancamento; replays idempotentes nao debitam novamente.
+   if p_action='dispatch' then
+     update public.inventory_positions stock set
+       available_quantity=stock.available_quantity-v_order.quantity,
+       reserved_quantity=stock.reserved_quantity-v_order.quantity,
+       updated_at=now()
+     from public.offers offer
+     where offer.id=v_order.offer_id
+       and stock.supplier_product_id=offer.supplier_product_id
+       and stock.supplier_org_id=v_order.supplier_org_id
+       and stock.reserved_quantity>=v_order.quantity
+       and stock.available_quantity>=v_order.quantity;
+     if not found then
+       raise exception 'reserved_stock_unavailable_for_dispatch' using errcode='22023';
+     end if;
+   end if;
    update public.order_fulfillments set status=v_target,updated_at=now(),
      tracking_reference=case when p_action='dispatch' then nullif(btrim(p_tracking),'') else tracking_reference end,
      dispatched_at=case when p_action='dispatch' then now() else dispatched_at end,
