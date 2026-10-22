@@ -1,0 +1,56 @@
+name: Catálogo Provisio - PostgreSQL RLS
+on:
+  pull_request:
+    paths:
+      - "db/migrations/**"
+      - "scripts/sql-test/**"
+      - "app/app/fornecedor/**"
+      - "app/admin/marketplace/**"
+      - "components/supplier-**"
+      - ".github/workflows/catalog-p1-rls.yml"
+  push:
+    branches:
+      - feat/provisio-cadastro-produtos-p1-20261022
+permissions:
+  contents: read
+jobs:
+  catalog-p1-cross-tenant:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Apply migrations and validate cross-tenant RLS
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGDATABASE: postgres
+          PGUSER: postgres
+          PGPASSWORD: test-only-password
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/local-auth-bootstrap.sql
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/local-storage-bootstrap.sql
+          for migration in db/migrations/*.sql; do
+            echo "Validating ${migration}"
+            psql -X -v ON_ERROR_STOP=1 -f "${migration}" >/dev/null
+          done
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/catalog-p1-isolation-local.sql
+          psql -X -v ON_ERROR_STOP=1 -f scripts/sql-test/catalog-p1-rpcs-review-local.sql
