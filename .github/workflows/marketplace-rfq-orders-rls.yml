@@ -62,11 +62,11 @@ jobs:
             echo "PASS legacy suite $suite"
           done
           # The new catalogue grants change SQLSTATE semantics without weakening tenant RLS.
-          for migration in db/migrations/001[6-9]*.sql db/migrations/002[0-4]*.sql; do
+          for migration in db/migrations/001[6-9]*.sql db/migrations/002[0-5]*.sql; do
             psql -X -v ON_ERROR_STOP=1 -f "$migration" >/dev/null
             echo "PASS migration $migration"
           done
-          for suite in scripts/sql-test/marketplace-transactional.sql scripts/sql-test/marketplace-fulfillment.sql scripts/sql-test/marketplace-logistics.sql; do
+          for suite in scripts/sql-test/marketplace-transactional.sql scripts/sql-test/marketplace-fulfillment.sql scripts/sql-test/marketplace-logistics.sql scripts/sql-test/marketplace-platform-supplier.sql; do
             psql -X -v ON_ERROR_STOP=1 -f "$suite" >/dev/null
             echo "PASS transactional suite $suite"
           done
