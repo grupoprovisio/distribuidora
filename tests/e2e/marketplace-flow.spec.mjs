@@ -233,6 +233,7 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     expect(image.mime_type).toBe('image/webp');expect(image.size_bytes).toBeGreaterThan(0);
     A.imagePath=image.storage_path;
     const preview=s.locator('img').first();await expect(preview).toBeVisible();
+    await preview.scrollIntoViewIfNeeded();
     await expect.poll(()=>preview.evaluate(e=>e.complete&&e.naturalWidth>0)).toBe(true);
     const anonymous=await fetch(`${cfg.url}/storage/v1/object/public/provisio-produtos/${image.storage_path}`);
     expect(anonymous.ok).toBe(false);
@@ -264,7 +265,10 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     await expect(page).toHaveURL(new RegExp('oferta='+A.offerId));
     await page.getByLabel('Quantidade',{exact:true}).fill('10');
     await page.getByLabel('Observações (opcional)',{exact:true}).fill('TESTE E2E FLUXO PRINCIPAL');
+    const created=page.waitForResponse(r=>r.url().endsWith('/api/marketplace/transactions')&&r.request().method()==='POST');
     await page.getByRole('button',{name:'Solicitar cotação',exact:true}).click();
+    const result=await created;const feedback=await result.json();
+    expect({status:result.status(),...feedback}).toMatchObject({status:201,ok:true});
     await expect.poll(()=>rows("select id from public.quote_requests where notes='TESTE E2E FLUXO PRINCIPAL'").length).toBe(1);
     mainQuote=rows("select * from public.quote_requests where notes='TESTE E2E FLUXO PRINCIPAL'")[0];
     expect(mainQuote.supplier_org_id).toBe(ORGS.supplierA);expect(mainQuote.quantity).toBe(10);
@@ -329,6 +333,8 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     await expect.poll(()=>rows(`select status from public.order_fulfillments where order_id='${mainOrder.id}'`)[0]?.status).toBe('delivered');
     await pages.buyerA.goto('/app/comprador/pedidos');
     await expect(pages.buyerA.getByText('Entregue (registro manual)',{exact:true})).toBeVisible();
+    await expect(pages.buyerA.getByText('Entrega registrada',{exact:true})).toBeVisible();
+    await expect(pages.buyerA.getByText('Confirmado pelo fornecedor · estoque reservado',{exact:true})).toHaveCount(0);
     await expect(pages.buyerA.getByText('Referência informada pelo fornecedor: E2E-LOCAL-ENTREGA-001')).toBeVisible();
     await pages.buyerA.screenshot({path:test.info().outputPath('comprador-entrega-concluida.png'),fullPage:true});
   });
@@ -375,7 +381,11 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     const three=await newOrder(3);expect(three.o.status).toBe(201);
     expect((await api('supplierA',{action:'order_transition',transition:'supplier_confirm',orderId:three.o.id})).status).toBe(201);
     expect(stock().reserved_quantity).toBe(3);
-    expect((await api('supplierA',{action:'fulfillment',transition:'start_separation',orderId:three.o.id,freightMinor:0})).status).toBe(201);
+    await pages.supplierA.goto('/app/fornecedor/pedidos');
+    const thirdCard=pages.supplierA.locator('li').filter({hasText:`Pedido #${three.o.id.slice(0,8)}`});
+    await thirdCard.getByLabel('Frete estimado em R$ (opcional)',{exact:true}).fill('0,00');
+    await confirmUI(pages.supplierA,thirdCard.getByRole('button',{name:'Iniciar separação',exact:true}));
+    await expect.poll(()=>rows(`select freight_estimate_minor from public.order_fulfillments where order_id='${three.o.id}'`)[0]?.freight_estimate_minor).toBe(0);
     expect((await api('supplierA',{action:'order_transition',transition:'supplier_cancel',orderId:three.o.id})).status).toBe(201);
     expect(stock()).toEqual({available_quantity:90,reserved_quantity:0});
     expect(rows(`select status from public.order_fulfillments where order_id='${three.o.id}'`)[0].status).toBe('cancelled');

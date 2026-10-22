@@ -109,3 +109,14 @@ test("verified PLATFORM_ADMIN needs active org and capability",async()=>{
   context.mfaError=false;context.capStatus="revoked";
   await assert.rejects(requireMarketplacePortal("admin"),/REDIRECT:\/acesso-pendente/);
 });
+
+test("portal organization scope comes from verified memberships, never request IDs",async()=>{
+ reset();let access=await getMarketplaceAccess();
+ assert.deepEqual(access.organizationIds,{comprador:[ORG],fornecedor:[],admin:[]});
+ context.role="SUPPLIER_ADMIN";context.capability="SUPPLIER";
+ access=await getMarketplaceAccess();
+ assert.deepEqual(access.organizationIds,{comprador:[],fornecedor:[ORG],admin:[]});
+ context.capStatus="revoked";
+ access=await getMarketplaceAccess();
+ assert.deepEqual(access.organizationIds,{comprador:[],fornecedor:[],admin:[]});
+});

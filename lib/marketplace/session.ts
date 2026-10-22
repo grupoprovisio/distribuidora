@@ -40,14 +40,16 @@ export async function getMarketplaceAccess() {
   const activeCaps = new Set((capResult.data??[])
     .filter(cap=>cap.status==="approved")
     .map(cap=>`${cap.organization_id}:${cap.capability}`));
-  const allowed = (Object.keys(PORTAL_ACCESS) as Portal[]).filter(portal => {
+  const organizationIds: Record<Portal,string[]> = { comprador: [], fornecedor: [], admin: [] };
+  for (const portal of Object.keys(PORTAL_ACCESS) as Portal[]) {
     const { capability, roles } = PORTAL_ACCESS[portal];
-    return members.some(member=>member.status === "active"
+    organizationIds[portal] = [...new Set(members.filter(member=>member.status === "active"
       && approvedOrgs.has(member.organization_id)
       && activeCaps.has(`${member.organization_id}:${capability}`)
-      && roles.includes(member.role as Role));
-  });
-  return { userId: user.id, email: user.email ?? "", allowed };
+      && roles.includes(member.role as Role)).map(member=>member.organization_id))];
+  }
+  const allowed = (Object.keys(PORTAL_ACCESS) as Portal[]).filter(portal=>organizationIds[portal].length>0);
+  return { userId: user.id, email: user.email ?? "", allowed, organizationIds };
 }
 
 export async function requireMarketplaceLogin() {

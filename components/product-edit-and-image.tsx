@@ -88,7 +88,7 @@ export function ProductEditAndImage({products}:{products:Product[]}){
    </select>
   </label>
   {product&&<div className="mt-5 grid gap-6 md:grid-cols-2">
-   <form action={action} key={product.id} className="grid content-start gap-3">
+   <form action={action} key={"edit:"+product.id} className="grid content-start gap-3">
     <input type="hidden" name="product_id" value={product.id}/>
     <label className="text-sm font-bold text-forest">Nome comercial
      <input required maxLength={160} name="name" defaultValue={product.name} className="mt-1 min-h-12 w-full rounded-xl border border-line bg-canvas p-3"/></label>
@@ -103,7 +103,7 @@ export function ProductEditAndImage({products}:{products:Product[]}){
     </button>
     {state.message&&<p role={state.status==="error"?"alert":"status"} className="text-sm">{state.message}</p>}
    </form>
-   <ProductImageManager key={product.id} product={product}/>
+   <ProductImageManager key={"images:"+product.id} product={product}/>
   </div>}
  </section>;
 }

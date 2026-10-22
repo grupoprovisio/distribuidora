@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isSameOriginRequest } from "@/lib/marketplace/request-origin";
 import { createClient } from "@/lib/supabase/server";
 import { getMarketplaceAccess } from "@/lib/marketplace/session";
 
@@ -33,9 +34,13 @@ export async function GET(request: Request) {
   const supplier=mode==="supplier_quotes"||mode==="supplier_orders";
   if (!access.allowed.includes(supplier?"fornecedor":"comprador")) return json({ok:false,reason:"forbidden"},403);
   const client=await createClient();
+  // RLS is the outer boundary; portal direction must also match a verified membership.
+  const organizationIds=access.organizationIds[supplier?"fornecedor":"comprador"];
+  if (!organizationIds.length) return json({ok:true,items:[],proposals:[],shipments:[]});
   if (mode==="orders"||mode==="supplier_orders") {
     const orders=await client.from("purchase_orders")
       .select("id,buyer_org_id,supplier_org_id,quote_request_id,proposal_id,offer_id,quantity,region_code,unit_price_minor,total_price_minor,status,created_at")
+      .in(supplier?"supplier_org_id":"buyer_org_id",organizationIds)
       .order("created_at",{ascending:false}).limit(60);
     if (orders.error) return json({ok:false,reason:"query_failed"},503);
     const ids=(orders.data??[]).map(order=>order.id);
@@ -47,6 +52,7 @@ export async function GET(request: Request) {
   }
   const quotes=await client.from("quote_requests")
     .select("id,buyer_org_id,supplier_org_id,offer_id,quantity,region_code,status,created_at")
+    .in(supplier?"supplier_org_id":"buyer_org_id",organizationIds)
     .order("created_at",{ascending:false}).limit(60);
   if (quotes.error) return json({ok:false,reason:"query_failed"},503);
   const ids=(quotes.data??[]).map(item=>item.id);
@@ -60,8 +66,7 @@ export async function GET(request: Request) {
 /** Transactional RPC only: no manual inserts and no provider or payment credentials. */
 export async function POST(request: Request) {
   if (!allowed()) return json({ok:false,reason:"not_enabled"},503);
-  const origin=request.headers.get("origin");
-  if (!origin || origin!==new URL(request.url).origin) return json({ok:false,reason:"invalid_origin"},403);
+  if (!isSameOriginRequest(request)) return json({ok:false,reason:"invalid_origin"},403);
   const access=await getMarketplaceAccess();
   if (!access) return json({ok:false,reason:"unauthorized"},401);
   const body=await readJson(request);
