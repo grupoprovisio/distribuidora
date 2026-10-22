@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Building2, ClipboardList, PackageSearch, ShieldCheck, Store, ListChecks } from "lucide-react";
+import { Activity, ChartNoAxesCombined, Building2, ClipboardList, PackageSearch, ShieldCheck, Store, ListChecks } from "lucide-react";
 
 const ITEMS = [
   ["/admin", "Visão geral", ClipboardList],
@@ -8,6 +8,7 @@ const ITEMS = [
   ["/admin/marketplace/homologacoes", "Homologações", ListChecks],
   ["/admin/marketplace/catalogo", "Catálogo pendente", PackageSearch],
   ["/admin/marketplace/solicitacoes", "Pedidos de cadastro", ListChecks],
+  ["/admin/marketplace/progresso", "Progresso do projeto", ChartNoAxesCombined],
   ["/admin/marketplace/prontidao", "Prontidão", Activity],
   ["/admin/marketplace/cadastro", "Cadastrar produtos", PackageSearch],
   ["/produtos", "Produtos autorizados", PackageSearch],
