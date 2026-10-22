@@ -2,17 +2,17 @@
 -- Requer migrations 0001-0025 e suites anteriores. NUNCA aplicar ao Supabase principal.
 reset role;
 insert into auth.users(id,raw_user_meta_data)
- values('00000000-0000-4000-8000-000000000006','{"full_name":"Plataforma Fornecedor Teste"}');
+ values('00000000-0000-4000-8000-000000000009','{"full_name":"Plataforma Fornecedor Teste"}');
 insert into auth.sessions(id,user_id,aal,not_after)
- values('70000000-0000-4000-8000-000000000016','00000000-0000-4000-8000-000000000006','aal1',now()+interval '1 day');
-update public.profiles set status='active' where id='00000000-0000-4000-8000-000000000006';
+ values('70000000-0000-4000-8000-000000000019','00000000-0000-4000-8000-000000000009','aal1',now()+interval '1 day');
+update public.profiles set status='active' where id='00000000-0000-4000-8000-000000000009';
 insert into public.organizations(id,legal_name,kind,is_platform_owned,status)
  values('10000000-0000-4000-8000-000000000004','Provisio Plataforma Homologacao','PLATFORM_OPERATOR',true,'approved');
 insert into public.organization_capabilities(organization_id,capability,status)
  values ('10000000-0000-4000-8000-000000000004','SUPPLIER','approved'),
         ('10000000-0000-4000-8000-000000000004','PLATFORM_OPERATOR','approved');
 insert into public.organization_members(organization_id,user_id,role,status)
- values('10000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-000000000006','PLATFORM_ADMIN','active');
+ values('10000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-000000000009','PLATFORM_ADMIN','active');
 insert into public.products(id,slug,name,base_unit,status)
  values('20000000-0000-4000-8000-000000000003','provisio-platform-sku-fixture','Somente fixture','un','active');
 insert into public.supplier_products(id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status)
@@ -35,8 +35,8 @@ reset role;
 
 -- PLATFORM_ADMIN esta autorizado SOMENTE na operadora de plataforma aprovada.
 set role authenticated;
-select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',false);
-select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000016"}',false);
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000009',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000019"}',false);
 select test.assert_count((select count(*) from public.quote_requests where supplier_org_id='10000000-0000-4000-8000-000000000004'),1,
  'platform admin sees its own buyer quote');
 select public.marketplace_propose_quote(
@@ -52,8 +52,8 @@ select public.marketplace_submit_checkout('10000000-0000-4000-8000-000000000003'
  '90000000-0000-4000-8000-000000000022');
 reset role;
 set role authenticated;
-select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',false);
-select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000016"}',false);
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000009',false);
+select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000019"}',false);
 select public.marketplace_transition_order(
  (select id from public.purchase_orders where checkout_key='90000000-0000-4000-8000-000000000022'),
  'supplier_confirm');
