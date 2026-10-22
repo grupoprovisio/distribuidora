@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { AdminCommercialForms, type CatalogOption } from "@/components/admin-commercial-catalog-forms";
+import { ProductEditAndImage } from "@/components/product-edit-and-image";
 import { createClient } from "@/lib/supabase/server";
 import { WRAP } from "@/lib/ui";
 
@@ -16,7 +17,7 @@ export default async function CommercialCatalogRegistration() {
   const [orgs,caps,products,skus,offers]=await Promise.all([
     db.from("organizations").select("id,legal_name,trade_name,kind,status").eq("status","approved").limit(250),
     db.from("organization_capabilities").select("organization_id,capability,status").eq("capability","SUPPLIER").eq("status","approved").limit(250),
-    db.from("products").select("id,name,slug,status").neq("status","archived").order("name").limit(250),
+    db.from("products").select("id,name,slug,status,gtin,base_unit").neq("status","archived").order("name").limit(250),
     db.from("supplier_products").select("id,product_id,supplier_org_id,supplier_sku,status").in("status",["pending","approved"]).limit(250),
     db.from("offers").select("id,supplier_product_id,base_price_minor,min_quantity,status").eq("status","pending").order("created_at",{ascending:false}).limit(250),
   ]);
@@ -55,7 +56,7 @@ export default async function CommercialCatalogRegistration() {
         {!supplierOptions.length&&<p className="mt-7 rounded-2xl bg-sand p-5 text-sm font-semibold text-[#5c3a06]">
           Nenhum fornecedor autorizado foi encontrado. Você pode criar produtos mestres como rascunho; para vincular SKUs, cadastre e aprove uma empresa fornecedora em Administração → Acessos e empresas.
         </p>}
-        <AdminCommercialForms options={{suppliers:supplierOptions,products:allProducts,draftProducts,pendingSkus,approvedSkus,pendingOffers}}/>
+        <><AdminCommercialForms options={{suppliers:supplierOptions,products:allProducts,draftProducts,pendingSkus,approvedSkus,pendingOffers}}/><ProductEditAndImage products={products.data??[]}/></>
       </>}
       <p className="mt-8 rounded-2xl border border-line bg-paper p-5 text-sm leading-relaxed text-muted">
         Para encontrar registros novos após cada cadastro ou aprovação, atualize esta página. Os seletores exibem no máximo 250 itens por etapa. A operação comercial de pedidos e pagamentos permanece bloqueada até homologação.
