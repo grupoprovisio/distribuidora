@@ -18,8 +18,18 @@ type Order = {
   proposal_id:string; offer_id:string; quantity:number; region_code:string;
   unit_price_minor:number; total_price_minor:number; status:string; created_at:string;
 };
+type Shipment = {
+  id:string;order_id:string;status:string;freight_estimate_minor:number|null;
+  estimated_delivery_date:string|null;tracking_reference:string|null;
+  dispatched_at:string|null;delivered_at:string|null;updated_at:string;
+};
 type Mode = "buyer_quotes" | "supplier_quotes" | "buyer_orders" | "supplier_orders";
-type PayloadResult = {ok:boolean;reason?:string;id?:string;items?:Quote[]|Order[];proposals?:Proposal[]};
+type PayloadResult = {ok:boolean;reason?:string;id?:string;items?:Quote[]|Order[];proposals?:Proposal[];shipments?:Shipment[]};
+const SHIPMENT_STATUS:Record<string,string>={
+  separating:"Separação em andamento",ready_to_dispatch:"Pronto para expedir",
+  in_transit:"Expedido · em trânsito",delivered:"Entregue (registro manual)",
+  cancelled:"Separação cancelada",
+};
 const API="/api/marketplace/transactions";
 const BRL=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const money=(cents:number)=>BRL.format(cents/100);
@@ -52,6 +62,10 @@ export function TransactionConsole({
   const [quotes,setQuotes]=useState<Quote[]>([]);
   const [proposals,setProposals]=useState<Proposal[]>([]);
   const [orders,setOrders]=useState<Order[]>([]);
+  const [shipments,setShipments]=useState<Shipment[]>([]);
+  const [freightInputs,setFreightInputs]=useState<Record<string,string>>({});
+  const [etaInputs,setEtaInputs]=useState<Record<string,string>>({});
+  const [trackingInputs,setTrackingInputs]=useState<Record<string,string>>({});
   const [error,setError]=useState("");
   const [notice,setNotice]=useState("");
   const [busy,setBusy]=useState(false);
@@ -79,15 +93,17 @@ export function TransactionConsole({
       const response=await fetch(API+"?mode="+modeParam[mode],{cache:"no-store",credentials:"same-origin"});
       const data:PayloadResult=await response.json();
       if(!response.ok||!data.ok)throw new Error("Consulta indisponível. Confirme sua sessão e suas permissões.");
-      if(mode==="buyer_orders"||mode==="supplier_orders")setOrders((data.items??[]) as Order[]);
-      else {
+      if(mode==="buyer_orders"||mode==="supplier_orders"){
+        setOrders((data.items??[]) as Order[]);
+        setShipments(data.shipments??[]);
+      } else {
         setQuotes((data.items??[]) as Quote[]);
         setProposals(data.proposals??[]);
       }
       setError("");
     }catch {
       setError("Não foi possível consultar operações com segurança. Confirme suas permissões ou tente novamente.");
-      setQuotes([]);setProposals([]);setOrders([]);
+      setQuotes([]);setProposals([]);setOrders([]);setShipments([]);
     }finally{setLoading(false);}
   },[mode]);
 
@@ -162,6 +178,36 @@ export function TransactionConsole({
     });
   }
 
+  function advanceShipping(order:Order,step:"start_separation"|"mark_ready"|"dispatch"|"deliver"){
+    const notes={
+      start_separation:"Iniciar a separação do pedido? O frete informado será apenas estimado, sem cobrança.",
+      mark_ready:"Concluir a separação e marcar o pedido pronto para expedição?",
+      dispatch:"Expedir o pedido? As unidades reservadas serão descontadas do estoque exatamente uma vez.",
+      deliver:"Registrar a entrega manualmente? Esta ação não equivale a comprovante de transportadora.",
+    };
+    const success={
+      start_separation:"Separação iniciada com sucesso.",
+      mark_ready:"Pedido separado e pronto para expedir.",
+      dispatch:"Pedido expedido e estoque atualizado.",
+      deliver:"Entrega registrada no acompanhamento interno.",
+    };
+    const payload:Record<string,unknown>={action:"fulfillment",orderId:order.id,transition:step};
+    if(step==="start_separation"){
+      const entered=(freightInputs[order.id]??"").trim();
+      const cents=entered==="0"?0:entered?parseCents(entered):null;
+      if(entered && cents===null){setError("Frete estimado inválido. Informe um valor em reais ou deixe vazio.");return;}
+      const eta=(etaInputs[order.id]??"").trim();
+      if(eta && !/^\d{4}-\d{2}-\d{2}$/.test(eta)){setError("A previsão precisa ser uma data válida.");return;}
+      if(cents!==null)payload.freightMinor=cents;
+      if(eta)payload.etaDate=eta;
+    }else if(step==="dispatch"){
+      const code=(trackingInputs[order.id]??"").trim();
+      if(code.length>80){setError("Referência de transporte deve ter até 80 caracteres.");return;}
+      if(code)payload.trackingReference=code;
+    }
+    setError("");
+    setPendingOperation({prompt:notes[step],payload,success:success[step]});
+  }
   const label="block text-sm font-extrabold text-forest-deep";
   const field="mt-2 min-h-12 w-full rounded-xl border border-line bg-canvas px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-forest";
   return <div className="space-y-6">
@@ -248,22 +294,62 @@ export function TransactionConsole({
           </div>}
         </li>;
       })}</ul>:<p role="status" className="mt-6 rounded-2xl bg-canvas p-7 text-sm text-muted">Nenhuma cotação disponível para seu perfil no momento.</p>)
-      :(orders.length?<ul className="mt-6 space-y-3">{orders.map(order=><li key={order.id} className="rounded-2xl border border-line bg-canvas p-5">
+      :(orders.length?<ul className="mt-6 space-y-3">{orders.map(order=>{
+        const shipment=shipments.find(item=>item.order_id===order.id);
+        return <li key={order.id} className="rounded-2xl border border-line bg-canvas p-5">;
         <div className="flex flex-wrap justify-between gap-3"><strong className="text-forest-deep">Pedido #{order.id.slice(0,8)}</strong><span className="text-xs font-extrabold text-forest">{statusName(order.status)}</span></div>
         <p className="mt-3 text-sm text-muted">Quantidade: {order.quantity} · UF: {order.region_code} · Data: {date(order.created_at)}</p>
         <p className="mt-2 font-black text-forest-deep">{money(order.total_price_minor)}</p>
-        <p className="mt-2 text-xs text-muted">Sem pagamento, emissão fiscal ou expedição. Estoque é reservado somente após confirmação do fornecedor.</p>
+        <p className="mt-2 text-xs text-muted">Sem pagamento nem emissão fiscal. A confirmação reserva o estoque; a expedição baixa as unidades reservadas. Frete abaixo é uma estimativa sem cobrança.</p>
+        {shipment&&<section className="mt-4 rounded-2xl border border-line bg-paper p-4" aria-label="Acompanhamento logístico">
+          <p className="text-xs font-extrabold uppercase tracking-wide text-terra">Acompanhamento · registro interno</p>
+          <p className="mt-2 text-sm font-black text-forest-deep">{SHIPMENT_STATUS[shipment.status]??"Em análise"}</p>
+          <div className="mt-2 space-y-1 text-xs text-muted">
+            {shipment.freight_estimate_minor!==null&&<p>Frete estimado (não cobrado): {money(shipment.freight_estimate_minor)}</p>}
+            {shipment.estimated_delivery_date&&<p>Previsão de entrega: {shipment.estimated_delivery_date.split("-").reverse().join("/")}</p>}
+            {shipment.tracking_reference&&<p>Referência informada pelo fornecedor: {shipment.tracking_reference}</p>}
+            {shipment.dispatched_at&&<p>Expedido em: {date(shipment.dispatched_at)}</p>}
+            {shipment.delivered_at&&<p>Entrega registrada em: {date(shipment.delivered_at)}</p>}
+          </div>
+        </section>}
+        {mode==="supplier_orders"&&order.status==="confirmed"&&(!shipment||shipment.status==="ready_to_dispatch")&&
+          <div className="mt-4 grid gap-3 rounded-2xl border border-line bg-paper p-4 sm:grid-cols-2">
+            {!shipment&&<>
+              <label className={label}>Frete estimado em R$ (opcional)
+                <input className={field} inputMode="decimal" placeholder="Ex.: 12,90" value={freightInputs[order.id]??""}
+                  onChange={e=>setFreightInputs(current=>({...current,[order.id]:e.target.value}))}/>
+              </label>
+              <label className={label}>Previsão de entrega (opcional)
+                <input className={field} type="date" value={etaInputs[order.id]??""}
+                  onChange={e=>setEtaInputs(current=>({...current,[order.id]:e.target.value}))}/>
+              </label>
+            </>}
+            {shipment?.status==="ready_to_dispatch"&&
+              <label className={label+" sm:col-span-2"}>Referência de transporte (opcional)
+                <input className={field} maxLength={80} placeholder="Código interno; nenhuma transportadora conectada"
+                  value={trackingInputs[order.id]??""}
+                  onChange={e=>setTrackingInputs(current=>({...current,[order.id]:e.target.value}))}/>
+              </label>}
+          </div>}
         <div className="mt-4 flex flex-wrap gap-2">
           {mode==="supplier_orders"&&order.status==="awaiting_supplier_confirmation"&&<>
             <button type="button" disabled={busy} onClick={()=>transition(order,"supplier_confirm")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Confirmar e reservar</button>
             <button type="button" disabled={busy} onClick={()=>transition(order,"supplier_reject")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Recusar solicitação</button>
           </>}
-          {mode==="supplier_orders"&&order.status==="confirmed"&&
+          {mode==="supplier_orders"&&order.status==="confirmed"&&(!shipment||shipment.status==="separating"||shipment.status==="ready_to_dispatch")&&
             <button type="button" disabled={busy} onClick={()=>transition(order,"supplier_cancel")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Cancelar e liberar estoque</button>}
+          {mode==="supplier_orders"&&order.status==="confirmed"&&!shipment&&
+            <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"start_separation")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Iniciar separação</button>}
+          {mode==="supplier_orders"&&shipment?.status==="separating"&&
+            <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"mark_ready")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Finalizar separação</button>}
+          {mode==="supplier_orders"&&shipment?.status==="ready_to_dispatch"&&
+            <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"dispatch")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Confirmar expedição</button>}
+          {mode==="supplier_orders"&&shipment?.status==="in_transit"&&
+            <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"deliver")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Registrar entrega</button>}
           {mode==="buyer_orders"&&order.status==="awaiting_supplier_confirmation"&&
             <button type="button" disabled={busy} onClick={()=>transition(order,"buyer_cancel")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Cancelar solicitação</button>}
         </div>
-      </li>)}</ul>:<p role="status" className="mt-6 rounded-2xl bg-canvas p-7 text-sm text-muted">Nenhuma solicitação de pedido encontrada.</p>)}
+      </li>;})}</ul>:<p role="status" className="mt-6 rounded-2xl bg-canvas p-7 text-sm text-muted">Nenhuma solicitação de pedido encontrada.</p>)}
     </section>
   </div>;
 }
