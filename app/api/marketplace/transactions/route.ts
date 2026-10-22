@@ -38,7 +38,12 @@ export async function GET(request: Request) {
       .select("id,buyer_org_id,supplier_org_id,quote_request_id,proposal_id,offer_id,quantity,region_code,unit_price_minor,total_price_minor,status,created_at")
       .order("created_at",{ascending:false}).limit(60);
     if (orders.error) return json({ok:false,reason:"query_failed"},503);
-    return json({ok:true,items:orders.data??[]});
+    const ids=(orders.data??[]).map(order=>order.id);
+    const shipments=ids.length?await client.from("order_fulfillments")
+      .select("id,order_id,status,freight_estimate_minor,estimated_delivery_date,tracking_reference,dispatched_at,delivered_at,updated_at")
+      .in("order_id",ids).limit(60):null;
+    if (shipments?.error) return json({ok:false,reason:"query_failed"},503);
+    return json({ok:true,items:orders.data??[],shipments:shipments?.data??[]});
   }
   const quotes=await client.from("quote_requests")
     .select("id,buyer_org_id,supplier_org_id,offer_id,quantity,region_code,status,created_at")
@@ -103,6 +108,31 @@ export async function POST(request: Request) {
       if (!isUuid(body.orderId)) return invalid();
       const response=await client.rpc("marketplace_transition_order",{
         order_id:body.orderId,action,
+      });
+      result=response;
+      break;
+    }
+    case "fulfillment": {
+      if (!access.allowed.includes("fornecedor")) return json({ok:false,reason:"forbidden"},403);
+      const transition=body.transition;
+      const allowedTransitions=["start_separation","mark_ready","dispatch","deliver"];
+      if (!isUuid(body.orderId) || typeof transition!=="string" ||
+          !allowedTransitions.includes(transition)) return invalid();
+      const freight=body.freightMinor??null;
+      const eta=body.etaDate??null;
+      const tracking=body.trackingReference??null;
+      if (freight!==null && (typeof freight!=="number" || !Number.isSafeInteger(freight) ||
+           freight<0 || freight>100000000)) return invalid();
+      if (eta!==null && (typeof eta!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(eta) ||
+           isNaN(Date.parse(eta)))) return invalid();
+      if (tracking!==null && (typeof tracking!=="string" ||
+           tracking.trim().length<1 || tracking.trim().length>80 ||
+           /[\x00-\x1f\x7f]/.test(tracking))) return invalid();
+      if (transition!=="start_separation" && (freight!==null || eta!==null)) return invalid();
+      if (transition!=="dispatch" && tracking!==null) return invalid();
+      const response=await client.rpc("marketplace_advance_fulfillment",{
+        order_id:body.orderId,action:transition,freight_estimate_minor:freight,
+        estimated_delivery_date:eta,tracking_reference:tracking
       });
       result=response;
       break;
