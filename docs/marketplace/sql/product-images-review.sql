@@ -8,6 +8,7 @@ create table if not exists public.product_images (
  size_bytes integer not null check (size_bytes between 1 and 5242880),
  created_at timestamptz not null default now()
 );
+grant select,insert,delete on public.product_images to authenticated;
 create index if not exists product_images_product_idx on public.product_images(product_id);
 alter table public.product_images enable row level security;
 create policy "admin_product_images_select" on public.product_images for select to authenticated
