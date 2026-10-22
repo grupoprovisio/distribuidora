@@ -12,6 +12,7 @@ export type PrivateOffer = {
   pack: string;
   priceMinor: number;
   minQuantity: number;
+  imageUrl?: string | null;
 };
 export type BuyerCatalogResult = { items: PrivateOffer[]; error: boolean; hasMore: boolean; regionNotAuthorized?: boolean };
 const SOURCES = new Set(["MANUAL_AUTHORIZED","SUPPLIER_CSV_AUTHORIZED","SUPPLIER_API_AUTHORIZED","PLATFORM_STOCK"]);
@@ -71,6 +72,7 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const regionIds=new Set((regions.data??[]).map(r=>r.offer_id));
   const stockMap=new Map((inventory.data??[]).map(s=>[s.supplier_product_id+":"+s.supplier_org_id,s]));
   const items:PrivateOffer[]=[];
+  const productByOffer=new Map<string,string>();
   for (const offer of visible) {
     const sku=skuMap.get(offer.supplier_product_id);
     const org=orgMap.get(offer.supplier_org_id);
@@ -79,11 +81,27 @@ export async function buyerCatalog(client: Client, region: string, page: number)
     const stock=stockMap.get(sku.id+":"+org.id);
     if (!product || !stock) continue;
     if (Number(stock.available_quantity)-Number(stock.reserved_quantity)<offer.min_quantity) continue;
+    productByOffer.set(offer.id,product.id);
     items.push({
       id:offer.id,slug:product.slug,productName:product.name,supplier:org.trade_name||org.legal_name,
       sku:sku.supplier_sku,pack:String(sku.pack_quantity)+" "+sku.pack_unit,
       priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity
     });
+  }
+  const shownProductIds=[...new Set(productByOffer.values())];
+  if(shownProductIds.length){
+    const images=await client.from("product_images").select("product_id,storage_path")
+      .in("product_id",shownProductIds).order("created_at",{ascending:false}).limit(100);
+    if(!images.error){
+      const first=new Map<string,string>();
+      for(const row of images.data??[]){if(!first.has(row.product_id))first.set(row.product_id,row.storage_path);}
+      const signed=await Promise.all([...first].map(async ([id,path])=>{
+        const result=await client.storage.from("provisio-produtos").createSignedUrl(path,15*60);
+        return [id,result.data?.signedUrl??null] as const;
+      }));
+      const byProduct=new Map<string,string|null>(signed);
+      for(const item of items)item.imageUrl=byProduct.get(productByOffer.get(item.id)??"")??null;
+    }
   }
   return {items,error:false,hasMore:hasMore&&page<1000};
 }

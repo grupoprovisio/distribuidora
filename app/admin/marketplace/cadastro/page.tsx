@@ -22,7 +22,7 @@ export default async function CommercialCatalogRegistration() {
     db.from("supplier_products").select("id,product_id,supplier_org_id,supplier_sku,status").in("status",["pending","approved"]).limit(250),
     db.from("offers").select("id,supplier_product_id,base_price_minor,min_quantity,status").eq("status","pending").order("created_at",{ascending:false}).limit(250),
   ]);
-  const categories=await db.from("product_categories" as "products").select("id,name").order("name").limit(250);
+  const categories=await db.from("product_categories").select("id,name").order("name").limit(250);
   const error=[orgs,caps,products,skus,offers].some(item=>item.error);
   const supplierSet=new Set((caps.data??[]).map(x=>x.organization_id));
   const supplierOptions:CatalogOption[]=(orgs.data??[]).filter(x=>supplierSet.has(x.id)&&["SUPPLIER","PLATFORM_OPERATOR"].includes(x.kind))

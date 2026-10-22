@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { FilterX, PackageSearch, Search, ShieldCheck } from "lucide-react";
 import type { PrivateOffer } from "@/lib/marketplace/buyer-catalog";
 
@@ -50,6 +51,9 @@ export function BuyerCatalogBrowser({ items, region }: { items: PrivateOffer[]; 
     </div>
     {shown.length ? <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
       {shown.map(item => <article key={item.id} className="rounded-2xl border border-line bg-canvas p-5">
+        {item.imageUrl&&<div className="relative mb-4 aspect-[4/3] overflow-hidden rounded-xl bg-paper">
+          <Image src={item.imageUrl} alt={"Imagem de "+item.productName} fill unoptimized sizes="(max-width: 640px) 90vw, 30vw" className="object-contain"/>
+        </div>}
         <p className="text-xs font-bold uppercase tracking-wide text-terra">{item.supplier}</p>
         <h2 className="mt-3 text-lg font-black text-forest-deep">{item.productName}</h2>
         <p className="mt-2 text-xs text-muted">SKU: {item.sku} · Embalagem: {item.pack}</p>
