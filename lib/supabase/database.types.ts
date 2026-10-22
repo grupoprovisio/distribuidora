@@ -1,6 +1,6 @@
 // Base gerada a partir do Supabase Provisio em 2026-10-17.
-// As tabelas e RPCs 0016-0021 sao tipagem proposta ate aplicar as migracoes em homologacao.
-// Regerar integralmente apos homologar o schema para evitar divergencia.
+// Tipagem versionada conforme SQL 0001-0024; 0024 exige homologacao antes de liberar logistica.
+// Regerar a partir do projeto Supabase apos validar a implantacao.
 export type Json =
   | string
   | number
@@ -17,6 +17,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      order_fulfillments: {
+        Row: {
+          id: string
+          order_id: string
+          buyer_org_id: string
+          supplier_org_id: string
+          status: string
+          freight_estimate_minor: number | null
+          estimated_delivery_date: string | null
+          tracking_reference: string | null
+          dispatched_at: string | null
+          delivered_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          buyer_org_id: string
+          supplier_org_id: string
+          status?: string
+          freight_estimate_minor?: number | null
+          estimated_delivery_date?: string | null
+          tracking_reference?: string | null
+          dispatched_at?: string | null
+          delivered_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          buyer_org_id?: string
+          supplier_org_id?: string
+          status?: string
+          freight_estimate_minor?: number | null
+          estimated_delivery_date?: string | null
+          tracking_reference?: string | null
+          dispatched_at?: string | null
+          delivered_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quote_requests: {
         Row: {
           id: string
@@ -575,6 +620,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_advance_fulfillment: {
+        Args: {
+          order_id: string
+          action: string
+          freight_estimate_minor?: number | null
+          estimated_delivery_date?: string | null
+          tracking_reference?: string | null
+        }
+        Returns: string
+      }
       marketplace_transition_order: {
         Args: { order_id: string; action: string }
         Returns: string
