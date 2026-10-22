@@ -10,7 +10,7 @@ on:
       - '.github/workflows/marketplace-rfq-orders-rls.yml'
   push:
     branches:
-      - feat/provisio-avanco-dois-perfis-20261022
+      - main
 permissions:
   contents: read
 jobs:
