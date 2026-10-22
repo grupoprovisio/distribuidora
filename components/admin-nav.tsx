@@ -8,7 +8,7 @@ const ITEMS = [
   ["/admin/marketplace/homologacoes", "Homologações", ListChecks],
   ["/admin/marketplace/catalogo", "Catálogo pendente", PackageSearch],
   ["/admin/marketplace/prontidao", "Prontidão", Activity],
-  ["/admin/marketplace/progresso", "Progresso front-end", BarChart3],
+  ["/admin/marketplace/progresso", "Progresso do projeto", BarChart3],
   ["/admin/marketplace/cadastro", "Cadastrar produtos", PackageSearch],
   ["/produtos", "Produtos autorizados", PackageSearch],
   ["/seguranca/mfa", "Segundo fator", ShieldCheck],
