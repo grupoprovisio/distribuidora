@@ -16,8 +16,6 @@ create policy "admin_product_images_insert" on public.product_images for insert 
  with check ((select marketplace_private.is_verified_platform_admin()) and storage_path like product_id::text || '/%');
 create policy "admin_product_images_delete" on public.product_images for delete to authenticated
  using ((select marketplace_private.is_verified_platform_admin()));
-create policy "buyer_product_images_select" on public.product_images for select to authenticated
- using (exists (select 1 from public.products p where p.id=product_images.product_id));
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
  values ('provisio-produtos','provisio-produtos',false,5242880,array['image/webp'])
  on conflict (id) do nothing;
