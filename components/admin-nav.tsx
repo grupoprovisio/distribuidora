@@ -7,6 +7,7 @@ const ITEMS = [
   ["/admin/acessos", "Acessos e empresas", Building2],
   ["/admin/marketplace/homologacoes", "Homologações", ListChecks],
   ["/admin/marketplace/catalogo", "Catálogo pendente", PackageSearch],
+  ["/admin/marketplace/solicitacoes", "Pedidos de cadastro", ListChecks],
   ["/admin/marketplace/prontidao", "Prontidão", Activity],
   ["/admin/marketplace/cadastro", "Cadastrar produtos", PackageSearch],
   ["/produtos", "Produtos autorizados", PackageSearch],

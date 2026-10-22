@@ -1,5 +1,6 @@
-// AUTO-GERADO a partir de Supabase Provisio em 2026-10-17.
-// Regerar quando novas migrations alterarem o schema.
+// Base gerada a partir do Supabase Provisio em 2026-10-17.
+// As tabelas e RPCs 0016-0021 sao tipagem proposta ate aplicar as migracoes em homologacao.
+// Regerar integralmente apos homologar o schema para evitar divergencia.
 export type Json =
   | string
   | number
@@ -16,6 +17,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      product_categories: {
+        Row: { id:string; name:string; slug:string; created_at:string }
+        Insert: { id?:string; name:string; slug:string; created_at?:string }
+        Update: { id?:string; name?:string; slug?:string; created_at?:string }
+        Relationships: []
+      }
+      product_category_assignments: {
+        Row: { product_id:string; category_id:string }
+        Insert: { product_id:string; category_id:string }
+        Update: { product_id?:string; category_id?:string }
+        Relationships: []
+      }
+      product_images: {
+        Row: { id:string; product_id:string; storage_path:string; mime_type:string; size_bytes:number; created_at:string }
+        Insert: { id?:string; product_id:string; storage_path:string; mime_type:string; size_bytes:number; created_at?:string }
+        Update: { id?:string; product_id?:string; storage_path?:string; mime_type?:string; size_bytes?:number; created_at?:string }
+        Relationships: []
+      }
+      supplier_product_submissions: {
+        Row: {
+          id:string; supplier_org_id:string; author_id:string; supplier_sku:string;
+          product_name:string; category_id:string|null; region_code:string;
+          base_unit:string; pack_quantity:number; pack_unit:string; base_price_minor:number;
+          available_quantity:number; status:string; created_at:string
+        }
+        Insert: {
+          id?:string; supplier_org_id:string; author_id:string; supplier_sku:string;
+          product_name:string; category_id?:string|null; region_code:string;
+          base_unit:string; pack_quantity:number; pack_unit:string; base_price_minor:number;
+          available_quantity?:number; status?:string; created_at?:string
+        }
+        Update: {
+          id?:string; supplier_org_id?:string; author_id?:string; supplier_sku?:string;
+          product_name?:string; category_id?:string|null; region_code?:string;
+          base_unit?:string; pack_quantity?:number; pack_unit?:string; base_price_minor?:number;
+          available_quantity?:number; status?:string; created_at?:string
+        }
+        Relationships: []
+      }
       buyer_delivery_regions: {
         Row: {
           buyer_org_id: string
@@ -403,7 +443,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      set_supplier_available_stock: {
+        Args: { p_org:string; p_sku:string; p_available:number }
+        Returns: undefined
+      }
+      create_supplier_pending_offer: {
+        Args: {
+          p_org:string; p_sku:string; p_price_minor:number; p_minimum:number;
+          p_region:string; p_valid_to?:string|null
+        }
+        Returns: string
+      }
+      promote_supplier_submission: {
+        Args: { p_submission:string; p_slug:string; p_gtin?:string|null }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
