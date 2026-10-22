@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Disposable integration test outputs; never publish browser credentials or traces.
+/test-results/
+/playwright-report/
+/tests/e2e/local/supabase/.temp/
+/tests/e2e/local/supabase/.branches/

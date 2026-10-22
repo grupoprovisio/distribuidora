@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, ArrowLeft, ArrowRight, Boxes, CheckCircle2, ClipboardList, LockKeyhole, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, ShieldAlert, ShieldCheck } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";

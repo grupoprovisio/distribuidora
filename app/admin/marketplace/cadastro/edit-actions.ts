@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireMarketplacePortal } from "@/lib/marketplace/session";
 type Feedback={status:"idle"|"success"|"error";message:string};
-const id=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const id=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const result=(status:Feedback["status"],message:string):Feedback=>({status,message});
 export async function editCatalogProduct(_:Feedback,data:FormData):Promise<Feedback>{
   await requireMarketplacePortal("admin");

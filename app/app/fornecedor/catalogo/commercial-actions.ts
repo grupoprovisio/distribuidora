@@ -8,7 +8,7 @@ import { UF_CODES } from "@/lib/marketplace/brazil-regions";
 export type SupplierCatalogFeedback = { status:"idle"|"error"|"success"; message:string };
 const failed=(message:string):SupplierCatalogFeedback=>({status:"error",message});
 const saved=(message:string):SupplierCatalogFeedback=>({status:"success",message});
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function value(data:FormData,key:string){const item=data.get(key);return typeof item==="string"?item.trim():"";}
 function decimal(data:FormData,key:string,max:number,integersOnly=false){

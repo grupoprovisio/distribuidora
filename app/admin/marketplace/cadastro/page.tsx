@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, PackagePlus, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldAlert, ShieldCheck } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";

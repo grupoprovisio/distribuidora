@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireMarketplacePortal } from "@/lib/marketplace/session";
 
 export type ReviewFeedback={status:"idle"|"success"|"error";message:string};
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const error=(message:string):ReviewFeedback=>({status:"error",message});
 export async function reviewSupplierSubmission(_previous:ReviewFeedback,data:FormData):Promise<ReviewFeedback>{
  await requireMarketplacePortal("admin");

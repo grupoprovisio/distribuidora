@@ -36,7 +36,14 @@
     "test:marketplace": "node scripts/marketplace-domain-check.mjs && node scripts/marketplace-access-check.mjs && node scripts/marketplace-csv-check.mjs && node scripts/marketplace-order-check.mjs && node scripts/marketplace-operations-check.mjs && node scripts/marketplace-finance-check.mjs && npm run test:hardening",
     "test:hardening": "node --test scripts/marketplace-hardening-check.mjs",
     "test:supabase-foundation": "node --test scripts/marketplace-supabase-gateway-check.mjs",
-    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs && node scripts/marketplace-project-progress-check.mjs"
+    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs && node scripts/marketplace-project-progress-check.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:start": "node scripts/e2e/start.mjs",
+    "test:e2e:stop": "npx --yes supabase@2.121.0 stop --workdir tests/e2e/local",
+    "test:local-config": "node --test scripts/marketplace-local-config-check.mjs",
+    "test:e2e:report": "node scripts/e2e/report.mjs",
+    "test:mfa-qr": "node --test scripts/marketplace-mfa-qr-check.mjs",
+    "test:uuid": "node --test scripts/marketplace-uuid-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
@@ -50,6 +57,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "20.19.43",
     "@types/react": "19.3.0",

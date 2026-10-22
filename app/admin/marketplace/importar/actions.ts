@@ -6,7 +6,7 @@ import { requireMarketplacePortal } from "@/lib/marketplace/session";
 import { previewAuthorizedCsv } from "@/lib/marketplace/csv-import";
 
 export type ImportFeedback = { status: "idle" | "success" | "error"; message: string };
-const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{12}$/i;
+const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 function slugify(name:string) {
   return name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()
     .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,90);

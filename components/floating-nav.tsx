@@ -21,6 +21,7 @@ export function FloatingNav() {
   useEffect(() => {
     if (!open) return;
     const panel = dialogRef.current;
+    const trigger = triggerRef.current;
     panel?.querySelector<HTMLElement>("a, button")?.focus();
     const keydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") { event.preventDefault(); setOpen(false); return; }
@@ -34,7 +35,7 @@ export function FloatingNav() {
     document.addEventListener("keydown", keydown);
     return () => {
       document.removeEventListener("keydown", keydown);
-      triggerRef.current?.focus();
+      trigger?.focus();
     };
   }, [open]);
 

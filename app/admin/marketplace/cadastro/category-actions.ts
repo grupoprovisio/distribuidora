@@ -22,7 +22,7 @@ export async function assignCategory(_:CategoryFeedback,data:FormData):Promise<C
  await requireMarketplacePortal("admin");
  const product_id=String(data.get("product_id")||"");
  const category_id=String(data.get("category_id")||"");
- const id=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+ const id=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
  if(!id.test(product_id)||!id.test(category_id))return response("error","Selecione produto e categoria válidos.");
  const client=await createClient();
  const {error}=await client.from("product_category_assignments").insert({product_id,category_id});

@@ -16,7 +16,7 @@ export async function submitSupplierProduct(_:Feedback,form:FormData):Promise<Fe
  const pack=Number(form.get("pack_quantity"));
  const price=Number(form.get("base_price_minor"));
  const stock=Number(form.get("available_quantity"));
- if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(org)||
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(org)||
   (category&&!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(category))||
   !UF_CODES.includes(state as typeof UF_CODES[number])||!sku||sku.length>100||name.length<2||name.length>160||
   !["un","kg","l"].includes(unit)||!["un","kg","l"].includes(packUnit)||!Number.isFinite(pack)||pack<=0||pack>1000000||

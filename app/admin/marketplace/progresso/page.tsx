@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, ArrowRight, ChartNoAxesCombined, CircleAlert, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChartNoAxesCombined, CircleAlert, ShieldCheck } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";
