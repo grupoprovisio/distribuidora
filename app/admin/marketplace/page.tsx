@@ -61,11 +61,11 @@ export default async function MarketplaceAdminPage() {
         <h2 className="mt-4 text-xl font-black text-forest-deep">Dados administrativos indisponíveis</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">O Supabase não confirmou as informações necessárias. Recarregue a página e verifique a sessão com MFA; os valores não foram substituídos por números fictícios.</p>
       </section> : <>
-        <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores reais das organizações">
-          {snapshot.counts.map(({icon:Icon,label,value,tone})=><article key={label} className="rounded-3xl border border-line bg-paper p-5">
-            <span className={"grid size-10 place-items-center rounded-2xl "+tone}><Icon size={19} aria-hidden/></span>
-            <p className="mt-5 text-xs font-black uppercase tracking-[0.1em] text-muted">{label}</p>
-            <p className="mt-2 text-3xl font-black tabular-nums text-forest-deep">{value}</p>
+        <section className="mt-5 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-3 xl:grid-cols-4" aria-label="Indicadores reais das organizações">
+          {snapshot.counts.map(({icon:Icon,label,value,tone})=><article key={label} className="rounded-2xl border border-line bg-paper p-3 sm:rounded-3xl sm:p-5">
+            <span className={"grid size-10 place-items-center rounded-2xl "+tone}><Icon size={17} aria-hidden/></span>
+            <p className="mt-2 text-[10px] font-black uppercase leading-tight tracking-[0.04em] text-muted sm:mt-5 sm:text-xs sm:tracking-[0.1em]">{label}</p>
+            <p className="mt-1 text-2xl font-black tabular-nums text-forest-deep sm:mt-2 sm:text-3xl">{value}</p>
           </article>)}
         </section>
         <section className="mt-8 overflow-hidden rounded-[2rem] border border-line bg-paper" aria-labelledby="recent-title">
