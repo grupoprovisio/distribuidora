@@ -167,10 +167,14 @@ test("Painel de progresso define 100 pontos, sem confundir front-end com operaca
     assert.ok(completed[i]>=0 && completed[i]<=weights[i],"Conclusao deve estar entre zero e o peso");
   }
   const page=file("app/admin/marketplace/progresso/page.tsx");
-  assert.match(page,/FRONTEND_PERCENT/);
-  assert.match(page,/role="progressbar"/);
-  assert.match(page,/Revisao|Revisão|revisão|revisao/);
-  assert.match(page,/comercial|operações|operacoes/i);
+  const gates=file("lib/marketplace/progress-gates.ts");
+  for(const id of ["code","tests","production"]) assert.match(gates,new RegExp('id: "'+id+'"'));
+  assert.match(gates,/percent: null/);
+  assert.match(page,/PROGRESS_GATES/);
+  assert.match(page,/progressbar/);
+  assert.match(page,/implementado|implementação|implementacao/i);
+  assert.match(page,/produção|producao|transações/i);
+  assert.match(gates,/homologação|homologacao|operações|operacoes/i);
   assert.match(file("components/admin-nav.tsx"),/\/admin\/marketplace\/progresso/);
   assert.match(file("app/admin/layout.tsx"),/requireMarketplacePortal\("admin"\)/);
 });
