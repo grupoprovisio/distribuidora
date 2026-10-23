@@ -230,7 +230,7 @@ test('20 - recuperação PKCE por e-mail local exige MFA existente e preserva o 
     const invalidResult = await invalidResponse;
     expect(invalidResult.ok()).toBe(false);
     expect((await invalidResult.json()).code).toBe('mfa_verification_failed');
-    await expect(page.getByRole('alert')).toHaveText(INVALID_CODE_MESSAGE);
+    await expect(page.locator('form').getByRole('alert')).toHaveText(INVALID_CODE_MESSAGE);
     expect(await first.inputValue() === NEW_PASSWORD, 'Keep the new password after invalid MFA').toBe(true);
     expect(await second.inputValue() === NEW_PASSWORD, 'Keep password confirmation after invalid MFA').toBe(true);
     expect(await code.inputValue() === invalidCode, 'Keep the entered MFA code after invalid MFA').toBe(true);
