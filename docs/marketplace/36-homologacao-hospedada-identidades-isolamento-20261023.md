@@ -58,3 +58,18 @@ Configurar empresas e conteúdos sintéticos explicitamente marcados NAO COMERCI
 ## Próximas decisões
 
 Sem quatro contas separadas (incluindo dois fornecedores) ou ambiente de homologação isolado, a prova de isolamento e o ciclo completo seguem bloqueados. Esta matriz permite executar tudo quando o acesso seguro estiver pronto.
+
+## Execução adicional hospedada — 23/10/2026
+
+Esta seção registra evidências reais sem divulgar endereços de e-mail, senhas, códigos ou URLs de ativação.
+
+- **Auth oficial:** foi criada uma identidade sintética e não privilegiada para Fornecedor A pelo `signUp` do Supabase. O e-mail de confirmação chegou à caixa autorizada. A verificação via link do titular ainda não foi concluída; o usuário Auth permanece **não confirmado** e com perfil **pending**. Não tratar como sessão homologada.
+- **Contagens atuais:** 3 usuários Auth ao todo (2 preexistentes e 1 sintético pendente), 2 organizações; nenhuma imagem, cotação, proposta ou pedido comercial no banco hospedado.
+- **RLS:** as 19 tabelas comerciais de `public` apresentam `relrowsecurity=true`. Um `SELECT` como role `anon` em `products` foi negado (SQLSTATE 42501); como role `authenticated` **sem JWT**, 0 produtos ficaram visíveis. Isso valida negações básicas, **não** o isolamento entre identidades e organizações reais.
+- **Storage:** bucket `provisio-produtos` com `public=false`, atualmente sem arquivos; upload com usuário real permanece pendente.
+- **Auditoria:** 17 registros históricos de acesso, 8 de catálogo e 0 transições de pedidos, verificados somente por contagem; não são evidência de novas ações testadas.
+- **Rotas do site em produção:** páginas `/app/fornecedor`, `/app/comprador` e `/admin/marketplace` redirecionam sessões anônimas para `/entrar` (307). A API `/api/marketplace/transactions` retorna 503 com a flag transacional desativada. Uma Preview protegida consultada com a identidade Vercel do projeto também retornou 503: **não habilitar transações em produção para forçar os testes**.
+- **Regressões existentes:** suíte local com 21/21 E2E aprovados, além de lint, TypeScript e build. Os testes locais não substituem execução comercial hospedada.
+- **Controle de risco:** não foram editadas senhas, MFA ou permissões de usuários existentes, não foram criadas organizações comerciais nem pedidos, e não houve deploy ou mudança de flags.
+
+**Próximo bloqueio operacional:** o titular deve ativar a identidade sintética pelo e-mail legítimo. É necessário ainda provisionar Fornecedor B e Comprador com caixas controladas, configurar cada associação exclusiva e realizar MFA administrativo pelo titular ou por ambiente QA isolado. Só então executar os casos hospedados de escrita, leitura positiva/negativa e auditoria.
