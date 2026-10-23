@@ -55,15 +55,15 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "fornecedor", name: "Painel Sou Fornecedor", weight: 12,
     code: 3, tests: 2, production: 1, priority: "P0",
-    evidence: "Catálogo por organização, solicitação de produto e estoque; uma conta Fornecedor A e organização SUPPLIER de testes ativas no Supabase hospedado.",
-    next: "Criar Fornecedor B como empresa e identidade independente; validar login, estoque, preço, WebP e tentativa de acesso cruzado com A no Supabase hospedado.",
+    evidence: "Catálogo, estoque e preço por fornecedor; Fornecedor QA A ativo no Supabase, Fornecedor QA B criado no Auth e vinculado como convidado até confirmação de e-mail.",
+    next: "Confirmar e ativar Fornecedor B; testar sessões A/B, estoque, imagem WebP, preços e negativas de acesso entre empresas no Supabase hospedado.",
     href: "/app/fornecedor",
   },
   {
     id: "comprador", name: "Painel Sou Comprador", weight: 10,
     code: 3, tests: 2, production: 1, priority: "P1",
-    evidence: "Catálogo privado filtrado por região, fornecedor, estoque, vigência, preço e capacidade BUYER.",
-    next: "Preparar uma conta de comprador de testes sem PLATFORM_ADMIN; validar filtros, preços e elegibilidade em sessão autenticada.",
+    evidence: "Catálogo privado por região e ofertas elegíveis; empresa Comprador QA criada com capacidade BUYER e BR-SP, mas sem identidade Auth exclusiva.",
+    next: "Provisionar Comprador Auth após o limite de envio do Supabase; ativar vínculo exclusivo BUYER e testar catálogo e cotação hospedados sem privilégios ADM.",
     href: "/app/comprador",
   },
   {
