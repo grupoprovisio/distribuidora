@@ -10,6 +10,7 @@ import {
   TOTAL_PROGRESS, type ProgressDimension
 } from "@/lib/marketplace/project-progress";
 import { WRAP } from "@/lib/ui";
+import { summarizeQaIdentityReadiness, type QaIdentitySnapshot } from "@/lib/marketplace/qa-readiness";
 
 export const metadata: Metadata = {
   title: "Evolução do projeto · ADM Provisio",
@@ -45,10 +46,34 @@ async function readLiveSnapshot():Promise<LiveCount[]|null>{
     {name:"Cadastros em análise",value:queries[4].count??0,href:"/admin/marketplace/solicitacoes"},
   ];
 }
+async function readHostedQaSummary():Promise<QaIdentitySnapshot|null> {
+  // Somente o ADM com MFA consegue acessar esta página; consultas SSR respeitam RLS.
+  // Falhar fechado: listas truncadas ou indisponíveis não geram percentuais fictícios.
+  const db=await createClient();
+  const [organizations,members,capabilities,profiles,mfa]=await Promise.all([
+    db.from("organizations").select("id,kind,status,trade_name",{count:"exact"}).limit(500),
+    db.from("organization_members").select("organization_id,user_id,role,status",{count:"exact"}).limit(500),
+    db.from("organization_capabilities").select("organization_id,capability,status",{count:"exact"}).limit(500),
+    db.from("profiles").select("id,status",{count:"exact"}).limit(500),
+    db.auth.mfa.getAuthenticatorAssuranceLevel(),
+  ]);
+  const results=[organizations,members,capabilities,profiles];
+  if(results.some(result=>result.error || result.count===null ||
+    (result.count??0)>500 || !result.data) || mfa.error) return null;
+  return summarizeQaIdentityReadiness({
+    organizations:organizations.data??[],
+    members:members.data??[],
+    capabilities:capabilities.data??[],
+    profiles:profiles.data??[],
+    adminAal2:mfa.data.currentLevel==="aal2",
+  });
+}
+
 const priorityLabels={P0:"Bloqueio imediato",P1:"Essencial para testar",P2:"Operação ampliada",P3:"Comercialização completa"} as const;
 
 export default async function ProgressPage(){
-  const live=await readLiveSnapshot();
+  const [live,qa]=await Promise.all([readLiveSnapshot(),readHostedQaSummary()]);
+  const transactionalEnabled=process.env.MARKETPLACE_TRANSACTIONS_ENABLED==="true";
   const blockers=PROJECT_AREAS.filter(area=>area.priority==="P0"||area.priority==="P1");
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="wine" title="Progresso do projeto" backHref="/admin/marketplace" showListButton={false}/>
@@ -93,6 +118,48 @@ export default async function ProgressPage(){
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted">{stage.help}</p>
         </article>)}
+      </section>
+
+      <section aria-labelledby="qa-identities-title" className="mt-8 rounded-3xl border border-line bg-paper p-5 sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-2xl">
+            <h2 id="qa-identities-title" className="text-xl font-black text-forest-deep">Identidades independentes para homologação</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Checagem ao vivo de organizações de testes, vínculos ativos e permissões mínimas no Supabase hospedado.
+              Administradores não contam como compradores ou fornecedores independentes.
+            </p>
+          </div>
+          <p className="rounded-full bg-lime-soft px-4 py-2 text-sm font-black tabular-nums text-forest-deep">
+            {qa ? qa.completed+" de "+qa.total+" perfis preparados" : "Verificação indisponível"}
+          </p>
+        </div>
+        {!qa ? <p role="alert" className="mt-5 text-sm text-wine">
+          Não foi possível confirmar os vínculos com RLS. Nenhuma identidade foi presumida como aprovada.
+        </p> : <>
+          <div role="progressbar" aria-label="Perfis independentes preparados para homologação"
+            aria-valuemin={0} aria-valuemax={qa.total} aria-valuenow={qa.completed}
+            className="mt-5 h-2.5 overflow-hidden rounded-full bg-canvas">
+            <div className="h-full rounded-full bg-forest" style={{width:(100*qa.completed/qa.total)+"%"}}/>
+          </div>
+          <ol className="mt-5 grid gap-3 sm:grid-cols-2">
+            {qa.milestones.map(item=><li key={item.id} className="rounded-2xl border border-line p-4">
+              <p className="flex items-center gap-2 text-sm font-black text-forest-deep">
+                {item.complete?<ShieldCheck size={18} className="text-forest" aria-hidden/>:
+                  <CircleAlert size={18} className="text-terra" aria-hidden/>}
+                {item.title}
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-muted">{item.explanation}</p>
+              <p className="mt-2 text-xs font-extrabold text-terra">
+                {item.complete?"Vínculo conferido":"Vínculo pendente"}
+              </p>
+            </li>)}
+          </ol>
+        </>}
+        <p className="mt-5 text-xs leading-relaxed text-muted">
+          Transações na versão publicada: <strong>{transactionalEnabled?"chave configurada neste ambiente":"não habilitadas neste ambiente"}</strong>.
+          Esta seção comprova somente pré-requisitos de identidade, não login de cada conta,
+          teste adversarial RLS, upload, cotação ou pedido; nada aqui altera o avanço geral.
+        </p>
       </section>
 
       <section aria-labelledby="live-title" className="mt-8">
