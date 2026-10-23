@@ -9,6 +9,52 @@ const MAILPIT_URL = 'http://127.0.0.1:54324';
 // Public, disposable fixture, never a hosted account's password.
 const NEW_PASSWORD = 'Only-Local-E2E-Recovered-MFA-2026!';
 const INVALID_CODE_MESSAGE = 'Código incorreto ou expirado. Confira o autenticador e tente novamente.';
+const blockedRequests = new WeakMap();
+
+function safeRequest(request) {
+  const url = new URL(request.url());
+  return { origin: url.origin, path: url.pathname, method: request.method(), kind: request.resourceType() };
+}
+
+function recoveryDiagnostics(page, authUrl) {
+  const errors = [], requests = [];
+  page.on('pageerror', error => {
+    // Runtime error text only: strip every URL, JWT and credential-shaped field.
+    const message = error.message.replace(/https?:\/\/[^\s"'<>]+/g, '[URL omitted]')
+      .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[JWT omitted]')
+      .replace(/(password|secret|access_token|refresh_token|code_verifier)\s*[=:]\s*\S+/gi, '$1=[omitted]')
+      .slice(0, 300);
+    if (errors.length < 10) errors.push({ name: error.name, message });
+  });
+  page.on('response', response => {
+    const request = response.request();
+    const safe = safeRequest(request);
+    if (requests.length < 40 && (safe.origin === authUrl || safe.kind === 'script' && !response.ok())) {
+      requests.push({ ...safe, status: response.status() });
+    }
+  });
+  page.on('requestfailed', request => {
+    if (requests.length < 40) requests.push({ ...safeRequest(request), failed: true });
+  });
+  return async () => {
+    const dom = await page.evaluate(() => {
+      const first = document.getElementById('reset-first');
+      const submit = document.querySelector('button[type="submit"]');
+      return {
+        readyState: document.readyState,
+        passwordInputPresent: Boolean(first),
+        reactInputAttached: Boolean(first && Object.keys(first).some(key => key.startsWith('__reactProps$'))),
+        checkingMfa: document.body.textContent.includes('Verificando a proteção da sua conta...'),
+        mfaInputPresent: Boolean(document.getElementById('reset-mfa-code')),
+        submitDisabled: submit?.disabled ?? null,
+      };
+    }).catch(() => ({ unavailable: true }));
+    console.log('Local recovery diagnostics:', JSON.stringify({
+      origin: new URL(page.url()).origin, path: new URL(page.url()).pathname, dom, errors, requests,
+      blocked: blockedRequests.get(page.context()) ?? [],
+    }));
+  };
+}
 
 async function mailpitJson(path) {
   const url = new URL(path, MAILPIT_URL);
@@ -77,10 +123,13 @@ async function requestRecovery(page, email) {
 
 async function isolatedContext(browser, authUrl) {
   const context = await browser.newContext({ baseURL: BASE_URL, locale: 'pt-BR', reducedMotion: 'reduce' });
+  blockedRequests.set(context, []);
   await context.route('**/*', route => {
     const url = new URL(route.request().url());
-    return [BASE_URL, authUrl].includes(url.origin) || url.protocol === 'data:'
-      ? route.continue() : route.abort();
+    if ([BASE_URL, authUrl].includes(url.origin) || url.protocol === 'data:') return route.continue();
+    const blocked = blockedRequests.get(context);
+    if (blocked.length < 10) blocked.push(safeRequest(route.request()));
+    return route.abort();
   });
   return context;
 }
@@ -108,6 +157,7 @@ test('20 - recuperação PKCE por e-mail local exige MFA existente e preserva o 
   const email = `e2e-recovery-mfa-${randomUUID()}@example.invalid`;
   let userId;
   let context;
+  let diagnose;
   try {
     // Administrative access is used only to create/delete this local fixture.
     // The recovery link is emitted by the public UI, never admin.generateLink.
@@ -127,6 +177,7 @@ test('20 - recuperação PKCE por e-mail local exige MFA existente e preserva o 
 
     context = await isolatedContext(browser, cfg.url);
     const page = await context.newPage();
+    diagnose = recoveryDiagnostics(page, cfg.url);
     await requestRecovery(page, email);
 
     const link = await receivedRecoveryLink(email, cfg.url);
@@ -148,6 +199,7 @@ test('20 - recuperação PKCE por e-mail local exige MFA existente e preserva o 
     });
     try { await page.goto(link); }
     catch { throw new Error('Could not open the local recovery email in its initiating browser.'); }
+    expect(new URL(page.url()).origin, 'Recovery callback must preserve the initiating app origin').toBe(BASE_URL);
     await expect.poll(() => new URL(page.url()).pathname).toBe('/redefinir-senha');
     expect(sawPkceCallback, 'Actual email verification must return an authorization code').toBe(true);
     const session = await recoverySession(context, cfg);
@@ -212,6 +264,9 @@ test('20 - recuperação PKCE por e-mail local exige MFA existente e preserva o 
     const nextLogin = await verifier.auth.mfa.getAuthenticatorAssuranceLevel();
     expect(nextLogin.data?.currentLevel).toBe('aal1');
     expect(nextLogin.data?.nextLevel).toBe('aal2');
+  } catch (error) {
+    await diagnose?.();
+    throw error;
   } finally {
     await Promise.allSettled([
       fixture.auth.signOut({ scope: 'local' }), verifier.auth.signOut({ scope: 'local' }),
@@ -232,16 +287,19 @@ test('21 - recuperação PKCE por e-mail local continua funcionando para conta s
   const email = `e2e-recovery-password-${randomUUID()}@example.invalid`;
   let userId;
   let context;
+  let diagnose;
   try {
     const created = await bootstrap.auth.admin.createUser({ email, password: LOCAL_PASSWORD, email_confirm: true });
     expect(created.error?.code ?? null, 'Create separate local identity without MFA').toBeNull();
     userId = created.data.user.id;
     context = await isolatedContext(browser, cfg.url);
     const page = await context.newPage();
+    diagnose = recoveryDiagnostics(page, cfg.url);
     await requestRecovery(page, email);
     const link = await receivedRecoveryLink(email, cfg.url);
     try { await page.goto(link); }
     catch { throw new Error('Could not open the local recovery email in its initiating browser.'); }
+    expect(new URL(page.url()).origin, 'Recovery callback must preserve the initiating app origin').toBe(BASE_URL);
     await expect.poll(() => new URL(page.url()).pathname).toBe('/redefinir-senha');
     const session = await recoverySession(context, cfg);
     const aal = await session.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -266,6 +324,9 @@ test('21 - recuperação PKCE por e-mail local continua funcionando para conta s
     const factors = await verifier.auth.mfa.listFactors();
     expect(factors.error?.code ?? null).toBeNull();
     expect(factors.data.all).toEqual([]);
+  } catch (error) {
+    await diagnose?.();
+    throw error;
   } finally {
     await Promise.allSettled([verifier.auth.signOut({ scope: 'local' }), context?.close()]);
     if (userId) {

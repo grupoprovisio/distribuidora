@@ -44,7 +44,7 @@
     "test:e2e:report": "node scripts/e2e/report.mjs",
     "test:mfa-qr": "node --test scripts/marketplace-mfa-qr-check.mjs",
     "test:uuid": "node --test scripts/marketplace-uuid-check.mjs",
-    "test:origin": "node --test scripts/marketplace-origin-check.mjs"
+    "test:origin": "node --test scripts/marketplace-origin-check.mjs scripts/marketplace-auth-redirect-check.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
