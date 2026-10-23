@@ -86,3 +86,11 @@ Esta seção registra evidências reais sem divulgar endereços de e-mail, senha
 6. A tentativa de preparar um guard de Preview transacional restrito a QA ficou sem integração validada; código experimental foi removido da branch, mantendo as rotas inalteradas.
 
 **Aceite ainda bloqueado:** confirmação do Fornecedor B, provisionamento da identidade Comprador quando a cota do SMTP Auth permitir, vínculo `BUYER` exclusivo ativo, sessões simultâneas reais, casos TENANT-01/02 com JWT assinado e E2E Auth → fornecedor → aprovação ADM MFA → comprador → cotação → proposta → pedido. O painel geral permanece estimativo; não somar registros de QA à produção homologada.
+
+## Revisão de identidades — usuário titular informou login com conta principal
+
+- O login com a conta original do titular **não** valida Fornecedor B. Foi conferido que as duas contas administrativas existentes possuem vínculos PLATFORM_ADMIN e BUYER/ORG_ADMIN; nenhuma das duas serve como fornecedor adversarial ou comprador QA independente.
+- O cadastro oficial da conta sintética de **Fornecedor B** já existe, mas permanece com e-mail Auth não confirmado, perfil pending e vínculo SUPPLIER_ADMIN invited. O e-mail de confirmação foi entregue à caixa autorizada. A ativação deve ser feita especificamente no endereço cadastrado para B, não entrando com a conta principal depois de confirmar uma mensagem diferente.
+- A organização Comprador QA continua aprovada com a região BR-SP, porém **sem identidade Auth**. Para concluir este caso, criar usuário distinto pelo Supabase Auth (via convite/inscrição oficial), com caixa postal controlada; depois do e-mail confirmado, conceder somente BUYER e verificar login sem admin. A última tentativa automatizada recebeu over_email_send_rate_limit; não contornar pela tabela auth.users nem por SQL com claims fingidas.
+- Usar endereços alternativos controlados com identificadores únicos é preferível a reaproveitar a conta contato da empresa, que já é administradora e não deve perder seus privilégios.
+- Após cada ativação: conferir verified_email e última sessão real, perfil active, vínculo ativo, ausência de PLATFORM_ADMIN e organização exclusiva; executar RLS positivo/negativo com JWT de sessão ativa.
