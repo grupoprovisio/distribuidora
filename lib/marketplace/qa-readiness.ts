@@ -71,10 +71,18 @@ export function summarizeQaIdentityReadiness(input: QaInput): QaIdentitySnapshot
     isEligibleOrg(member.organization_id,"BUYER")
     && ["BUYER","ORG_ADMIN"].includes(member.role)).map(member => member.user_id));
 
+  // Qualquer outro vínculo comercial ativo descaracteriza um testador exclusivo,
+  // mesmo se o vínculo adicional pertence a organização que não é de QA.
+  const anySupplierUsers = new Set(activeMembers.filter(member =>
+    orgs.get(member.organization_id)?.kind === "SUPPLIER"
+    && ["SUPPLIER_ADMIN","ORG_ADMIN"].includes(member.role)).map(member=>member.user_id));
+  const anyBuyerUsers = new Set(activeMembers.filter(member =>
+    orgs.get(member.organization_id)?.kind === "BUYER"
+    && ["BUYER","ORG_ADMIN"].includes(member.role)).map(member=>member.user_id));
   const exclusiveSupplierUsers = new Set([...supplierUsers].filter(id =>
-    !platformAdmins.has(id) && !buyerUsers.has(id)));
+    !platformAdmins.has(id) && !anyBuyerUsers.has(id)));
   const exclusiveBuyerUsers = new Set([...buyerUsers].filter(id =>
-    !platformAdmins.has(id) && !supplierUsers.has(id)));
+    !platformAdmins.has(id) && !anySupplierUsers.has(id)));
 
   const supplierOrganizations = new Set(activeMembers.filter(member =>
     exclusiveSupplierUsers.has(member.user_id)
