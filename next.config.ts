@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // Identificadores públicos para conferir a versão efetivamente servida pelo domínio.
-const releaseId = "provisio-pr38-nav-recovery-20261022";
+const releaseId = "provisio-recovery-mfa-20261023";
 const gitRevision = process.env.VERCEL_GIT_COMMIT_SHA;
 const releaseHeaders = [
   { key: "X-Provisio-Release", value: releaseId },
