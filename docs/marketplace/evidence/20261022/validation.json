@@ -1,0 +1,50 @@
+{
+  "testedCodeCommit": "48e009d733ba6f950ad93fc70a6f0458a4996698",
+  "date": "2026-10-22",
+  "browser": {
+    "passed": 19,
+    "total": 19,
+    "failed": 0
+  },
+  "javascript": {
+    "total": 51,
+    "passed": 51,
+    "failed": 0
+  },
+  "postgres": {
+    "major": 17,
+    "passed": 9,
+    "suites": [
+      "marketplace-rls",
+      "marketplace-admin-catalog",
+      "marketplace-admin-commercial-write",
+      "marketplace-catalog-audit",
+      "marketplace-buyer-regions",
+      "marketplace-transactional",
+      "marketplace-fulfillment",
+      "marketplace-logistics",
+      "marketplace-platform-supplier"
+    ]
+  },
+  "hostedReadOnlyBaseline": {
+    "users": 2,
+    "organizations": 2,
+    "products": 1,
+    "offers": 1,
+    "quotes": 0,
+    "orders": 0,
+    "images": 0,
+    "fulfillments": 0,
+    "e2eAccounts": 0
+  },
+  "productionTransactionsEnabled": false,
+  "scope": "Real local services; no production writes; no payments or carrier integration",
+  "lint": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "browserRunRepeatedSuccessfully": true,
+  "browserCiWorkflow": "prepared but inactive: GitHub OAuth has no workflow scope"
+}

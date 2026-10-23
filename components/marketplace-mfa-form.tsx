@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { mfaQrImageUrl } from "@/lib/marketplace/mfa-qr";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -50,7 +51,7 @@ export function MarketplaceMfaForm() {
       }
       const result=await supabase.auth.mfa.enroll({factorType:"totp",friendlyName:"Provisio Administração"});
       if(result.error)throw result.error;
-      setFactor({factorId:result.data.id,qr:result.data.totp.qr_code,secret:result.data.totp.secret});
+      setFactor({factorId:result.data.id,qr:mfaQrImageUrl(result.data.totp.qr_code),secret:result.data.totp.secret});
       setEnrolled(false);
     }catch{setError("Não foi possível configurar o autenticador. Tente novamente.");}
     finally{setBusy(false);}

@@ -194,7 +194,7 @@ export function TransactionConsole({
     const payload:Record<string,unknown>={action:"fulfillment",orderId:order.id,transition:step};
     if(step==="start_separation"){
       const entered=(freightInputs[order.id]??"").trim();
-      const cents=entered==="0"?0:entered?parseCents(entered):null;
+      const cents=/^0(?:[.,]0{1,2})?$/.test(entered)?0:entered?parseCents(entered):null;
       if(entered && cents===null){setError("Frete estimado inválido. Informe um valor em reais ou deixe vazio.");return;}
       const eta=(etaInputs[order.id]??"").trim();
       if(eta && !/^\d{4}-\d{2}-\d{2}$/.test(eta)){setError("A previsão precisa ser uma data válida.");return;}
@@ -212,7 +212,7 @@ export function TransactionConsole({
   const field="mt-2 min-h-12 w-full rounded-xl border border-line bg-canvas px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-forest";
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-lime-soft p-4 text-sm text-forest">
-      <p className="flex items-center gap-2"><ShieldCheck size={18} aria-hidden /> Registros reais com permissão por empresa. <strong>Confirmação do fornecedor reserva estoque; não há cobrança, nota fiscal nem expedição automática.</strong></p>
+      <p className="flex items-start gap-2"><ShieldCheck size={18} className="mt-0.5 shrink-0" aria-hidden /><span>Registros reais com permissão por empresa. <strong>Confirmação do fornecedor reserva estoque; não há cobrança, nota fiscal nem expedição automática.</strong></span></p>
       <button type="button" disabled={loading||busy} onClick={()=>void refresh()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-4 text-sm font-extrabold text-white disabled:opacity-50"><RefreshCw size={17} aria-hidden/> Atualizar</button>
     </div>
     {pendingOperation&&<section role="group" aria-labelledby="transaction-confirm-title"
@@ -296,8 +296,8 @@ export function TransactionConsole({
       })}</ul>:<p role="status" className="mt-6 rounded-2xl bg-canvas p-7 text-sm text-muted">Nenhuma cotação disponível para seu perfil no momento.</p>)
       :(orders.length?<ul className="mt-6 space-y-3">{orders.map(order=>{
         const shipment=shipments.find(item=>item.order_id===order.id);
-        return <li key={order.id} className="rounded-2xl border border-line bg-canvas p-5">;
-        <div className="flex flex-wrap justify-between gap-3"><strong className="text-forest-deep">Pedido #{order.id.slice(0,8)}</strong><span className="text-xs font-extrabold text-forest">{statusName(order.status)}</span></div>
+        return <li key={order.id} className="rounded-2xl border border-line bg-canvas p-5">
+        <div className="flex flex-wrap justify-between gap-3"><strong className="text-forest-deep">Pedido #{order.id.slice(0,8)}</strong><span className="text-xs font-extrabold text-forest">{shipment?.status==="delivered"?"Entrega registrada":shipment?.status==="in_transit"?"Em transporte · estoque baixado":statusName(order.status)}</span></div>
         <p className="mt-3 text-sm text-muted">Quantidade: {order.quantity} · UF: {order.region_code} · Data: {date(order.created_at)}</p>
         <p className="mt-2 font-black text-forest-deep">{money(order.total_price_minor)}</p>
         <p className="mt-2 text-xs text-muted">Sem pagamento nem emissão fiscal. A confirmação reserva o estoque; a expedição baixa as unidades reservadas. Frete abaixo é uma estimativa sem cobrança.</p>

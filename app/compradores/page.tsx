@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, BadgeCheck, ClipboardList, PackageCheck, ShieldCheck, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, BadgeCheck, ClipboardList, PackageCheck, UtensilsCrossed } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { FloatingNav } from "@/components/floating-nav";
 import { MarketplaceLeadForm } from "@/components/marketplace-lead-form";
@@ -48,7 +48,7 @@ export default function CompradoresPage() {
         </div>
       </section>
       <section className="bg-[#173b30] py-16 text-white"><div className={`${WRAP} flex flex-wrap items-center justify-between gap-8`}><div><p className="text-xs font-black uppercase tracking-[.2em] text-[#d5edaa]">Provisio para negócios</p><h2 className="mt-3 max-w-2xl text-3xl font-black sm:text-4xl">Uma nova relação com o abastecimento começa aqui.</h2></div><a href="#interesse" className="inline-flex items-center gap-2 rounded-full bg-[#d5edaa] px-7 py-4 text-sm font-extrabold text-[#173b30]">Saiba mais <ArrowRight size={18}/></a></div></section>
-      <section id="interesse" className={`${WRAP} scroll-mt-20 py-20`} aria-label="Formulário de interesse"><MarketplaceLeadForm role="comprador"/><p className="mt-6 flex items-start gap-2 text-sm text-[#63736a]"><ShieldCheck size={18} className="shrink-0"/> Esta é uma demonstração. O formulário não envia dados; pedidos e cobranças reais ainda não estão habilitados.</p></section>
+      <section id="interesse" className={`${WRAP} scroll-mt-20 py-20`} aria-label="Formulário de interesse"><MarketplaceLeadForm role="comprador"/></section>
     </main><SiteFooter/><FloatingNav/>
   </div>;
 }

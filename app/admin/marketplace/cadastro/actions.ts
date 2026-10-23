@@ -6,11 +6,10 @@ import { requireMarketplacePortal } from "@/lib/marketplace/session";
 
 export type Feedback={status:"idle"|"success"|"error";message:string};
 const feedback=(status:Feedback["status"],message:string):Feedback=>({status,message});
-const ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const slugPattern=/^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const units=new Set(["un","kg","l"]);
 const stateCodes=new Set(["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"]);
-type Client=Awaited<ReturnType<typeof createClient>>;
 
 function text(data:FormData,key:string,max=200) {
   const item=data.get(key);

@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-10-22T21:28:00.722Z",
+  "environment": "local Supabase Auth/PostgreSQL/Storage + Chromium; no cloud writes",
+  "stats": {
+    "startTime": "2026-10-22T21:25:22.546Z",
+    "duration": 114613.159,
+    "expected": 19,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "name": "01 - oito sessões independentes, senha incorreta e autorização por perfil",
+      "status": "passed",
+      "durationMs": 18082
+    },
+    {
+      "name": "02 - administração exige MFA real; autenticação AAL1 não aprova produto",
+      "status": "passed",
+      "durationMs": 2166
+    },
+    {
+      "name": "03 - fornecedores A e B cadastram produtos; pendências não aparecem ao comprador",
+      "status": "passed",
+      "durationMs": 4125
+    },
+    {
+      "name": "04 - administrador promove e homologa produtos; oferta sem estoque é recusada",
+      "status": "passed",
+      "durationMs": 11508
+    },
+    {
+      "name": "05 - estoque gravado pelos fornecedores e ofertas aprovadas pelo administrador",
+      "status": "passed",
+      "durationMs": 5759
+    },
+    {
+      "name": "06 - catálogo do comprador respeita região e catálogo do fornecedor respeita empresa",
+      "status": "passed",
+      "durationMs": 4086
+    },
+    {
+      "name": "07 - upload real no Storage privado, conversão WebP e bloqueio de outra empresa",
+      "status": "passed",
+      "durationMs": 2317
+    },
+    {
+      "name": "08 - alteração de preço fica pendente e só aparece após aprovação",
+      "status": "passed",
+      "durationMs": 3124
+    },
+    {
+      "name": "09 - comprador envia cotação pela tela e fornecedor correto recebe",
+      "status": "passed",
+      "durationMs": 6214
+    },
+    {
+      "name": "10 - proposta, confirmação explícita e pedido sem reserva antecipada",
+      "status": "passed",
+      "durationMs": 2680
+    },
+    {
+      "name": "11 - confirmação reserva exatamente uma vez e estoque reservado não pode ser reduzido",
+      "status": "passed",
+      "durationMs": 2409
+    },
+    {
+      "name": "12 - separação, expedição, baixa única e entrega pelas telas",
+      "status": "passed",
+      "durationMs": 3766
+    },
+    {
+      "name": "13 - isolamento real em tabelas, RPCs e API para fornecedor B, comprador B e leitor",
+      "status": "passed",
+      "durationMs": 1337
+    },
+    {
+      "name": "14 - usuário com dois perfis não mistura seus painéis de compra e fornecimento",
+      "status": "passed",
+      "durationMs": 200
+    },
+    {
+      "name": "15 - CSRF, JSON inválido, dados excessivos e sessão ausente são rejeitados",
+      "status": "passed",
+      "durationMs": 188
+    },
+    {
+      "name": "16 - idempotência, cancelamento do comprador, recusa e liberação de reserva",
+      "status": "passed",
+      "durationMs": 2162
+    },
+    {
+      "name": "17 - duas confirmações concorrentes não vendem estoque acima do disponível",
+      "status": "passed",
+      "durationMs": 536
+    },
+    {
+      "name": "18 - layouts mobile e acompanhamento do comprador sem rolagem horizontal",
+      "status": "passed",
+      "durationMs": 1769
+    },
+    {
+      "name": "19 - bloqueio do perfil e encerramento da sessão retiram acesso imediatamente",
+      "status": "passed",
+      "durationMs": 355
+    }
+  ]
+}

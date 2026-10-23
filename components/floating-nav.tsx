@@ -21,6 +21,7 @@ export function FloatingNav() {
   useEffect(() => {
     if (!open) return;
     const panel = dialogRef.current;
+    const trigger = triggerRef.current;
     panel?.querySelector<HTMLElement>("a, button")?.focus();
     const keydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") { event.preventDefault(); setOpen(false); return; }
@@ -34,7 +35,7 @@ export function FloatingNav() {
     document.addEventListener("keydown", keydown);
     return () => {
       document.removeEventListener("keydown", keydown);
-      triggerRef.current?.focus();
+      trigger?.focus();
     };
   }, [open]);
 
@@ -80,6 +81,7 @@ export function FloatingNav() {
               {[
                 ["/", "Início"], ["/produtos", "Catálogo autorizado"],
                 ["/compradores", "Sou comprador"], ["/fornecedores", "Sou fornecedor"],
+                ["/entrar", "Login"],
                 ["/como-funciona", "Como funciona"], ["/contato", "Contato"],
                 ["/admin/marketplace", "ADM"],
               ].map(([href, label]) => (
@@ -89,9 +91,6 @@ export function FloatingNav() {
                 </Link>
               ))}
             </nav>
-            <p className="mt-auto border-t border-line pt-5 text-xs leading-relaxed text-muted">
-              Plataforma comercial em desenvolvimento. Nenhuma transação real está habilitada.
-            </p>
           </aside>
         </div>
       )}
