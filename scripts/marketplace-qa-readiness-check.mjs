@@ -76,6 +76,6 @@ assert.equal(s.supplierOrganizations,1,"supplier with buyer powers must not coun
 
 data=sample();data.members.push({user_id:"buyer",organization_id:"real",role:"SUPPLIER_ADMIN",status:"active"});
 s=summarizeQaIdentityReadiness(data);
-assert.equal(s.buyerIdentities,1,"buyer with real supplier role is not QA-scope supplier but should be reviewed");
+assert.equal(s.buyerIdentities,0,"buyer with supplier role anywhere is not an independent QA buyer");
 
 console.log("PASS: hosted QA readiness fail-closed identities, roles, MFA and distinct companies");
