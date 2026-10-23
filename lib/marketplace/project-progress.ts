@@ -1,10 +1,10 @@
 /**
- * Revisão de escopo do Grupo Provisio (22/10/2026).
+ * Revisão de escopo do Grupo Provisio (23/10/2026).
  * As notas são estimativas auditáveis baseadas em QUATRO critérios por dimensão e setor:
  * 0 = nenhum critério comprovado; 4 = os quatro critérios comprovados.
  * Peso das áreas soma 100. Código, testes e produção nunca são intercambiáveis.
  * Os dados do Supabase são consultados separadamente e não elevam automaticamente notas.
- * As etapas de cotações/pedidos existem nesta branch de integração, mas não em produção.
+ * Percentuais exigem evidência por dimensão; testes isolados em CI não comprovam homologação hospedada.
  */
 export type Priority = "P0" | "P1" | "P2" | "P3";
 export type ProgressDimension = "code" | "tests" | "production";
@@ -20,22 +20,22 @@ export type ProjectArea = {
   next: string;
   href: string;
 };
-export const REVIEW_DATE = "22/10/2026";
+export const REVIEW_DATE = "23/10/2026";
 export const MAX_CHECKPOINTS = 4;
 
 export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "institucional", name: "Site institucional e duas jornadas", weight: 10,
-    code: 4, tests: 3, production: 2, priority: "P0",
+    code: 4, tests: 3, production: 2, priority: "P2",
     evidence: "Início, Sou comprador e Sou fornecedor publicados. Links e acesso sem sessão validados na Vercel.",
-    next: "Retirar a suspensão clientHold do domínio no Squarespace e conferir celular, desktop e DNS.",
+    next: "Domínio grupoprovisio.com publicado e revisão d6327bab conferida; validar regressão visual final em celular e desktop.",
     href: "/",
   },
   {
     id: "autenticacao", name: "Login, recuperação e MFA", weight: 10,
-    code: 4, tests: 3, production: 2, priority: "P1",
-    evidence: "Supabase SSR, recuperação de senha, papéis e MFA. Sessão AAL2 administrativa verificada no banco.",
-    next: "Homologar login, recuperação e troca de perfil com duas identidades independentes em navegador.",
+    code: 4, tests: 4, production: 3, priority: "P1",
+    evidence: "PR #40 integrado, recuperação de senha real e login homologados pelo titular; 21/21 E2E locais com MFA e sem MFA aprovados.",
+    next: "Homologar separadamente login e troca de perfil com duas identidades independentes no Supabase hospedado.",
     href: "/entrar",
   },
   {
@@ -84,7 +84,7 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
     id: "logistica", name: "Entrega e acompanhamento logístico", weight: 4,
     code: 2, tests: 1, production: 0, priority: "P2",
     evidence: "Migração 0024 e telas de separação, frete estimado, expedição, baixa de estoque e entrega manual preparadas e testadas em CI.",
-    next: "Aplicar 0024 após CI, confirmar E2E autenticado e planejar cotação real de frete, transportadora e prova de entrega.",
+    next: "Migração 0024 já aplicada; falta E2E autenticado hospedado, cotação real de frete, transportadora e prova de entrega.",
     href: "/como-funciona",
   },
   {
@@ -96,9 +96,9 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   },
   {
     id: "qualidade", name: "Segurança, CI e publicação", weight: 4,
-    code: 3, tests: 2, production: 1, priority: "P0",
-    evidence: "CI e build do catálogo aprovados; produção Vercel pronta, mas domínio suspenso e E2E comercial incompleto.",
-    next: "Testar a integração atual, revisar SQL/RLS e comprovar ponta a ponta no Preview antes do merge.",
+    code: 3, tests: 3, production: 2, priority: "P0",
+    evidence: "PRs #39 e #40 integrados; 21/21 E2E locais aprovados; domínio e revisão d6327bab publicados e verificados.",
+    next: "Comprovar RLS e fluxos comerciais com identidades independentes no Supabase hospedado; não confundir CI local com homologação em produção.",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
