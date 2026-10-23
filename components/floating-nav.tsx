@@ -81,6 +81,7 @@ export function FloatingNav() {
               {[
                 ["/", "Início"], ["/produtos", "Catálogo autorizado"],
                 ["/compradores", "Sou comprador"], ["/fornecedores", "Sou fornecedor"],
+                ["/entrar", "Login"],
                 ["/como-funciona", "Como funciona"], ["/contato", "Contato"],
                 ["/admin/marketplace", "ADM"],
               ].map(([href, label]) => (
@@ -90,9 +91,6 @@ export function FloatingNav() {
                 </Link>
               ))}
             </nav>
-            <p className="mt-auto border-t border-line pt-5 text-xs leading-relaxed text-muted">
-              Plataforma comercial em desenvolvimento. Nenhuma transação real está habilitada.
-            </p>
           </aside>
         </div>
       )}
