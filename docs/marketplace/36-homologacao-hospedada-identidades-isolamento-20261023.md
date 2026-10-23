@@ -94,3 +94,14 @@ Esta seção registra evidências reais sem divulgar endereços de e-mail, senha
 - A organização Comprador QA continua aprovada com a região BR-SP, porém **sem identidade Auth**. Para concluir este caso, criar usuário distinto pelo Supabase Auth (via convite/inscrição oficial), com caixa postal controlada; depois do e-mail confirmado, conceder somente BUYER e verificar login sem admin. A última tentativa automatizada recebeu over_email_send_rate_limit; não contornar pela tabela auth.users nem por SQL com claims fingidas.
 - Usar endereços alternativos controlados com identificadores únicos é preferível a reaproveitar a conta contato da empresa, que já é administradora e não deve perder seus privilégios.
 - Após cada ativação: conferir verified_email e última sessão real, perfil active, vínculo ativo, ausência de PLATFORM_ADMIN e organização exclusiva; executar RLS positivo/negativo com JWT de sessão ativa.
+
+## Troca da identidade de homologação Fornecedor B — 23/10/2026
+
+O titular autorizou utilizar outro endereço de e-mail próprio. Foi criada uma **nova identidade Supabase Auth por cadastro oficial**, distinta dos dois administradores existentes, usando caixa controlada pelo titular e senha aleatória (não incluída em código, documentação ou GitHub).
+
+- A identidade Fornecedor B foi cadastrada no Auth e recebeu a solicitação de confirmação por e-mail. No momento da consulta, `email_confirmed=false` e perfil `pending`.
+- A mesma organização sintética **PROVISIO QA FORNECEDOR B - NAO COMERCIAL** permaneceu `SUPPLIER`, `approved`, com capacidade `SUPPLIER=approved`; a nova identidade recebeu exclusivamente vínculo `SUPPLIER_ADMIN=invited`.
+- O convite anterior para a conta alternativa não confirmada foi marcado `revoked`, sem excluir usuários e sem tocar nos acessos reais.
+- Verificação posterior no banco: ambas as identidades Fornecedor B têm **zero** vínculos `PLATFORM_ADMIN`. Apenas a nova tem convite pendente; a antiga está revogada.
+- Próximos requisitos: confirmar o e-mail **da nova identidade**, ativar perfil e vínculo após verificar Auth, recuperar/definir senha pela aplicação, validar login hospedado, permissões e tentativas de acesso cruzado com o Fornecedor A.
+- **Não considerar B homologado nem liberar transações globais** antes dos testes com sessão própria e RLS. Nenhum produto, pedido ou estoque foi criado nesta substituição.
