@@ -73,3 +73,16 @@ Esta seção registra evidências reais sem divulgar endereços de e-mail, senha
 - **Controle de risco:** não foram editadas senhas, MFA ou permissões de usuários existentes, não foram criadas organizações comerciais nem pedidos, e não houve deploy ou mudança de flags.
 
 **Próximo bloqueio operacional:** o titular deve ativar a identidade sintética pelo e-mail legítimo. É necessário ainda provisionar Fornecedor B e Comprador com caixas controladas, configurar cada associação exclusiva e realizar MFA administrativo pelo titular ou por ambiente QA isolado. Só então executar os casos hospedados de escrita, leitura positiva/negativa e auditoria.
+
+## Execução hospedada complementar — 23/10/2026 (fornecedor B e comprador)
+
+**Ambiente:** Supabase `xprvdquocenfqvnokmmi`, com alterações limitadas a registros rotulados `PROVISIO QA ... - NAO COMERCIAL`; contas anteriores inalteradas.
+
+1. Fornecedor **A**: Auth e e-mail confirmados, perfil ativo, organização própria `SUPPLIER` aprovada e vínculo `SUPPLIER_ADMIN` ativo. Não recebe papel `PLATFORM_ADMIN`.
+2. Fornecedor **B**: criado pelo fluxo oficial `supabase.auth.signUp`; email enviado e confirmado na caixa Gmail controlada **como entregue**, mas **a identidade ainda não foi confirmada pelo titular**. Organização `SUPPLIER` independente criada, capacidade `SUPPLIER` aprovada, vínculo `SUPPLIER_ADMIN` mantido em `invited`, perfil `pending`. O vínculo não concede acesso antes da ativação.
+3. Comprador **QA**: organização `BUYER` própria criada e aprovada, capacidade `BUYER` aprovada e região `BR-SP` cadastrada. **Não há usuário comprador independente vinculado**. A tentativa de cadastro oficial da identidade `buyer` recebeu HTTP 429 `over_email_send_rate_limit`. Não aumentar a cota, forjar confirmação nem inserir diretamente em `auth.users`.
+4. RLS hospedado: todas as políticas comerciais continuam ativas. Uma transação SQL `READ ONLY` com `SET LOCAL ROLE authenticated` e alegação simulada de usuário enxergou **zero** linhas, inclusive da própria organização do Fornecedor A. O motivo foi verificado no código do banco: `marketplace_private.has_active_membership` requer `has_live_auth_session()`, que confere um `auth.sessions.id` vigente correspondente ao `session_id` do JWT. **Não criar/forjar sessão para contornar essa proteção**. O teste realizado comprova negação a uma identidade sem sessão válida, não isolamento de dois logins reais.
+5. Cotações, propostas, pedidos, reservas e imagens ainda carecem de execução hospedada como clientes Auth reais. Não foram criadas transações ou ofertas fictícias aprovadas nesta etapa; flag de transações global permanece **desabilitada**, sem deploy de transações.
+6. A tentativa de preparar um guard de Preview transacional restrito a QA ficou sem integração validada; código experimental foi removido da branch, mantendo as rotas inalteradas.
+
+**Aceite ainda bloqueado:** confirmação do Fornecedor B, provisionamento da identidade Comprador quando a cota do SMTP Auth permitir, vínculo `BUYER` exclusivo ativo, sessões simultâneas reais, casos TENANT-01/02 com JWT assinado e E2E Auth → fornecedor → aprovação ADM MFA → comprador → cotação → proposta → pedido. O painel geral permanece estimativo; não somar registros de QA à produção homologada.
