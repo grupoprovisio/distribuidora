@@ -35,7 +35,7 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
     id: "autenticacao", name: "Login, recuperação e MFA", weight: 10,
     code: 4, tests: 4, production: 3, priority: "P0",
     evidence: "PR #40 integrado, recuperação de senha real e login homologados pelo titular; 21/21 E2E locais com MFA e sem MFA aprovados.",
-    next: "Fornecedores A/B confirmados e ativos em empresas próprias; falta comprador Auth independente e testes HTTP assinados de quatro perfis, com MFA administrativo.",
+    next: "Comprador QA criado pelo Auth oficial, com confirmação de e-mail pendente; completar login HTTP dele e de Fornecedor B e validar ADM com MFA real.",
     href: "/entrar",
   },
   {
@@ -54,16 +54,16 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   },
   {
     id: "fornecedor", name: "Painel Sou Fornecedor", weight: 12,
-    code: 3, tests: 3, production: 1, priority: "P0",
-    evidence: "Fornecedor A/B com identidades e organizações independentes ativas; RLS hospedada: cada um leu 1 solicitação própria e 0 alheias, atualização cruzada bloqueada.",
-    next: "Executar login HTTP real A/B no site hospedado; validar WebP, estoque e preços persistidos sem tocar em dados comerciais.",
+    code: 3, tests: 3, production: 2, priority: "P0",
+    evidence: "Fornecedor A/B com empresas independentes ativas; Fornecedor A passou login HTTP real, leitura isolada, cadastro QA pendente e negação 42501 da aprovação; teste descartável limpo. B exige senha atual.",
+    next: "Revalidar Fornecedor B com senha atual via HTTP, concluir fluxo de estoque/preço e imagens WebP via ADM MFA no ambiente hospedado.",
     href: "/app/fornecedor",
   },
   {
     id: "comprador", name: "Painel Sou Comprador", weight: 10,
     code: 3, tests: 2, production: 1, priority: "P1",
-    evidence: "Catálogo privado por região e ofertas elegíveis; empresa Comprador QA criada com capacidade BUYER e BR-SP, mas sem identidade Auth exclusiva.",
-    next: "Provisionar conta Auth exclusiva do Comprador QA por fluxo oficial; testar catálogo e cotação via JWT assinado, sem privilégio de ADM.",
+    evidence: "Catálogo privado por região; identidade BUYER QA criada pelo Auth oficial, e-mail de confirmação entregue; perfil pending e vínculo BUYER invited na empresa QA aprovada para BR-SP.",
+    next: "Confirmar o e-mail do comprador, ativar perfil e vínculo e testar catálogo, cotações e pedidos via JWT assinado, sem poderes ADM.",
     href: "/app/comprador",
   },
   {
@@ -97,8 +97,8 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "qualidade", name: "Segurança, CI e publicação", weight: 4,
     code: 3, tests: 3, production: 2, priority: "P0",
-    evidence: "PRs #39–#41 integrados; 21/21 E2E locais, lint, TypeScript e build aprovados; 19/19 tabelas públicas com RLS e testes SQL hospedados reversíveis.",
-    next: "Concluir comprador Auth independente, E2E HTTP hospedado, upload de fotos e MFA real; corrigir proteção contra senhas vazadas no Supabase Auth antes da liberação.",
+    evidence: "PRs #39–#42 integrados; 21/21 E2E locais, testes SQL reversíveis e login/cadastro HTTP assinado de Fornecedor A com RLS hospedada aprovados; 19/19 tabelas públicas com RLS.",
+    next: "Confirmar comprador QA; E2E HTTP das quatro identidades, upload WebP e ADM MFA; proteção de senhas vazadas exige plano Supabase Pro e aprovação de custo.",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
