@@ -4,11 +4,13 @@ import { MarketplaceModule } from "@/components/marketplace-module";
 import { TransactionConsole } from "@/components/marketplace-transaction-console";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
+import { getMarketplaceAccess } from "@/lib/marketplace/session";
+import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
 
 export const metadata:Metadata={title:"Pedidos recebidos · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
-export default function SupplierOrdersPage() {
-  if(process.env.MARKETPLACE_TRANSACTIONS_ENABLED!=="true")
+export default async function SupplierOrdersPage() {
+  if(!transactionEnabledForAccess(await getMarketplaceAccess()))
     return <MarketplaceModule title="Pedidos e subpedidos" description="A consulta real de pedidos aguarda homologação do fluxo e liberação do ambiente Preview." backHref="/app/fornecedor" accent="terra"/>;
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="terra" title="Pedidos recebidos" backHref="/app/fornecedor" showListButton={false}/>

@@ -5,6 +5,8 @@ import { TransactionConsole } from "@/components/marketplace-transaction-console
 import { SiteFooter } from "@/components/site-footer";
 import { myMarketplaceOrganizations } from "@/lib/marketplace/my-organizations";
 import { WRAP } from "@/lib/ui";
+import { getMarketplaceAccess } from "@/lib/marketplace/session";
+import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
 
 export const metadata:Metadata={title:"Cotações empresariais · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
@@ -12,7 +14,7 @@ export const dynamic="force-dynamic";
 export default async function BuyerQuotesPage({searchParams}:{searchParams:Promise<{oferta?:string;regiao?:string}>}) {
   const params=await searchParams;
   const summary=await myMarketplaceOrganizations("comprador");
-  const enabled=process.env.MARKETPLACE_TRANSACTIONS_ENABLED==="true";
+  const enabled=transactionEnabledForAccess(await getMarketplaceAccess());
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="forest" title="Cotações" backHref="/app/comprador" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
