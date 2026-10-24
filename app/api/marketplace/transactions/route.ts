@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { isSameOriginRequest } from "@/lib/marketplace/request-origin";
 import { createClient } from "@/lib/supabase/server";
 import { getMarketplaceAccess } from "@/lib/marketplace/session";
+import { qaTransactionBodyAllowed, readQaTransactionScope, transactionAccessMode } from "@/lib/marketplace/qa-transaction-gate";
 
 export const dynamic = "force-dynamic";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REGION = /^BR-(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/;
-const allowed = () => process.env.MARKETPLACE_TRANSACTIONS_ENABLED === "true";
 const json = (data: unknown, status=200) => NextResponse.json(data,{status,headers:{"Cache-Control":"no-store"}});
 const invalid = () => json({ok:false,reason:"invalid_request"},400);
 
@@ -26,8 +26,8 @@ async function readJson(request: Request) {
 
 /** Only validated Supabase sessions/RLS can read commercial transactions. */
 export async function GET(request: Request) {
-  if (!allowed()) return json({ok:false,reason:"not_enabled"},503);
   const access=await getMarketplaceAccess();
+  if (transactionAccessMode(access)==="disabled") return json({ok:false,reason:"not_enabled"},503);
   if (!access) return json({ok:false,reason:"unauthorized"},401);
   const mode=new URL(request.url).searchParams.get("mode");
   if (!["quotes","supplier_quotes","orders","supplier_orders"].includes(mode??"")) return invalid();
@@ -65,13 +65,19 @@ export async function GET(request: Request) {
 
 /** Transactional RPC only: no manual inserts and no provider or payment credentials. */
 export async function POST(request: Request) {
-  if (!allowed()) return json({ok:false,reason:"not_enabled"},503);
   if (!isSameOriginRequest(request)) return json({ok:false,reason:"invalid_origin"},403);
   const access=await getMarketplaceAccess();
+  const accessMode=transactionAccessMode(access);
+  if (accessMode==="disabled") return json({ok:false,reason:"not_enabled"},503);
   if (!access) return json({ok:false,reason:"unauthorized"},401);
   const body=await readJson(request);
   if (!body || typeof body.action!=="string") return invalid();
   const client=await createClient();
+  if (accessMode==="qa") {
+    const scope=readQaTransactionScope(process.env);
+    if (!scope || !(await qaTransactionBodyAllowed(client,access,body,scope)))
+      return json({ok:false,reason:"qa_scope_denied"},403);
+  }
   let result: {data:string|null;error:{code?:string}|null};
   switch(body.action) {
     case "quote": {

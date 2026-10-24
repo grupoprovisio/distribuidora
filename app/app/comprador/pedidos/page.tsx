@@ -4,11 +4,13 @@ import { MarketplaceModule } from "@/components/marketplace-module";
 import { TransactionConsole } from "@/components/marketplace-transaction-console";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
+import { getMarketplaceAccess } from "@/lib/marketplace/session";
+import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
 
 export const metadata:Metadata={title:"Solicitações de pedido · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
-export default function BuyerOrdersPage() {
-  if(process.env.MARKETPLACE_TRANSACTIONS_ENABLED!=="true")
+export default async function BuyerOrdersPage() {
+  if(!transactionEnabledForAccess(await getMarketplaceAccess()))
     return <MarketplaceModule title="Pedidos e subpedidos" description="O checkout e as solicitações comerciais seguem desativados até a homologação do banco e do Preview. Nenhum pagamento está disponível." backHref="/app/comprador"/>;
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="forest" title="Pedidos" backHref="/app/comprador" showListButton={false}/>

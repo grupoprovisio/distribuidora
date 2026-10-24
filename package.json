@@ -36,7 +36,7 @@
     "test:marketplace": "node scripts/marketplace-domain-check.mjs && node scripts/marketplace-access-check.mjs && node scripts/marketplace-csv-check.mjs && node scripts/marketplace-order-check.mjs && node scripts/marketplace-operations-check.mjs && node scripts/marketplace-finance-check.mjs && npm run test:hardening",
     "test:hardening": "node --test scripts/marketplace-hardening-check.mjs",
     "test:supabase-foundation": "node --test scripts/marketplace-supabase-gateway-check.mjs",
-    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs && node scripts/marketplace-project-progress-check.mjs && node scripts/marketplace-qa-readiness-check.mjs",
+    "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs && node scripts/marketplace-project-progress-check.mjs && node scripts/marketplace-qa-readiness-check.mjs && node scripts/marketplace-qa-transaction-gate-check.mjs",
     "test:e2e": "playwright test",
     "test:e2e:start": "node scripts/e2e/start.mjs",
     "test:e2e:stop": "npx --yes supabase@2.121.0 stop --workdir tests/e2e/local",
