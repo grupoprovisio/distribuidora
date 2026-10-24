@@ -1,5 +1,5 @@
 /**
- * Revisão de escopo do Grupo Provisio (23/10/2026).
+ * Revisão de escopo do Grupo Provisio (24/10/2026).
  * As notas são estimativas auditáveis baseadas em QUATRO critérios por dimensão e setor:
  * 0 = nenhum critério comprovado; 4 = os quatro critérios comprovados.
  * Peso das áreas soma 100. Código, testes e produção nunca são intercambiáveis.
@@ -20,7 +20,7 @@ export type ProjectArea = {
   next: string;
   href: string;
 };
-export const REVIEW_DATE = "23/10/2026";
+export const REVIEW_DATE = "24/10/2026";
 export const MAX_CHECKPOINTS = 4;
 
 export const PROJECT_AREAS: readonly ProjectArea[] = [
@@ -28,63 +28,63 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
     id: "institucional", name: "Site institucional e duas jornadas", weight: 10,
     code: 4, tests: 3, production: 2, priority: "P2",
     evidence: "Início, Sou comprador e Sou fornecedor publicados. Links e acesso sem sessão validados na Vercel.",
-    next: "Domínio grupoprovisio.com publicado e revisão d6327bab conferida; validar regressão visual final em celular e desktop.",
+    next: "Domínio grupoprovisio.com publicado e revisão a1172ab conferida; rever continuamente regressões em celular e desktop.",
     href: "/",
   },
   {
     id: "autenticacao", name: "Login, recuperação e MFA", weight: 10,
     code: 4, tests: 4, production: 3, priority: "P0",
     evidence: "PR #40 integrado, recuperação de senha real e login homologados pelo titular; 21/21 E2E locais com MFA e sem MFA aprovados.",
-    next: "Conta Fornecedor A já confirmada no Auth e ativa com organização exclusiva; criar Fornecedor B e Comprador independentes, testar sessões e MFA no navegador hospedado.",
+    next: "Fornecedores A/B confirmados e ativos em empresas próprias; falta comprador Auth independente e testes HTTP assinados de quatro perfis, com MFA administrativo.",
     href: "/entrar",
   },
   {
     id: "administracao", name: "ADM e governança comercial", weight: 10,
     code: 4, tests: 3, production: 2, priority: "P0",
-    evidence: "Homologação de organizações, produto mestre, categorias, propostas de preço e pedidos de cadastro sob MFA.",
+    evidence: "Homologação de empresas e catálogo: negação 42501 para fornecedor, fluxo positivo simulado com AAL2 em SQL e ROLLBACK, sem comprovante HTTP de MFA.",
     next: "Executar fluxo de homologação pelo navegador com administrador real e auditoria de ações.",
     href: "/admin/marketplace",
   },
   {
     id: "catalogo", name: "Produtos, fotos, categorias e estoque", weight: 16,
     code: 4, tests: 3, production: 1, priority: "P0",
-    evidence: "Migrações 0016–0021 em Supabase Free, SQL RLS, importação CSV, conversão para WebP e Storage privado.",
-    next: "Produto e oferta fictícios cadastrados e visíveis sob RLS; falta carregar uma imagem WebP no Storage e validar em navegador com ADM + MFA.",
+    evidence: "Migrações 0016–0021 hospedadas, RLS de solicitações A/B validada, produtos/SKU/ofertas aprovados apenas em transação revertida; WebP local e bucket privado sem imagens hospedadas.",
+    next: "Enviar imagem WebP pelo navegador autenticado, validar Storage privado e aprovar produto/preço via sessão real ADM + MFA.",
     href: "/admin/marketplace/prontidao",
   },
   {
     id: "fornecedor", name: "Painel Sou Fornecedor", weight: 12,
-    code: 3, tests: 2, production: 1, priority: "P0",
-    evidence: "Catálogo, estoque e preço por fornecedor; Fornecedor QA A ativo no Supabase, Fornecedor QA B criado no Auth e vinculado como convidado até confirmação de e-mail.",
-    next: "Confirmar e ativar Fornecedor B; testar sessões A/B, estoque, imagem WebP, preços e negativas de acesso entre empresas no Supabase hospedado.",
+    code: 3, tests: 3, production: 1, priority: "P0",
+    evidence: "Fornecedor A/B com identidades e organizações independentes ativas; RLS hospedada: cada um leu 1 solicitação própria e 0 alheias, atualização cruzada bloqueada.",
+    next: "Executar login HTTP real A/B no site hospedado; validar WebP, estoque e preços persistidos sem tocar em dados comerciais.",
     href: "/app/fornecedor",
   },
   {
     id: "comprador", name: "Painel Sou Comprador", weight: 10,
     code: 3, tests: 2, production: 1, priority: "P1",
     evidence: "Catálogo privado por região e ofertas elegíveis; empresa Comprador QA criada com capacidade BUYER e BR-SP, mas sem identidade Auth exclusiva.",
-    next: "Provisionar Comprador Auth após o limite de envio do Supabase; ativar vínculo exclusivo BUYER e testar catálogo e cotação hospedados sem privilégios ADM.",
+    next: "Provisionar conta Auth exclusiva do Comprador QA por fluxo oficial; testar catálogo e cotação via JWT assinado, sem privilégio de ADM.",
     href: "/app/comprador",
   },
   {
     id: "cotacoes", name: "Cotações e propostas (RFQ)", weight: 10,
-    code: 3, tests: 2, production: 0, priority: "P1",
-    evidence: "Migração 0022 aplicada no Supabase, testes SQL/RLS aprovados no CI; interface sob flag transacional desativada.",
-    next: "Solicitar cotação pela conta compradora independente e responder pela fornecedora; manter flag global protegida até testes hospedados positivos e negativos.",
+    code: 3, tests: 3, production: 0, priority: "P1",
+    evidence: "Migração 0022, 21/21 E2E locais e RPCs de cotação/proposta executados no Supabase hospedado em transação SQL revertida; API em produção desligada.",
+    next: "Repetir cotação/proposta pela API HTTP com comprador independente e fornecedor, mantendo flag global protegida até homologação.",
     href: "/app/comprador/cotacoes",
   },
   {
     id: "pedidos", name: "Pedidos e reservas", weight: 10,
-    code: 3, tests: 2, production: 0, priority: "P1",
-    evidence: "Migração 0023 aplicada, testes CI de reserva atômica, rejeição, cancelamento, estoque insuficiente e isolamento aprovados; flag transacional OFF.",
-    next: "Homologar pedido com usuários reais, conferir recebimento fornecedor/cliente e liberar transações por ambiente.",
+    code: 3, tests: 3, production: 0, priority: "P1",
+    evidence: "Migração 0023, E2E locais, pedido e confirmação/reserva no banco hospedado via SQL ROLLBACK; nenhuma transação persistiu em produção.",
+    next: "Validar pedido, reserva idempotente e cancelamento via HTTP com comprador exclusivo antes de liberar flag transacional por ambiente.",
     href: "/app/comprador/pedidos",
   },
   {
     id: "logistica", name: "Entrega e acompanhamento logístico", weight: 4,
-    code: 2, tests: 1, production: 0, priority: "P2",
-    evidence: "Migração 0024 e telas de separação, frete estimado, expedição, baixa de estoque e entrega manual preparadas e testadas em CI.",
-    next: "Migração 0024 já aplicada; falta E2E autenticado hospedado, cotação real de frete, transportadora e prova de entrega.",
+    code: 2, tests: 2, production: 0, priority: "P2",
+    evidence: "Migração 0024, testes E2E locais e fluxo hospedado revertido: reserva 3, baixa para 47, entrega e 4 eventos de auditoria logística.",
+    next: "Repetir separação, expedição e entrega em navegador hospedado; frete contratado e prova de entrega real continuam fora do QA.",
     href: "/como-funciona",
   },
   {
@@ -97,8 +97,8 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "qualidade", name: "Segurança, CI e publicação", weight: 4,
     code: 3, tests: 3, production: 2, priority: "P0",
-    evidence: "PRs #39 e #40 integrados; 21/21 E2E locais aprovados; domínio e revisão d6327bab publicados e verificados.",
-    next: "Acompanhar no ADM as quatro identidades de QA (MFA, fornecedores A/B e comprador), executar isolamento hospedado e conferir trilhas de auditoria antes da liberação global.",
+    evidence: "PRs #39–#41 integrados; 21/21 E2E locais, lint, TypeScript e build aprovados; 19/19 tabelas públicas com RLS e testes SQL hospedados reversíveis.",
+    next: "Concluir comprador Auth independente, E2E HTTP hospedado, upload de fotos e MFA real; corrigir proteção contra senhas vazadas no Supabase Auth antes da liberação.",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
