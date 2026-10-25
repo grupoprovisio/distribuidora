@@ -11,6 +11,7 @@ import {
 } from "@/lib/marketplace/project-progress";
 import { WRAP } from "@/lib/ui";
 import { summarizeQaIdentityReadiness, type QaIdentitySnapshot } from "@/lib/marketplace/qa-readiness";
+import { readQaTransactionScope } from "@/lib/marketplace/qa-transaction-gate";
 
 export const metadata: Metadata = {
   title: "Evolução do projeto · ADM Provisio",
@@ -74,6 +75,7 @@ const priorityLabels={P0:"Bloqueio imediato",P1:"Essencial para testar",P2:"Oper
 export default async function ProgressPage(){
   const [live,qa]=await Promise.all([readLiveSnapshot(),readHostedQaSummary()]);
   const transactionalEnabled=process.env.MARKETPLACE_TRANSACTIONS_ENABLED==="true";
+  const qaTransactionEnabled=!transactionalEnabled && readQaTransactionScope(process.env)!==null;
   const blockers=PROJECT_AREAS.filter(area=>area.priority==="P0"||area.priority==="P1");
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="wine" title="Progresso do projeto" backHref="/admin/marketplace" showListButton={false}/>
@@ -156,7 +158,8 @@ export default async function ProgressPage(){
           </ol>
         </>}
         <p className="mt-5 text-xs leading-relaxed text-muted">
-          Transações na versão publicada: <strong>{transactionalEnabled?"chave configurada neste ambiente":"não habilitadas neste ambiente"}</strong>.
+          Transações comerciais: <strong>{transactionalEnabled?"habilitadas globalmente":"desabilitadas para o público"}</strong>.
+          Homologação isolada: <strong>{qaTransactionEnabled?"ativa somente para as três organizações QA autorizadas":"desativada"}</strong>.
           Esta seção comprova somente pré-requisitos de identidade, não login de cada conta,
           teste adversarial RLS, upload, cotação ou pedido; nada aqui altera o avanço geral.
         </p>
@@ -227,7 +230,7 @@ export default async function ProgressPage(){
       <div className="mt-9 flex flex-wrap gap-3 rounded-2xl border border-line bg-paper p-5 text-sm text-muted">
         <ShieldCheck size={21} className="shrink-0 text-forest" aria-hidden/>
         <p>Os percentuais são indicadores de planejamento, revistos manualmente por commit, e não equivalem a serviços homologados.
-          Cotações e pedidos novos continuam protegidos por <code>MARKETPLACE_TRANSACTIONS_ENABLED=false</code> até testes completos.
+          Cotações e pedidos comerciais permanecem protegidos por <code>MARKETPLACE_TRANSACTIONS_ENABLED=false</code> até testes completos; a modalidade QA não autoriza outras empresas.
           Nenhum valor financeiro ou produto de demonstração é considerado faturamento real.</p>
       </div>
     </main>

@@ -4,11 +4,13 @@ import { MarketplaceModule } from "@/components/marketplace-module";
 import { TransactionConsole } from "@/components/marketplace-transaction-console";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
+import { getMarketplaceAccess } from "@/lib/marketplace/session";
+import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
 
 export const metadata:Metadata={title:"Cotações recebidas · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
-export default function SupplierQuotesPage() {
-  if(process.env.MARKETPLACE_TRANSACTIONS_ENABLED!=="true")
+export default async function SupplierQuotesPage() {
+  if(!transactionEnabledForAccess(await getMarketplaceAccess()))
     return <MarketplaceModule title="Cotações" description="As propostas comerciais permanecem desativadas até migração, autenticação e testes de isolamento no Preview." backHref="/app/fornecedor" accent="terra"/>;
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="terra" title="Cotações recebidas" backHref="/app/fornecedor" showListButton={false}/>

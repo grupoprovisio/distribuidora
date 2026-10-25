@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 import { myMarketplaceOrganizations } from "@/lib/marketplace/my-organizations";
 import { buyerCatalog, type BuyerCatalogResult } from "@/lib/marketplace/buyer-catalog";
 import { BuyerCatalogBrowser } from "@/components/buyer-catalog-browser";
+import { getMarketplaceAccess } from "@/lib/marketplace/session";
+import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
 
 export const metadata:Metadata={title:"Catálogo empresarial · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
@@ -18,6 +20,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   const page=/^[0-9]{1,4}$/.test(params.pagina??"1")?Math.min(1000,Math.max(1,Number(params.pagina??"1"))):1;
   // Both helpers independently verify the authenticated user and enforce RLS.
   const summary=await myMarketplaceOrganizations("comprador");
+  const quotesEnabled=transactionEnabledForAccess(await getMarketplaceAccess());
   const catalog:BuyerCatalogResult=!summary.error && summary.organizations.length
     ? await buyerCatalog(await createClient(),region,page)
     : {items:[],error:summary.error,hasMore:false};
@@ -48,7 +51,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
           <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
-        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} quotesEnabled={process.env.MARKETPLACE_TRANSACTIONS_ENABLED === "true"}/>}
+        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} quotesEnabled={quotesEnabled}/>}
         <nav aria-label="Paginação do catálogo" className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 text-sm font-bold text-forest">
           <span>Página {page}</span><div className="flex gap-2">
             {page>1 && <Link href={prevUrl} className="rounded-full bg-paper px-4 py-3 ring-1 ring-line">Anterior</Link>}
