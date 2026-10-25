@@ -84,11 +84,20 @@ export function summarizeQaIdentityReadiness(input: QaInput): QaIdentitySnapshot
   const exclusiveBuyerUsers = new Set([...buyerUsers].filter(id =>
     !platformAdmins.has(id) && !anySupplierUsers.has(id)));
 
-  const supplierOrganizations = new Set(activeMembers.filter(member =>
+  // Cada empresa deve ter sua propria identidade de homologacao.
+  // Um usuario com vinculos em A e B nao prova duas sessoes independentes.
+  const eligibleSupplierMembers = activeMembers.filter(member =>
     exclusiveSupplierUsers.has(member.user_id)
     && isEligibleOrg(member.organization_id,"SUPPLIER")
-    && ["SUPPLIER_ADMIN","ORG_ADMIN"].includes(member.role)
-  ).map(member => member.organization_id)).size;
+    && ["SUPPLIER_ADMIN","ORG_ADMIN"].includes(member.role));
+  const usedSupplierUsers = new Set<string>();
+  const independentSupplierOrgs = new Set<string>();
+  for (const member of eligibleSupplierMembers) {
+    if (usedSupplierUsers.has(member.user_id) || independentSupplierOrgs.has(member.organization_id)) continue;
+    usedSupplierUsers.add(member.user_id);
+    independentSupplierOrgs.add(member.organization_id);
+  }
+  const supplierOrganizations = independentSupplierOrgs.size;
 
   const supplierA = supplierOrganizations >= 1;
   const supplierB = supplierOrganizations >= 2;
