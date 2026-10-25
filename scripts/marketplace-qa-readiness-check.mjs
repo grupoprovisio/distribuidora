@@ -78,4 +78,16 @@ data=sample();data.members.push({user_id:"buyer",organization_id:"real",role:"SU
 s=summarizeQaIdentityReadiness(data);
 assert.equal(s.buyerIdentities,0,"buyer with supplier role anywhere is not an independent QA buyer");
 
+// Duas empresas vinculadas ao MESMO usuario nao constituem duas identidades independentes.
+data=sample();
+data.members[2].user_id="sa";
+s=summarizeQaIdentityReadiness(data);
+assert.equal(s.supplierOrganizations,1,"one account across supplier A/B is not two independent identities");
+assert.equal(s.completed,3);
+
+// Uma segunda conta genuinamente distinta restaura o criterio.
+data=sample();
+s=summarizeQaIdentityReadiness(data);
+assert.equal(s.supplierOrganizations,2);
+
 console.log("PASS: hosted QA readiness fail-closed identities, roles, MFA and distinct companies");
