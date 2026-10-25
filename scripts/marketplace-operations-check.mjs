@@ -27,3 +27,13 @@ for (const command of ["supplier_confirm", "supplier_reject", "supplier_cancel",
 assert.doesNotMatch(sql, /grant\s+all\s+on\s+marketplace_private\.order_transition_audit\s+to\s+(anon|authenticated)/i,
   "must not expose private audit");
 console.log("marketplace-operations-check: OK — actual SQL authorization, locking, idempotency and audit contract");
+
+
+// The intermediate logistics label is business-facing but is not a fiscal issuance.
+const logisticsUi = readFileSync(new URL("../components/marketplace-transaction-console.tsx", import.meta.url), "utf8");
+assert.match(logisticsUi, /ready_to_dispatch:"Faturamento[^"]*sem emiss[aã]o fiscal/i,
+  "ready_to_dispatch must be labeled Faturamento without implying NF-e issuance");
+assert.match(logisticsUi, />Avan[cç]ar para Faturamento<\/button>/,
+  "supplier must see the updated logistics action");
+assert.match(logisticsUi, /mark_ready:"[^"]*nenhuma nota fiscal ser[aá] emitida automaticamente/i,
+  "confirmation must not suggest fiscal automation");

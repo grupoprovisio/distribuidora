@@ -26,7 +26,7 @@ type Shipment = {
 type Mode = "buyer_quotes" | "supplier_quotes" | "buyer_orders" | "supplier_orders";
 type PayloadResult = {ok:boolean;reason?:string;id?:string;items?:Quote[]|Order[];proposals?:Proposal[];shipments?:Shipment[]};
 const SHIPMENT_STATUS:Record<string,string>={
-  separating:"Separação em andamento",ready_to_dispatch:"Pronto para expedir",
+  separating:"Separação em andamento",ready_to_dispatch:"Faturamento · etapa interna (sem emissão fiscal)",
   in_transit:"Expedido · em trânsito",delivered:"Entregue (registro manual)",
   cancelled:"Separação cancelada",
 };
@@ -186,13 +186,13 @@ export function TransactionConsole({
   function advanceShipping(order:Order,step:"start_separation"|"mark_ready"|"dispatch"|"deliver"){
     const notes={
       start_separation:"Iniciar a separação do pedido? O frete informado será apenas estimado, sem cobrança.",
-      mark_ready:"Concluir a separação e marcar o pedido pronto para expedição?",
+      mark_ready:"Concluir a separação e avançar para Faturamento? Esta é apenas uma etapa interna: nenhuma nota fiscal será emitida automaticamente.",
       dispatch:"Expedir o pedido? As unidades reservadas serão descontadas do estoque exatamente uma vez.",
       deliver:"Registrar a entrega manualmente? Esta ação não equivale a comprovante de transportadora.",
     };
     const success={
       start_separation:"Separação iniciada com sucesso.",
-      mark_ready:"Pedido separado e pronto para expedir.",
+      mark_ready:"Separação concluída. Pedido na etapa Faturamento, sem emissão fiscal automática.",
       dispatch:"Pedido expedido e estoque atualizado.",
       deliver:"Entrega registrada no acompanhamento interno.",
     };
@@ -349,7 +349,7 @@ export function TransactionConsole({
           {mode==="supplier_orders"&&order.status==="confirmed"&&!shipment&&
             <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"start_separation")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Iniciar separação</button>}
           {mode==="supplier_orders"&&shipment?.status==="separating"&&
-            <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"mark_ready")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Finalizar separação</button>}
+            <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"mark_ready")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Avançar para Faturamento</button>}
           {mode==="supplier_orders"&&shipment?.status==="ready_to_dispatch"&&
             <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"dispatch")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Confirmar expedição</button>}
           {mode==="supplier_orders"&&shipment?.status==="in_transit"&&
