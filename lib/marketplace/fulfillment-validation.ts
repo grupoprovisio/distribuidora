@@ -1,6 +1,13 @@
 /** Logistics transitions are domain validation only; authorization remains server/RLS. */
 export const FULFILLMENT_STATUSES = ["separating","ready_to_dispatch","in_transit","delivered","cancelled"] as const;
 export type FulfillmentStatus = typeof FULFILLMENT_STATUSES[number];
+export const FULFILLMENT_LABELS: Record<FulfillmentStatus, string> = {
+  separating: "Separação",
+  ready_to_dispatch: "Faturamento",
+  in_transit: "Em trânsito",
+  delivered: "Entregue",
+  cancelled: "Cancelado",
+};
 const next: Record<FulfillmentStatus, readonly FulfillmentStatus[]> = {
   separating:["ready_to_dispatch","cancelled"],
   ready_to_dispatch:["in_transit","cancelled"],
