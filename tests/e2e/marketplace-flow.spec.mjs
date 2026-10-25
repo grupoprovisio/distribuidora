@@ -313,7 +313,7 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     await expect.poll(()=>rows(`select status from public.order_fulfillments where order_id='${mainOrder.id}'`)[0]?.status).toBe('separating');
     const premature=await api('supplierA',{action:'fulfillment',transition:'deliver',orderId:mainOrder.id});expect(premature.status).toBe(422);
     card=page.locator('li').filter({hasText:`Pedido #${mainOrder.id.slice(0,8)}`});
-    await confirmUI(page,card.getByRole('button',{name:'Finalizar separação',exact:true}));
+    await confirmUI(page,card.getByRole('button',{name:'Avançar para Faturamento',exact:true}));
     await expect.poll(()=>rows(`select status from public.order_fulfillments where order_id='${mainOrder.id}'`)[0]?.status).toBe('ready_to_dispatch');
     await card.getByLabel('Referência de transporte (opcional)',{exact:true}).fill('E2E-LOCAL-ENTREGA-001');
     await confirmUI(page,card.getByRole('button',{name:'Confirmar expedição',exact:true}));
