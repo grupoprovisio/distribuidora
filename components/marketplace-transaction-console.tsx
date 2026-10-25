@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, RefreshCw, ShieldCheck } from "lucide-react";
 
@@ -54,6 +54,10 @@ function parseCents(text:string) {
   return Number.isSafeInteger(value) && value>0 && value<=1000000000?value:null;
 }
 
+const hydrationSubscribe=()=>()=>{};
+const hydratedOnClient=()=>true;
+const hydratedOnServer=()=>false;
+
 export function TransactionConsole({
   mode, organizations, initialOffer="",initialRegion="BR-SP",
 }: {
@@ -70,6 +74,7 @@ export function TransactionConsole({
   const [notice,setNotice]=useState("");
   const [busy,setBusy]=useState(false);
   const [loading,setLoading]=useState(true);
+  const hydrated=useSyncExternalStore(hydrationSubscribe,hydratedOnClient,hydratedOnServer);
   const [orgId,setOrgId]=useState(organizations?.[0]?.id??"");
   const [offerId,setOfferId]=useState(initialOffer);
   const [quantity,setQuantity]=useState("1");
@@ -210,6 +215,9 @@ export function TransactionConsole({
   }
   const label="block text-sm font-extrabold text-forest-deep";
   const field="mt-2 min-h-12 w-full rounded-xl border border-line bg-canvas px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-forest";
+  // Prevent early input before React hydrates: the DOM must not accept values
+  // that the client state has not yet captured (especially quantity/notes).
+  if(!hydrated) return <p role="status" className="rounded-2xl border border-line bg-paper p-5 text-sm text-muted">Preparando operações seguras...</p>;
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-lime-soft p-4 text-sm text-forest">
       <p className="flex items-start gap-2"><ShieldCheck size={18} className="mt-0.5 shrink-0" aria-hidden /><span>Registros reais com permissão por empresa. <strong>Confirmação do fornecedor reserva estoque; não há cobrança, nota fiscal nem expedição automática.</strong></span></p>
