@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
+import { createClient } from '@supabase/supabase-js';
 import { BASE_URL, LOCAL_PASSWORD, ORGS, resetAndSeed, rows, sql } from './local-env.mjs';
 
 // This test deliberately authenticates through the browser and operates ONLY on a disposable local Supabase.
 // The dedicated runner sets the QA flag ON and the global transactions flag OFF.
 test.describe.serial('Homologação: transações habilitadas exclusivamente para as três empresas QA', () => {
   const pages = {}, contexts = {};
-  let fixture;
+  let fixture, cfg;
 
   const post = (name, payload) => pages[name].evaluate(async body => {
     const r = await fetch('/api/marketplace/transactions', {
@@ -44,7 +45,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
 
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(220_000);
-    const cfg = await resetAndSeed();
+    cfg = await resetAndSeed();
     for (const name of ['admin', 'supplierA', 'supplierB', 'buyerA', 'buyerB', 'dual']) {
       contexts[name] = await browser.newContext({
         baseURL: BASE_URL, viewport: { width: 1170, height: 820 }, locale: 'pt-BR',
@@ -65,6 +66,10 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     };
     const f = fixture;
     sql(`begin;
+      update public.organizations set qa_only=true
+        where id in ('${ORGS.supplierA}','${ORGS.supplierB}','${ORGS.buyerA}');
+      insert into public.buyer_delivery_regions(buyer_org_id,region_code)
+        values ('${ORGS.buyerB}','BR-SP') on conflict do nothing;
       insert into public.products(id,slug,name,base_unit,status) values
         ('${f.product}','qa-isolated-offer','QA local commodity','un','active'),
         ('${f.realProduct}','non-qa-commercial-offer','Non QA test offer','un','active');
@@ -120,6 +125,33 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
   });
 
   test('02 — oferta real externa não pode ser cotada, Fornecedor B não pode responder ao A', async () => {
+    // Direct Supabase HTTP requests prove the QA realm cannot be bypassed by
+    // skipping the Next.js transaction API (RLS and private RPCs enforce it).
+    const buyerAClient=createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false}});
+    const buyerBClient=createClient(cfg.url,cfg.key,{auth:{persistSession:false,autoRefreshToken:false}});
+    const aAuth=await buyerAClient.auth.signInWithPassword({email:cfg.users.buyerA.email,password:LOCAL_PASSWORD});
+    const bAuth=await buyerBClient.auth.signInWithPassword({email:cfg.users.buyerB.email,password:LOCAL_PASSWORD});
+    expect(aAuth.error).toBeNull();
+    expect(bAuth.error).toBeNull();
+    const aOffers=await buyerAClient.from('offers').select('id').in('id',[fixture.offer,fixture.realOffer]);
+    const bOffers=await buyerBClient.from('offers').select('id').in('id',[fixture.offer,fixture.realOffer]);
+    expect(aOffers.error).toBeNull();
+    expect(bOffers.error).toBeNull();
+    expect(aOffers.data.map(o=>o.id)).toEqual([fixture.offer]);
+    expect(bOffers.data.map(o=>o.id)).toEqual([fixture.realOffer]);
+    const bypassA=await buyerAClient.rpc('marketplace_create_quote',{
+      buyer_org_id:ORGS.buyerA,offer_id:fixture.realOffer,quantity:2,
+      region_code:'BR-SP',notes:'QA must not trade with real supplier',request_key:randomUUID(),
+    });
+    const bypassB=await buyerBClient.rpc('marketplace_create_quote',{
+      buyer_org_id:ORGS.buyerB,offer_id:fixture.offer,quantity:2,
+      region_code:'BR-SP',notes:'Real buyer must not trade with QA supplier',request_key:randomUUID(),
+    });
+    expect(bypassA.error?.code).toBe('22023');
+    expect(bypassB.error?.code).toBe('22023');
+    // Global sign-out would revoke the separate Playwright browser sessions.
+    await Promise.all([buyerAClient.auth.signOut({scope:'local'}),buyerBClient.auth.signOut({scope:'local'})]);
+
     const other = await post('buyerA', {
       action: 'quote', buyerOrgId: ORGS.buyerA, offerId: fixture.realOffer,
       quantity: 2, region: 'BR-SP', notes: 'should be denied', idempotencyKey: randomUUID(),

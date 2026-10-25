@@ -260,6 +260,7 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     const created=page.waitForResponse(r=>r.url().endsWith('/api/marketplace/transactions')&&r.request().method()==='POST');
     await page.getByRole('button',{name:'Solicitar cotação',exact:true}).click();
     const result=await created;const feedback=await result.json();
+    expect(result.request().postDataJSON()).toMatchObject({quantity:10,notes:'TESTE E2E FLUXO PRINCIPAL'});
     expect({status:result.status(),...feedback}).toMatchObject({status:201,ok:true});
     await expect.poll(()=>rows("select id from public.quote_requests where notes='TESTE E2E FLUXO PRINCIPAL'").length).toBe(1);
     mainQuote=rows("select * from public.quote_requests where notes='TESTE E2E FLUXO PRINCIPAL'")[0];
