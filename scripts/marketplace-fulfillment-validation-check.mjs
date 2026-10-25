@@ -6,7 +6,8 @@ const source=readFileSync(new URL("../lib/marketplace/fulfillment-validation.ts"
 const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const mod={exports:{}};
 vm.runInNewContext(code,{exports:mod.exports,module:mod},{timeout:2000});
-const {canAdvanceFulfillment,validateFulfillmentTransition,validateFulfillmentDetails}=mod.exports;
+const {canAdvanceFulfillment,validateFulfillmentTransition,validateFulfillmentDetails,FULFILLMENT_LABELS}=mod.exports;
+assert.equal(FULFILLMENT_LABELS.ready_to_dispatch,"Faturamento");
 for(const [from,to] of [["separating","ready_to_dispatch"],["ready_to_dispatch","in_transit"],["in_transit","delivered"],["separating","cancelled"],["ready_to_dispatch","cancelled"]]){
   assert.equal(canAdvanceFulfillment(from,to),true);
   assert.doesNotThrow(()=>validateFulfillmentTransition(from,to));
