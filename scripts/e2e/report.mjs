@@ -2,8 +2,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 // This is a redacted summary only. No JWTs, credentials, cookies or screenshots.
 const sources = [
-  {name: 'standard-local', file: 'test-results/e2e-summary.json'},
-  {name: 'qa-scoped-local', file: 'test-results/e2e-qa-summary.json'},
+  {name: 'standard-local', file: '.e2e-summaries/e2e-summary.json'},
+  {name: 'qa-scoped-local', file: '.e2e-summaries/e2e-qa-summary.json'},
 ];
 const present = sources.filter(source => existsSync(source.file));
 if (!present.length) throw new Error('No Playwright JSON report available');

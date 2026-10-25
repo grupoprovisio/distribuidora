@@ -13,7 +13,7 @@ export default defineConfig({
   expect: { timeout: 20_000 },
   globalTimeout: 1_200_000,
   reporter: [['list'], ['json', { outputFile: process.env.PROVISIO_E2E_QA_SCOPE === 'true'
-    ? 'test-results/e2e-qa-summary.json' : 'test-results/e2e-summary.json' }]],
+    ? '.e2e-summaries/e2e-qa-summary.json' : '.e2e-summaries/e2e-summary.json' }]],
   use: {
     baseURL: 'http://127.0.0.1:3210',
     browserName: 'chromium',

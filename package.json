@@ -37,7 +37,7 @@
     "test:hardening": "node --test scripts/marketplace-hardening-check.mjs",
     "test:supabase-foundation": "node --test scripts/marketplace-supabase-gateway-check.mjs",
     "test:frontend-scope": "node --test scripts/marketplace-frontend-scope-check.mjs && node scripts/marketplace-project-progress-check.mjs && node scripts/marketplace-qa-readiness-check.mjs && node scripts/marketplace-qa-transaction-gate-check.mjs",
-    "test:e2e": "playwright test && PROVISIO_E2E_QA_SCOPE=true playwright test tests/e2e/qa-scoped-transactions.spec.mjs",
+    "test:e2e": "node scripts/e2e/clean-reports.mjs && playwright test && PROVISIO_E2E_QA_SCOPE=true playwright test tests/e2e/qa-scoped-transactions.spec.mjs",
     "test:e2e:start": "node scripts/e2e/start.mjs",
     "test:e2e:stop": "npx --yes supabase@2.121.0 stop --workdir tests/e2e/local",
     "test:local-config": "node --test scripts/marketplace-local-config-check.mjs",

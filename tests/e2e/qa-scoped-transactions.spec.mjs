@@ -23,13 +23,22 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
   }, mode);
 
   async function login(page, email) {
-    await page.goto('/entrar');
-    await page.getByRole('button', { name: 'Link por e-mail', exact: true }).click();
+    await page.goto('/entrar', { waitUntil: 'domcontentloaded' });
+    // Wait for React hydration before editing controlled fields on a cold Next.js build.
+    // The default browser suite uses the same interactive tab verification.
+    await expect(async () => {
+      await page.getByRole('button', { name: 'Link por e-mail', exact: true }).click();
+      await expect(page.getByLabel('Senha', { exact: true })).toHaveCount(0, { timeout: 1000 });
+    }).toPass({ timeout: 20000 });
     await page.getByRole('button', { name: 'E-mail e senha', exact: true }).click();
+    await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
     await page.getByLabel('E-mail empresarial').fill(email);
-    await page.getByLabel('Senha', { exact: true }).fill(LOCAL_PASSWORD);
+    const password = page.getByLabel('Senha', { exact: true });
+    await password.fill(LOCAL_PASSWORD);
+    await expect(password).toHaveValue(LOCAL_PASSWORD);
     await page.getByRole('button', { name: 'Entrar com segurança', exact: true }).click();
-    await page.waitForURL(u => !['/entrar', '/app'].includes(u.pathname), { timeout: 30000 });
+    await page.waitForURL(u => !['/entrar', '/app'].includes(u.pathname),
+      { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.goto('/robots.txt');
   }
 
