@@ -7,6 +7,15 @@ where id in ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000
 update public.organization_members set status='active'
 where user_id='00000000-0000-4000-8000-000000000003'
 and organization_id='10000000-0000-4000-8000-000000000003';
+update public.organization_members set status='active'
+where user_id='00000000-0000-4000-8000-000000000001'
+and organization_id='10000000-0000-4000-8000-000000000001';
+update public.organization_capabilities set status='approved'
+where organization_id='10000000-0000-4000-8000-000000000001'
+and capability='SUPPLIER';
+update public.organizations set status='approved'
+where id in ('10000000-0000-4000-8000-000000000001',
+             '10000000-0000-4000-8000-000000000003');
 update public.organizations set qa_only=true
 where id in ('10000000-0000-4000-8000-000000000001',
              '10000000-0000-4000-8000-000000000003');
@@ -63,6 +72,10 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000011"}',true);
+select test.assert_count((select count(*) from public.quote_requests
+  where basket_id in (select id from public.quote_baskets
+    where request_key='90000000-0000-4000-8000-000000000090')),1,
+  'supplier A must read only the matching buyer quote');
 select public.marketplace_propose_quote(
  (select id from public.quote_requests where basket_id in (
    select id from public.quote_baskets where request_key='90000000-0000-4000-8000-000000000090')),
