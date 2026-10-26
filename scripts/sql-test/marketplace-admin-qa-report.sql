@@ -26,16 +26,23 @@ begin
   end if;
 end $fixtures$;
 
+do $membership$
+declare info text;
+begin
+  select string_agg(m.organization_id::text || ':' || m.role || ':' || m.status, ',')
+    into info from public.organization_members m
+    where m.user_id='00000000-0000-4000-8000-000000000006';
+  raise notice 'QA REPORT ADMIN MEMBERSHIPS: %',info;
+end $membership$;
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',true);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000001"}',true);
 do $diagnostic$
+declare links text;
 begin
- raise notice 'QA REPORT TEST AAL=%, UID=%, ADMIN=%, BUYER_CAP=%, SUPPLIER_CAP=%',
- (select auth.jwt() ->> 'aal'),(select auth.uid()),
- (select marketplace_private.is_verified_platform_admin()),
- marketplace_private.has_active_capability('10000000-0000-4000-8000-000000000003','BUYER'),
- marketplace_private.has_active_capability('10000000-0000-4000-8000-000000000001','SUPPLIER');
+  raise notice 'QA REPORT TEST role=%, sub=%, claims=%, rowsec=%',
+    current_user,current_setting('request.jwt.claim.sub',true),
+    current_setting('request.jwt.claims',true),current_setting('row_security',true);
 end $diagnostic$;
 select test.assert_count((select count(*) from public.quote_requests where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'ADM AAL1 QA quote denial');
 select test.assert_count((select count(*) from public.quote_proposals where supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'ADM AAL1 QA proposal denial');
