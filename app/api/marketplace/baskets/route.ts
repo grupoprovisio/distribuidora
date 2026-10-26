@@ -81,6 +81,30 @@ export async function GET(request:Request){
     .select("order_id,status,updated_at")
     .in("order_id",orderIds):null;
   if(fulfillments?.error)return respond({ok:false,reason:"query_failed"},503);
-  return respond({ok:true,baskets:baskets.data??[],quotes:quotes?.data??[],
+  const offerIds=[...new Set((quotes?.data??[]).map(q=>q.offer_id))];
+  const offers=offerIds.length?await db.from("offers")
+    .select("id,supplier_product_id,supplier_org_id").in("id",offerIds):null;
+  const skuIds=[...new Set((offers?.data??[]).map(o=>o.supplier_product_id))];
+  const skus=skuIds.length?await db.from("supplier_products")
+    .select("id,product_id").in("id",skuIds):null;
+  const productIds=[...new Set((skus?.data??[]).map(s=>s.product_id))];
+  const products=productIds.length?await db.from("products")
+    .select("id,name").in("id",productIds):null;
+  const suppliers=await db.from("organizations")
+    .select("id,trade_name,legal_name").in("id",[...scope.suppliers]);
+  if(offers?.error||skus?.error||products?.error||suppliers.error)
+    return respond({ok:false,reason:"query_failed"},503);
+  const skuById=new Map((skus?.data??[]).map(s=>[s.id,s.product_id]));
+  const productById=new Map((products?.data??[]).map(p=>[p.id,p.name]));
+  const supplierById=new Map((suppliers.data??[])
+    .map(s=>[s.id,s.trade_name||s.legal_name]));
+  const offerById=new Map((offers?.data??[]).map(o=>[o.id,o]));
+  const lines=(quotes?.data??[]).map(q=>{
+    const offer=offerById.get(q.offer_id);
+    return {...q,
+      productName:productById.get(skuById.get(offer?.supplier_product_id??"")??"")??"Produto",
+      supplierName:supplierById.get(q.supplier_org_id)??"Fornecedor"};
+  });
+  return respond({ok:true,baskets:baskets.data??[],quotes:lines,
     proposals:proposals?.data??[],orders:orders?.data??[],fulfillments:fulfillments?.data??[]});
 }
