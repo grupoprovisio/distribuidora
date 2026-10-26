@@ -19,6 +19,19 @@ where id in ('10000000-0000-4000-8000-000000000001',
 update public.organizations set qa_only=true
 where id in ('10000000-0000-4000-8000-000000000001',
              '10000000-0000-4000-8000-000000000003');
+-- Addresses and rates exist ONLY in the disposable PostgreSQL CI transaction.
+insert into public.buyer_contact_profiles
+(user_id,buyer_org_id,full_name,contact_email,phone,postal_code,street,street_number,complement,neighborhood,city,state_code,reference)
+values ('00000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000003',
+ 'Comprador QA Local','qa-buyer@example.invalid','11999999999','01001000',
+ 'Rua de Teste QA','123','','Centro','Sao Paulo','SP','Portaria QA');
+insert into public.provisio_shipping_origin
+(id,label,postal_code,street,street_number,neighborhood,city,state_code,pickup_enabled,active)
+values (1,'Unidade QA Local','01001000','Rua da Unidade QA','321','Centro','Sao Paulo','SP',true,true);
+insert into public.provisio_shipping_rates
+(origin_id,label,postal_start,postal_end,destination_state,price_minor,min_business_days,max_business_days)
+values (1,'Tarifa QA Capital',1000000,1999999,'SP',1780,2,4);
+
 insert into public.offer_price_tiers(offer_id,min_quantity,unit_price_minor)
  values('40000000-0000-4000-8000-000000000001',5,900)
  on conflict(offer_id,min_quantity) do update set unit_price_minor=excluded.unit_price_minor;
@@ -45,6 +58,22 @@ select public.marketplace_submit_quote_basket(
 select test.assert_count((select count(*) from public.quote_baskets
  where request_key='90000000-0000-4000-8000-000000000090'),1,
  'basket idempotency should create exactly one grouping');
+select test.assert_count((select count(*) from public.quote_baskets
+ where request_key='90000000-0000-4000-8000-000000000090'
+ and recipient_snapshot->>'fullName'='Comprador QA Local'
+ and origin_snapshot->>'label'='Unidade QA Local'
+ and freight_minor=0),1,'pickup has immutable contact and configured origin');
+-- Delivery uses the ADM-authorized tariff; no buyer can invent their own price.
+select public.marketplace_submit_quote_basket(
+ '10000000-0000-4000-8000-000000000003','BR-SP','delivery',
+ '[{"offerId":"40000000-0000-4000-8000-000000000001","quantity":1}]'::jsonb,
+ '90000000-0000-4000-8000-000000000093');
+select test.assert_count((select count(*) from public.quote_baskets
+ where request_key='90000000-0000-4000-8000-000000000093'
+ and freight_minor=1780 and min_business_days=2 and max_business_days=4
+ and recipient_snapshot->>'reference'='Portaria QA'),1,
+ 'delivery freight and recipient reference come only from saved server data');
+
 select test.assert_count((select count(*) from public.quote_requests
  where basket_id in (select id from public.quote_baskets
  where request_key='90000000-0000-4000-8000-000000000090')),1,
