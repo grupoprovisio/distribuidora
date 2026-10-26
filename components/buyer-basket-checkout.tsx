@@ -236,7 +236,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
         {mode==="checkout"&&method==="delivery"&&freight?.available&&freight.quote&&
           <p className="mt-3 text-xs font-semibold text-forest">
             Entrega estimada: {freight.quote.minBusinessDays}–{freight.quote.maxBusinessDays} dias úteis.
-          </p>}}
+          </p>}
         {error&&<p role="alert" className="mt-4 rounded-xl bg-sand p-3 text-sm font-semibold text-wine">{error}</p>}
         {mode==="checkout"?<button type="button" disabled={!validation?.ready||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
