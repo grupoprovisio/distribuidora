@@ -28,19 +28,18 @@ const status=(quote:Quote,proposal?:Proposal,order?:Order,fulfillment?:Fulfillme
   return "Em análise pelo fornecedor";
 };
 export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
-  const [summary,setSummary]=useState<Summary|null>(null);
-  const [error,setError]=useState(false);
-  const [loading,setLoading]=useState(true);
   const [revision,setRevision]=useState(0);
+  const [snapshot,setSnapshot]=useState<{revision:number;summary:Summary|null;error:boolean}|null>(null);
+  const loading=snapshot?.revision!==revision;
+  const error=!loading&&!!snapshot?.error;
+  const summary=!loading?snapshot?.summary:null;
   useEffect(()=>{
     const controller=new AbortController();
-    setLoading(true);
     void fetch("/api/marketplace/baskets",{credentials:"same-origin",cache:"no-store",signal:controller.signal})
       .then(async r=>{const data=await r.json() as Summary;
-        if(!controller.signal.aborted){setSummary(r.ok&&data.ok?data:null);setError(!r.ok||!data.ok);}
+        if(!controller.signal.aborted)setSnapshot({revision,summary:r.ok&&data.ok?data:null,error:!r.ok||!data.ok});
       })
-      .catch(()=>{if(!controller.signal.aborted)setError(true);})
-      .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+      .catch(()=>{if(!controller.signal.aborted)setSnapshot({revision,summary:null,error:true});});
     return ()=>controller.abort();
   },[revision]);
   const baskets=summary?.baskets??[];
