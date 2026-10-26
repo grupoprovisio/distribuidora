@@ -43,7 +43,12 @@ export async function POST(request:Request){
   const db=await createClient();
   const verified=await validateBuyerBasket(db,access,body.buyerOrgId,body.region,body.lines);
   if(!verified.ok)return respond(verified,422);
-  if(body.action==="validate")return respond(verified);
+  if(body.action==="validate"){
+    const qaScope=readQaTransactionScope(process.env);
+    const quoteEnabled=transactionAccessMode(access)==="qa"
+      && qaScope?.buyer===body.buyerOrgId;
+    return respond({...verified,quoteEnabled});
+  }
   if(!verified.ready)return respond({...verified,reason:"basket_changed"},409);
   if(body.method!=="delivery"&&body.method!=="pickup")
     return respond({ok:false,reason:"invalid_method"},400);
