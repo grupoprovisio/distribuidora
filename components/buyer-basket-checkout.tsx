@@ -179,11 +179,39 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     </section>:<div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_19rem]">
       <section aria-label="Produtos na cesta" className="min-w-0 space-y-5">
         {loading&&<p role="status" className="rounded-2xl bg-paper p-5 text-sm text-muted">Atualizando preços e estoque...</p>}
-        {!loading&&!validation&&<p role="alert" className="rounded-2xl bg-paper p-5 text-sm text-muted">Não foi possível conferir sua cesta.</p>}
+        {!loading&&validationIssue&&<div role="alert" className="rounded-2xl border border-line bg-paper p-5 text-sm text-muted">
+          <p>{failureText(validationIssue)}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" onClick={()=>setRefresh(x=>x+1)}
+              className="min-h-10 rounded-full border border-forest px-4 text-xs font-black text-forest">
+              Tentar novamente
+            </button>
+            {validationIssue==="session_expired"&&
+              <Link href="/entrar" className="inline-flex min-h-10 items-center rounded-full bg-forest px-4 text-xs font-bold text-white">
+                Entrar novamente
+              </Link>}
+          </div>
+        </div>}
+        {!loading&&validation&&invalidLines.length>0&&
+          <div role="status" className="rounded-2xl border border-line bg-paper p-4 text-sm text-muted">
+            <p className="font-bold text-forest-deep">
+              {invalidLines.length} {invalidLines.length===1?"produto precisa":"produtos precisam"} de revisão.
+            </p>
+            <p className="mt-1">Os itens válidos continuam com seus preços confirmados. Você pode retirar os indisponíveis sem perder o restante da cesta.</p>
+            <button type="button"
+              onClick={()=>{for(const item of invalidLines)basket.setQuantity(item.offerId,0);}}
+              className="mt-3 min-h-10 rounded-full border border-line px-4 text-xs font-black text-forest">
+              Remover itens indisponíveis
+            </button>
+          </div>}
         {grouped.map(([supplier,lines])=><section key={supplier} className="space-y-3">
           <div className="flex items-center justify-between gap-3 px-2">
             <h2 className="text-lg font-black text-forest-deep">{supplier}</h2>
-            <span className="text-sm font-extrabold text-forest">{brl(lines.reduce((n,row)=>n+row.subtotalMinor,0))}</span>
+            <span className="text-sm font-extrabold text-forest">
+              {lines.some(line=>line.valid)?
+                brl(lines.reduce((n,row)=>n+row.subtotalMinor,0)):
+                "Aguardando valores"}
+            </span>
           </div>
           {lines.map(item=><article key={item.offerId}
             className="flex min-w-0 items-center gap-3 rounded-[1.75rem] bg-paper p-3 shadow-card ring-1 ring-line/70 sm:gap-5 sm:p-5">
@@ -194,8 +222,12 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-2 text-sm font-black text-forest-deep sm:text-base">{item.productName}</h3>
               <p className="mt-1 text-xs text-muted">{item.pack}</p>
-              <p className="mt-2 text-sm font-black tabular-nums text-forest">{brl(item.unitPriceMinor)} / un</p>
-              <p className="mt-1 text-xs font-semibold text-muted">Subtotal: <strong>{brl(item.subtotalMinor)}</strong></p>
+              {item.valid?<>
+                <p className="mt-2 text-sm font-black tabular-nums text-forest">{brl(item.unitPriceMinor)} / un</p>
+                <p className="mt-1 text-xs font-semibold text-muted">Subtotal: <strong>{brl(item.subtotalMinor)}</strong></p>
+              </>:<p className="mt-2 text-xs font-bold text-muted">
+                Preço não confirmado — não incluído no subtotal
+              </p>}
               {!item.valid&&<p role="alert" className="mt-1 text-xs font-bold text-wine">{item.reason}</p>}
             </div>
             <div className="flex shrink-0 flex-col items-end gap-3">
@@ -207,7 +239,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
                 </button>
                 <span aria-live="polite" className="min-w-5 text-center text-sm font-black tabular-nums">{item.quantity}</span>
                 <button type="button" aria-label={"Aumentar "+item.productName}
-                  disabled={item.quantity>=item.available||item.quantity>=100000}
+                  disabled={!item.valid||item.quantity>=item.available||item.quantity>=100000}
                   onClick={()=>basket.setQuantity(item.offerId,item.quantity+1)}
                   className="grid size-9 place-items-center rounded-full disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-forest">
                   <Plus size={16} aria-hidden/>
@@ -238,16 +270,22 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
         <dl className="mt-5 space-y-3 text-sm text-muted">
           <div className="flex justify-between"><dt>Produtos diferentes</dt><dd className="font-bold text-ink">{basket.distinctCount}</dd></div>
           <div className="flex justify-between"><dt>Unidades</dt><dd className="font-bold text-ink">{basket.count}</dd></div>
-          <div className="flex justify-between"><dt>Produtos</dt><dd className="font-bold text-ink">{brl(productsTotal)}</dd></div>
+          <div className="flex justify-between gap-3">
+            <dt>{validation?.ready?"Produtos":"Produtos disponíveis"}</dt>
+            <dd className="font-bold text-ink">{productsTotal===null?"A confirmar":brl(productsTotal)}</dd>
+          </div>
           <div className="flex justify-between"><dt>Frete</dt><dd className="font-semibold">
            {shippingMinor!==null?shippingMinor===0?"Grátis":brl(shippingMinor):"A calcular"}
           </dd></div>
         </dl>
         <div className="mt-5 flex justify-between gap-3 border-t border-line pt-4">
           <span className="font-black text-forest-deep">
-           {shippingMinor!==null?"Total estimado":"Subtotal dos produtos"}
+            {total!==null?"Total estimado (produtos + frete)":
+              validation&&!validation.ready?"Total pendente de revisão":"Total a confirmar"}
           </span>
-          <strong className="text-xl font-black tabular-nums text-forest-deep">{brl(total)}</strong>
+          <strong className="text-xl font-black tabular-nums text-forest-deep">
+            {total!==null?brl(total):"—"}
+          </strong>
         </div>
         {mode==="checkout"&&!savedContact&&
           <p className="mt-3 text-xs font-semibold text-muted">
@@ -257,8 +295,13 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
           <p className="mt-3 text-xs font-semibold text-forest">
             Entrega estimada: {freight.quote.minBusinessDays}–{freight.quote.maxBusinessDays} dias úteis.
           </p>}
+        {validation?.ready&&!validation.quoteEnabled&&
+          <p role="status" className="mt-4 rounded-xl bg-canvas p-3 text-xs font-semibold text-muted">
+            Sua conta pode consultar os preços, mas não registrar cotações neste ambiente.
+            Para testar o envio, entre com a identidade independente do Comprador QA.
+          </p>}
         {error&&<p role="alert" className="mt-4 rounded-xl bg-sand p-3 text-sm font-semibold text-wine">{error}</p>}
-        {mode==="checkout"?<button type="button" disabled={!validation?.ready||loading||submitting||!checkoutReady}
+        {mode==="checkout"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
           {submitting?"Registrando solicitação...":"Solicitar cotação"}
