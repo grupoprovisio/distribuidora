@@ -106,6 +106,7 @@ export default async function MarketplaceAdminPage() {
             {[
               {href:"/admin/acessos",title:"Empresas e permissões",detail:"Aprovar perfis, organizações, vínculos e capacidades."},
               {href:"/admin/marketplace/homologacoes",title:"Fila de homologações",detail:"Veja pendências reais de empresas, usuários e acessos antes de tomar uma decisão."},
+              {href:"/admin/marketplace/cotacoes-compradores",title:"Cotações recebidas dos compradores",detail:"Acompanhe solicitações agrupadas e pendências por fornecedor."},
               {href:"/app/fornecedor",title:"Operação do fornecedor",detail:"Acesso condicionado à capacidade de fornecedor no Supabase."},
               {href:"/produtos",title:"Catálogo autorizado",detail:"Visualize a vitrine institucional, sem ofertas externas."},
             ].map(({href,title,detail})=><Link href={href} key={href} className="flex items-center justify-between gap-4 rounded-2xl border border-line p-4 hover:bg-lime-soft">
