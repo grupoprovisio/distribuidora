@@ -66,9 +66,21 @@ export function BuyerFreightCalculator({
   useEffect(()=>{
     if(!auto||cep.length!==8)return;
     const controller=new AbortController();
-    void requestQuote(cep,controller.signal);
+    const params=new URLSearchParams({buyer:buyerOrgId,cep});
+    void fetch("/api/marketplace/frete?"+params,{
+      credentials:"same-origin",cache:"no-store",signal:controller.signal,
+    }).then(async r=>{
+      if(!r.ok)throw Error();
+      return await r.json() as FreightInfo;
+    }).then(data=>{
+      if(!controller.signal.aborted){setShown(data);onQuote(data);setMessage("");}
+    }).catch(()=>{
+      if(!controller.signal.aborted){
+        setMessage("Não foi possível consultar o frete.");onQuote(null);
+      }
+    });
     return ()=>controller.abort();
-  },[auto,cep,requestQuote]);
+  },[auto,cep,buyerOrgId,onQuote]);
 
   const pickupLabel=origin?.label??"Unidade Provisio";
   const address=origin?
