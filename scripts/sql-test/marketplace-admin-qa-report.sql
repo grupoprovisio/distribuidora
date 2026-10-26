@@ -37,13 +37,13 @@ end $membership$;
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',true);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000001"}',true);
+reset role;
 do $diagnostic$
-declare links text;
 begin
-  raise notice 'QA REPORT TEST role=%, sub=%, claims=%, rowsec=%',
-    current_user,current_setting('request.jwt.claim.sub',true),
-    current_setting('request.jwt.claims',true),current_setting('row_security',true);
+  raise notice 'QA RLS verifier under AAL1: %',marketplace_private.is_verified_platform_admin();
 end $diagnostic$;
+set role authenticated;
+
 select test.assert_count((select count(*) from public.quote_requests where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'ADM AAL1 QA quote denial');
 select test.assert_count((select count(*) from public.quote_proposals where supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'ADM AAL1 QA proposal denial');
 select test.assert_count((select count(*) from public.purchase_orders where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'ADM AAL1 QA order denial');
