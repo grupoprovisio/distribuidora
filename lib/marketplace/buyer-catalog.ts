@@ -12,6 +12,8 @@ export type PrivateOffer = {
   pack: string;
   priceMinor: number;
   minQuantity: number;
+  availableQuantity: number;
+  priceTiers: { minQuantity:number; unitPriceMinor:number }[];
   imageUrl?: string | null;
 };
 export type BuyerCatalogResult = { items: PrivateOffer[]; error: boolean; hasMore: boolean; regionNotAuthorized?: boolean };
@@ -53,14 +55,15 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const ids=visible.map(o=>o.id);
   const skuIds=[...new Set(visible.map(o=>o.supplier_product_id))];
   const orgIds=[...new Set(visible.map(o=>o.supplier_org_id))];
-  const [skus,orgs,regions,inventory,capabilities]=await Promise.all([
+  const [skus,orgs,regions,inventory,capabilities,tiers]=await Promise.all([
     client.from("supplier_products").select("id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status").in("id",skuIds).eq("status","approved"),
     client.from("organizations").select("id,legal_name,trade_name,kind,status").in("id",orgIds).eq("status","approved"),
     client.from("offer_regions").select("offer_id,region_code").in("offer_id",ids).in("region_code",regionCodes),
     client.from("inventory_positions").select("supplier_product_id,supplier_org_id,available_quantity,reserved_quantity").in("supplier_product_id",skuIds),
-    client.from("organization_capabilities").select("organization_id,capability,status").in("organization_id",orgIds).eq("capability","SUPPLIER").eq("status","approved")
+    client.from("organization_capabilities").select("organization_id,capability,status").in("organization_id",orgIds).eq("capability","SUPPLIER").eq("status","approved"),
+    client.from("offer_price_tiers").select("offer_id,min_quantity,unit_price_minor").in("offer_id",ids)
   ]);
-  if ([skus,orgs,regions,inventory,capabilities].some(q=>q.error)) return {...empty,error:true};
+  if ([skus,orgs,regions,inventory,capabilities,tiers].some(q=>q.error)) return {...empty,error:true};
   const productIds=[...new Set((skus.data??[]).map(s=>s.product_id))];
   if (!productIds.length) return {...empty,hasMore:hasMore&&page<1000};
   const products=await client.from("products").select("id,slug,name,status").in("id",productIds).eq("status","active");
@@ -85,7 +88,12 @@ export async function buyerCatalog(client: Client, region: string, page: number)
     items.push({
       id:offer.id,slug:product.slug,productName:product.name,supplier:org.trade_name||org.legal_name,
       sku:sku.supplier_sku,pack:String(sku.pack_quantity)+" "+sku.pack_unit,
-      priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity
+      priceMinor:offer.base_price_minor,minQuantity:offer.min_quantity,
+      availableQuantity:Math.max(0,Number(stock.available_quantity)-Number(stock.reserved_quantity)),
+      priceTiers:(tiers.data??[]).filter(t=>t.offer_id===offer.id
+        && Number.isSafeInteger(t.min_quantity)&&Number.isSafeInteger(t.unit_price_minor)&&t.unit_price_minor>0)
+        .map(t=>({minQuantity:t.min_quantity,unitPriceMinor:t.unit_price_minor}))
+        .sort((a,b)=>a.minQuantity-b.minQuantity)
     });
   }
   const shownProductIds=[...new Set(productByOffer.values())];
