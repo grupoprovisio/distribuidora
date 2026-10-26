@@ -22,13 +22,24 @@ export async function POST(request:Request){
   if(!isSameOriginRequest(request))return respond({ok:false,reason:"invalid_origin"},403);
   const access=await getMarketplaceAccess();
   if(!access)return respond({ok:false,reason:"unauthorized"},401);
-  if(transactionAccessMode(access)!=="qa")return respond({ok:false,reason:"not_enabled"},503);
-  const scope=readQaTransactionScope(process.env);
   const body=await readBody(request);
-  if(!scope||!body||body.buyerOrgId!==scope.buyer
-    ||typeof body.region!=="string"||!REGION.test(body.region)
-    ||!validateBasketInput(body.lines))return respond({ok:false,reason:"invalid_basket"},400);
-  if(body.action!=="validate"&&body.action!=="submit")return respond({ok:false,reason:"invalid_action"},400);
+  if(!body||typeof body.buyerOrgId!=="string"||typeof body.region!=="string"
+    ||!REGION.test(body.region)||!validateBasketInput(body.lines))
+    return respond({ok:false,reason:"invalid_basket"},400);
+  if(body.action!=="validate"&&body.action!=="submit")
+    return respond({ok:false,reason:"invalid_action"},400);
+  // Pricing is read-only and governed by buyer membership and RLS. It must
+  // work for a buyer account with an additional ADM capability, even when
+  // QA transactions are intentionally disabled for that mixed-role identity.
+  if(!access.allowed.includes("comprador") ||
+     !access.organizationIds.comprador.includes(body.buyerOrgId))
+    return respond({ok:false,reason:"buyer_not_authorized"},403);
+  if(body.action==="submit"){
+    const scope=readQaTransactionScope(process.env);
+    if(transactionAccessMode(access)!=="qa"||!scope||
+       body.buyerOrgId!==scope.buyer)
+      return respond({ok:false,reason:"not_enabled"},503);
+  }
   const db=await createClient();
   const verified=await validateBuyerBasket(db,access,body.buyerOrgId,body.region,body.lines);
   if(!verified.ok)return respond(verified,422);
