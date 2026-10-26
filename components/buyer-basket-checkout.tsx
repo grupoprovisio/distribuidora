@@ -1,11 +1,15 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
 import { useBuyerBasket } from "@/lib/marketplace/buyer-basket-store";
 import type { BasketValidation, ValidatedBasketLine } from "@/lib/marketplace/basket-validation";
+import type { BuyerContact } from "@/lib/marketplace/buyer-contact";
+import { normalizeCep } from "@/lib/marketplace/buyer-contact";
+import { BuyerProfileForm } from "@/components/buyer-profile-form";
+import { BuyerFreightCalculator, type FreightInfo } from "@/components/buyer-freight-calculator";
 
 type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout"};
 type BasketResponse=BasketValidation&{id?:string;status?:string;paymentStatus?:string};
@@ -18,6 +22,15 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
   const [submitting,setSubmitting]=useState(false);
   const [error,setError]=useState("");
   const [method,setMethod]=useState<"delivery"|"pickup">("delivery");
+  const [savedContact,setSavedContact]=useState<BuyerContact|null>(null);
+  const [cep,setCep]=useState("");
+  const [freight,setFreight]=useState<FreightInfo|null>(null);
+  const handleSaved=useCallback((profile:BuyerContact)=>{
+    setSavedContact(profile);setCep(profile.postalCode);setFreight(null);
+  },[]);
+  const handleEdit=useCallback(()=>{setSavedContact(null);setFreight(null);},[]);
+  const handlePostal=useCallback((next:string)=>{setCep(next);setFreight(null);},[]);
+  const handleFreight=useCallback((value:FreightInfo|null)=>{setFreight(value);},[]);
   const router=useRouter();
   const serialized=JSON.stringify(basket.items);
   const rows=basket.items;
@@ -45,6 +58,23 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
   },[serialized,buyerOrgId,region,rows]);
   async function submit(){
     if(submitting||!validation?.ready||!basket.items.length)return;
+    if(mode!=="checkout"||!savedContact){
+      setError("Confira e salve seu cadastro de contato e endereço antes de solicitar a cotação.");
+      return;
+    }
+    if(normalizeCep(cep)!==savedContact.postalCode){
+      setError("O CEP calculado precisa ser igual ao CEP salvo no cadastro. Atualize seu endereço.");
+      return;
+    }
+    if(method==="delivery"&&(!freight?.available||!freight.quote||
+      freight.quote.state!==savedContact.state||freight.cep!==savedContact.postalCode)){
+      setError("Calcule o frete para seu endereço cadastrado antes de solicitar a cotação.");
+      return;
+    }
+    if(method==="pickup"&&!freight?.pickupAvailable){
+      setError("A retirada não está disponível. Confira a unidade Provisio cadastrada.");
+      return;
+    }
     setSubmitting(true);setError("");
     // Stable key across retries, but distinct baskets get different keys.
     const storageKey="provisio-rfq-idem:"+userId+":"+buyerOrgId+":"+region+":"+serialized;
@@ -72,7 +102,15 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
     }catch{setError("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setSubmitting(false);}
   }
-  const total=validation?.totalMinor??0;
+  const productsTotal=validation?.totalMinor??0;
+  const shippingMinor=method==="pickup"&&mode==="checkout"?0:
+    (freight?.available&&freight.quote&&freight.cep===normalizeCep(cep)?freight.quote.freightMinor:null);
+  const total=productsTotal+(shippingMinor??0);
+  const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
+    !!(freight?.available&&freight.quote&&savedContact&&
+      freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
+  const checkoutReady=!!(mode==="checkout"&&savedContact&&
+    normalizeCep(cep)===savedContact.postalCode&&deliveryValid);
   const grouped=useMemo(()=>{
     const map=new Map<string,ValidatedBasketLine[]>();
     for(const item of validation?.lines??[]){
@@ -143,6 +181,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
             </div>
           </article>)}
         </section>)}
+        {mode==="checkout"&&<BuyerProfileForm buyerOrgId={buyerOrgId}
+           compact onSaved={handleSaved} onEdited={handleEdit}/>}
         <button type="button" onClick={()=>{if(window.confirm("Remover todos os produtos da cesta?"))basket.clear();}}
           className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-muted">
           <Trash2 size={16} aria-hidden/> Limpar cesta
@@ -153,14 +193,25 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
         <dl className="mt-5 space-y-3 text-sm text-muted">
           <div className="flex justify-between"><dt>Produtos diferentes</dt><dd className="font-bold text-ink">{basket.distinctCount}</dd></div>
           <div className="flex justify-between"><dt>Unidades</dt><dd className="font-bold text-ink">{basket.count}</dd></div>
-          <div className="flex justify-between"><dt>Frete</dt><dd className="font-semibold">A calcular</dd></div>
+          <div className="flex justify-between"><dt>Produtos</dt><dd className="font-bold text-ink">{brl(productsTotal)}</dd></div>
+          <div className="flex justify-between"><dt>Frete</dt><dd className="font-semibold">
+           {shippingMinor!==null?shippingMinor===0?"Grátis":brl(shippingMinor):"A calcular"}
+          </dd></div>
         </dl>
         <div className="mt-5 flex justify-between gap-3 border-t border-line pt-4">
-          <span className="font-black text-forest-deep">Total estimado</span>
+          <span className="font-black text-forest-deep">
+           {shippingMinor!==null?"Total estimado":"Subtotal dos produtos"}
+          </span>
           <strong className="text-xl font-black tabular-nums text-forest-deep">{brl(total)}</strong>
         </div>
         {mode==="checkout"&&<fieldset className="mt-6 space-y-3">
-          <legend className="text-sm font-extrabold text-forest-deep">Como deseja receber?</legend>
+          <legend className="text-sm font-extrabold text-forest-deep">
+            Como deseja receber seus produtos?
+          </legend>
+          <p className="text-xs leading-relaxed text-muted">
+            Escolha entrega no endereço cadastrado ou retirada na unidade Provisio.
+            O valor do frete e o prazo serão incluídos na cotação enviada.
+          </p>
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 text-sm">
             <input type="radio" checked={method==="delivery"} onChange={()=>setMethod("delivery")} name="method"/>
             Entrega no endereço cadastrado
@@ -170,11 +221,24 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
             Retirada na Provisio
           </label>
           {method==="pickup"&&<p className="text-xs text-muted">
-            O endereço e horário da retirada serão confirmados pela distribuidora.
+            Retirada sujeita à unidade cadastrada no ADM. Consulte o endereço abaixo.
           </p>}
         </fieldset>}
+        <div className="mt-5">
+          <BuyerFreightCalculator buyerOrgId={buyerOrgId}
+            postalCode={cep} onPostalCodeChange={handlePostal}
+            onQuote={handleFreight} auto={mode==="checkout"&&!!savedContact}/>
+        </div>
+        {mode==="checkout"&&!savedContact&&
+          <p className="mt-3 text-xs font-semibold text-muted">
+            Preencha e salve os dados do destinatário para prosseguir.
+          </p>}
+        {mode==="checkout"&&method==="delivery"&&freight?.available&&freight.quote&&
+          <p className="mt-3 text-xs font-semibold text-forest">
+            Entrega estimada: {freight.quote.minBusinessDays}–{freight.quote.maxBusinessDays} dias úteis.
+          </p>}}
         {error&&<p role="alert" className="mt-4 rounded-xl bg-sand p-3 text-sm font-semibold text-wine">{error}</p>}
-        {mode==="checkout"?<button type="button" disabled={!validation?.ready||loading||submitting}
+        {mode==="checkout"?<button type="button" disabled={!validation?.ready||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
           {submitting?"Registrando solicitação...":"Solicitar cotação"}
@@ -186,6 +250,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
         <p className="mt-4 text-xs leading-relaxed text-muted">
           Os valores apresentados são estimativas. A cotação será registrada na sua conta
           e os preços finais dependerão das propostas recebidas.
+          O frete informado usa tarifas configuradas pela administração e o prazo é estimado.
           Nenhum pagamento é realizado nesta etapa.
         </p>
       </aside>
