@@ -42,6 +42,12 @@ select test.assert_count((select count(*) from public.quote_requests
  where basket_id in (select id from public.quote_baskets
  where request_key='90000000-0000-4000-8000-000000000090')),1,
  'basket should attach exactly one quote');
+-- Capture the quote id while acting as buyer. Suppliers intentionally cannot
+-- SELECT the buyer's basket row, but can read their own quote by its id.
+select set_config('test.basket_quote_id',(
+ select id::text from public.quote_requests where basket_id in (
+ select id from public.quote_baskets where request_key='90000000-0000-4000-8000-000000000090')
+ limit 1),true);
 do $conflict$
 declare blocked boolean:=false;
 begin
@@ -72,23 +78,12 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000011"}',true);
-do $supplier_diag$
-declare uid uuid; cap boolean; sess boolean; cnt integer;
-begin
-  uid := current_setting('request.jwt.claim.sub',true)::uuid;
-  cap := marketplace_private.has_active_capability(
-    '10000000-0000-4000-8000-000000000001','SUPPLIER');
-  sess := marketplace_private.has_live_auth_session();
-  select count(*) into cnt from public.quote_requests;
-  raise notice 'BASKET LOCAL supplier uid=%,cap=%,session=%,visible=%',uid,cap,sess,cnt;
-end $supplier_diag$;
+
 select test.assert_count((select count(*) from public.quote_requests
-  where basket_id in (select id from public.quote_baskets
-    where request_key='90000000-0000-4000-8000-000000000090')),1,
-  'supplier A must read only the matching buyer quote');
+ where id=current_setting('test.basket_quote_id')::uuid),1,
+ 'supplier A must read its own quote without viewing buyer-only basket metadata');
 select public.marketplace_propose_quote(
- (select id from public.quote_requests where basket_id in (
-   select id from public.quote_baskets where request_key='90000000-0000-4000-8000-000000000090')),
+ current_setting('test.basket_quote_id')::uuid,
  2500,now()+interval '7 days');
 
 reset role;
