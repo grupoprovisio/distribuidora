@@ -96,6 +96,26 @@ test("Checkout B2B e cesta mantêm RLS, escopo QA e pagamento bloqueado", () => 
   }
 });
 
+test("Carrinho exibe itens indisponíveis e preços parciais sem liberar transações",()=>{
+  const api=file("app/api/marketplace/baskets/route.ts");
+  const cart=file("components/buyer-basket-checkout.tsx");
+  const store=file("lib/marketplace/buyer-basket-store.ts");
+  const catalog=file("lib/marketplace/buyer-catalog.ts");
+  const pricing=file("lib/marketplace/basket-validation.ts");
+  assert.match(api,/if\(body\.action==="submit"\)/);
+  assert.match(api,/if\(body\.action==="validate"\)/);
+  assert.match(api,/quoteEnabled/);
+  assert.match(pricing,/sameRealm/);
+  assert.match(pricing,/Produto indisponível/);
+  assert.match(store,/productName/);
+  assert.doesNotMatch(store,/unitPriceMinor|subtotalMinor/);
+  assert.match(cart,/visibleLines/);
+  assert.match(cart,/Remover itens indisponíveis/);
+  assert.match(cart,/Total estimado \(produtos \+ frete\)/);
+  assert.match(cart,/lines:selected/);
+  assert.match(catalog,/qa_only/);
+});
+
 test("Frete automático SP respeita ADM, CEP específico e escolha de retirada",()=>{
   const migration=file("db/migrations/0031_provisio_shipping_state_rates.sql");
   const api=file("app/api/marketplace/frete/route.ts");
