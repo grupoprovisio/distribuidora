@@ -251,20 +251,24 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     expect((await clients.buyerA.from('offers').select('base_price_minor').eq('id',A.offerId)).data).toEqual([{base_price_minor:1450}]);
   });
 
-  test('09 - comprador envia cotação pela tela e fornecedor correto recebe',async()=>{
-    const page=pages.buyerA;await page.goto('/app/comprador/catalogo');
-    await page.locator(`a[href*="oferta=${A.offerId}"]`).first().click();
-    await expect(page).toHaveURL(new RegExp('oferta='+A.offerId));
+  test('09 - comprador envia cotação individual pela tela e fornecedor correto recebe',async()=>{
+    // The legacy individual RFQ flow remains testable alongside the new
+    // payment-gated grouped basket, covered by qa-scoped-transactions test 04.
+    const page=pages.buyerA;
+    await page.goto('/app/comprador/cotacoes?oferta='+encodeURIComponent(A.offerId)+'&regiao=BR-SP');
     await page.getByLabel('Quantidade',{exact:true}).fill('10');
     await page.getByLabel('Observações (opcional)',{exact:true}).fill('TESTE E2E FLUXO PRINCIPAL');
-    const created=page.waitForResponse(r=>r.url().endsWith('/api/marketplace/transactions')&&r.request().method()==='POST');
+    const created=page.waitForResponse(r=>r.url().endsWith('/api/marketplace/transactions')
+      && r.request().method()==='POST');
     await page.getByRole('button',{name:'Solicitar cotação',exact:true}).click();
     const result=await created;const feedback=await result.json();
     expect(result.request().postDataJSON()).toMatchObject({quantity:10,notes:'TESTE E2E FLUXO PRINCIPAL'});
     expect({status:result.status(),...feedback}).toMatchObject({status:201,ok:true});
     await expect.poll(()=>rows("select id from public.quote_requests where notes='TESTE E2E FLUXO PRINCIPAL'").length).toBe(1);
     mainQuote=rows("select * from public.quote_requests where notes='TESTE E2E FLUXO PRINCIPAL'")[0];
-    expect(mainQuote.supplier_org_id).toBe(ORGS.supplierA);expect(mainQuote.quantity).toBe(10);
+    expect(mainQuote.supplier_org_id).toBe(ORGS.supplierA);
+    expect(mainQuote.quantity).toBe(10);
+    expect(mainQuote.basket_id).toBeNull();
     await pages.supplierA.goto('/app/fornecedor/cotacoes');
     await expect(pages.supplierA.getByText(`Cotação #${mainQuote.id.slice(0,8)}`,{exact:true})).toBeVisible();
     expect((await apiGet('supplierB','supplier_quotes')).items).toEqual([]);

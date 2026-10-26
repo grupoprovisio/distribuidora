@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
@@ -9,7 +9,7 @@ import { myMarketplaceOrganizations } from "@/lib/marketplace/my-organizations";
 import { buyerCatalog, type BuyerCatalogResult } from "@/lib/marketplace/buyer-catalog";
 import { BuyerCatalogBrowser } from "@/components/buyer-catalog-browser";
 import { getMarketplaceAccess } from "@/lib/marketplace/session";
-import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
+
 
 export const metadata:Metadata={title:"Catálogo empresarial · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
@@ -20,10 +20,11 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   const page=/^[0-9]{1,4}$/.test(params.pagina??"1")?Math.min(1000,Math.max(1,Number(params.pagina??"1"))):1;
   // Both helpers independently verify the authenticated user and enforce RLS.
   const summary=await myMarketplaceOrganizations("comprador");
-  const quotesEnabled=transactionEnabledForAccess(await getMarketplaceAccess());
+  const access=await getMarketplaceAccess();
   const catalog:BuyerCatalogResult=!summary.error && summary.organizations.length
     ? await buyerCatalog(await createClient(),region,page)
     : {items:[],error:summary.error,hasMore:false};
+  const buyerOrgId=summary.organizations[0]?.id??"";
   const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1);
   const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1);
   return <div className="min-h-dvh bg-canvas">
@@ -31,9 +32,8 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
       <Link href="/app/comprador" className="inline-flex min-h-11 items-center gap-2 text-sm font-extrabold text-forest hover:underline"><ArrowLeft size={16} aria-hidden/> Área do comprador</Link>
       <p className="mt-5 text-xs font-black uppercase tracking-wide text-terra">Acesso privado · Compras empresariais</p>
-      <h1 className="mt-2 text-3xl font-black text-forest-deep sm:text-4xl">Catálogo autorizado</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">Produtos, preços, embalagens e fornecedores reais serão exibidos somente depois de sua homologação. O catálogo não utiliza preços de terceiros ou comparação externa.</p>
-      <div className="mt-6 flex gap-3 rounded-2xl bg-lime-soft p-5 text-sm text-forest"><ShieldCheck size={20} className="shrink-0" aria-hidden/><span>A consulta respeita a autorização no Supabase e a região. Nenhum pedido, pagamento ou reserva é efetuado aqui.</span></div>
+      <h1 className="mt-2 text-3xl font-black text-forest-deep sm:text-4xl">Escolha seus produtos</h1>
+      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">Compare ofertas, ajuste as quantidades e coloque tudo na cesta. Solicite sua cotação quando terminar.</p>
       <section className="mt-6 overflow-hidden rounded-[2rem] border border-line bg-paper">
         <div className="border-b border-line p-6 sm:p-8">
           <form method="get" action="/app/comprador/catalogo" className="flex flex-wrap items-end gap-3">
@@ -51,7 +51,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
           <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
-        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} quotesEnabled={quotesEnabled}/>}
+        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId}/>}
         <nav aria-label="Paginação do catálogo" className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 text-sm font-bold text-forest">
           <span>Página {page}</span><div className="flex gap-2">
             {page>1 && <Link href={prevUrl} className="rounded-full bg-paper px-4 py-3 ring-1 ring-line">Anterior</Link>}
