@@ -56,7 +56,21 @@ export function AdminFreightSettings(){
    }catch{setError("Não foi possível carregar as regras de frete. Verifique a autenticação ADM com MFA.");}
    finally{setLoaded(true);}
  },[]);
- useEffect(()=>{void reload();},[reload]);
+ useEffect(()=>{
+   let active=true;
+   void fetch("/api/marketplace/admin-frete",{credentials:"same-origin",cache:"no-store"})
+     .then(async r=>{if(!r.ok)throw Error();return await r.json() as {ok:boolean;origin:OriginRecord|null;rates:RateRecord[]};})
+     .then(data=>{
+       if(!active)return;
+       if(!data.ok)throw Error();
+       setHasOrigin(!!data.origin);
+       if(data.origin)setOrigin(toDraft(data.origin));
+       setRates(data.rates);
+     })
+     .catch(()=>{if(active)setError("Não foi possível carregar as regras de frete. Verifique a sessão ADM.");})
+     .finally(()=>{if(active)setLoaded(true);});
+   return ()=>{active=false;};
+ },[]);
  async function send(payload:unknown){
    setBusy(true);setError("");setMessage("");
    try{
