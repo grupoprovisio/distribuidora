@@ -13,7 +13,7 @@ export type ValidatedBasketLine={
   tiers:BasketPriceTier[];valid:boolean;reason:string|null;
 };
 export type BasketValidation={ok:boolean;reason?:string;lines:ValidatedBasketLine[];
-  totalMinor:number;ready:boolean;region:string};
+  totalMinor:number;ready:boolean;region:string;quoteEnabled?:boolean};
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function validateBasketInput(lines:unknown):lines is BasketSelection[] {
   return Array.isArray(lines) && lines.length>0 && lines.length<=100 &&
