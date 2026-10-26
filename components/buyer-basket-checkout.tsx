@@ -298,8 +298,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
           </p>}
         {validation?.ready&&!validation.quoteEnabled&&
           <p role="status" className="mt-4 rounded-xl bg-canvas p-3 text-xs font-semibold text-muted">
-            Sua conta pode consultar os preços, mas não registrar cotações neste ambiente.
-            Para testar o envio, entre com a identidade independente do Comprador QA.
+            Você pode consultar os preços, mas esta conta não está habilitada
+            para enviar a cotação. Entre com uma conta de comprador autorizada.
           </p>}
         {error&&<p role="alert" className="mt-4 rounded-xl bg-sand p-3 text-sm font-semibold text-wine">{error}</p>}
         {mode==="checkout"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
