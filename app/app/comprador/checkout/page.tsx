@@ -10,7 +10,7 @@ export const metadata:Metadata={title:"Revisar cotação · Provisio",robots:{in
 export const dynamic="force-dynamic";
 export default async function BuyerCheckoutPage({
  searchParams,
-}:{searchParams:Promise<{regiao?:string}>}){
+}:{searchParams:Promise<{regiao?:string;recebimento?:string}>}){
   const params=await searchParams;
   const access=await requireMarketplacePortal("comprador");
   const summary=await myMarketplaceOrganizations("comprador");
@@ -22,7 +22,7 @@ export default async function BuyerCheckoutPage({
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
       <h1 className="mb-6 text-3xl font-black text-forest-deep sm:text-4xl">Revisar cotação</h1>
       {orgId&&!summary.error?
-        <BuyerBasketCheckout userId={access.userId} buyerOrgId={orgId} region={region} mode="checkout"/>:
+        <BuyerBasketCheckout userId={access.userId} buyerOrgId={orgId} region={region} mode="checkout" initialMethod={params.recebimento==="retirada"?"pickup":"delivery"}/>:
         <p role="alert" className="rounded-2xl bg-paper p-5 text-sm text-muted">
           Sua empresa compradora não está disponível nesta sessão.
         </p>}
