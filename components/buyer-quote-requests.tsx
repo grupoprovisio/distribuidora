@@ -4,7 +4,11 @@ import Link from "next/link";
 import { ArrowLeft, ClipboardList, PackageCheck, RefreshCw } from "lucide-react";
 
 type Basket={id:string;buyer_org_id:string;region_code:string;
- fulfillment_method:"delivery"|"pickup";payment_status:"unpaid"|"paid"|"refunded";created_at:string};
+ fulfillment_method:"delivery"|"pickup";payment_status:"unpaid"|"paid"|"refunded";created_at:string;
+ freight_minor:number|null;min_business_days:number|null;max_business_days:number|null;
+ recipient_snapshot:{fullName?:string;street?:string;number?:string;complement?:string;city?:string;state?:string;postalCode?:string}|null;
+ origin_snapshot:{label?:string;street?:string;number?:string;city?:string;state?:string}|null;
+};
 type Quote={id:string;basket_id:string;offer_id:string;productName:string;
  supplierName:string;quantity:number;status:string};
 type Proposal={id:string;quote_request_id:string;unit_price_minor:number;status:string;expires_at:string};
@@ -81,6 +85,23 @@ export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
             {quotes.length} {quotes.length===1?"produto":"produtos"}
           </span>
         </div>
+        <div className="border-b border-line bg-canvas px-5 py-3 text-xs text-muted">
+          <p>
+            {basket.fulfillment_method==="delivery"?
+              "Endereço: "+(basket.recipient_snapshot?.street??"Não informado")+
+              ", "+(basket.recipient_snapshot?.number??"")+" — "+
+              (basket.recipient_snapshot?.city??"")+"/"+(basket.recipient_snapshot?.state??"")+
+              " · CEP "+(basket.recipient_snapshot?.postalCode??""):
+              "Retirada: "+(basket.origin_snapshot?.label??"unidade Provisio")+
+              " — "+(basket.origin_snapshot?.street??"")+
+              ", "+(basket.origin_snapshot?.number??"")}
+          </p>
+          <p className="mt-1">
+            Frete: {basket.freight_minor!==null?brl(basket.freight_minor):"A confirmar"}
+            {basket.min_business_days!==null&&basket.max_business_days!==null?
+              " · "+basket.min_business_days+"–"+basket.max_business_days+" dias úteis estimados":""}
+          </p>
+        </div>
         <ul className="divide-y divide-line">
           {quotes.map(q=>{
             const p=(summary?.proposals??[]).find(p=>p.quote_request_id===q.id&&p.status==="proposed");
@@ -104,8 +125,12 @@ export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
         </ul>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-canvas p-5">
           <div>
-            <p className="text-xs font-medium text-muted">Total das propostas recebidas</p>
+            <p className="text-xs font-medium text-muted">Total das propostas recebidas (itens)</p>
             <p className="text-xl font-black text-forest-deep">{brl(value)}</p>
+            <p className="mt-1 text-xs font-semibold text-forest">
+              Com frete registrado: {basket.freight_minor!==null?brl(value+basket.freight_minor):
+                "A calcular"}
+            </p>
           </div>
           <p className="inline-flex items-center gap-2 text-xs font-bold text-forest">
             <PackageCheck size={16} aria-hidden/>

@@ -13,7 +13,7 @@ export default async function AdminBuyerBasketsPage(){
   // /admin/layout requires verified AAL2. Supabase RLS limits to QA baskets.
   const db=await createClient();
   const baskets=await db.from("quote_baskets")
-    .select("id,buyer_org_id,region_code,fulfillment_method,payment_status,created_at")
+    .select("id,buyer_org_id,region_code,fulfillment_method,payment_status,created_at,recipient_snapshot,origin_snapshot,freight_minor,min_business_days,max_business_days")
     .order("created_at",{ascending:false}).limit(60);
   const ids=(baskets.data??[]).map(b=>b.id);
   const lines=ids.length?await db.from("quote_requests")
@@ -87,6 +87,29 @@ export default async function AdminBuyerBasketsPage(){
                 </span>
               </div>
             </div>
+            {(()=>{
+              const c=b.recipient_snapshot as {fullName?:string;email?:string;phone?:string;street?:string;number?:string;
+                complement?:string;neighborhood?:string;city?:string;state?:string;postalCode?:string;reference?:string}|null;
+              const o=b.origin_snapshot as {label?:string;street?:string;number?:string;city?:string;state?:string}|null;
+              return <div className="mt-4 grid gap-3 rounded-xl bg-canvas p-4 text-xs leading-relaxed text-forest-deep sm:grid-cols-2">
+                <div>
+                  <p className="font-black">Destinatário</p>
+                  <p className="mt-1">{c?.fullName??"Cadastro antigo sem destinatário"}</p>
+                  {c?.email&&<p>E-mail: {c.email}</p>}
+                  {c?.phone&&<p>Telefone: {c.phone}</p>}
+                  {c?.street&&<p>{c.street}, {c.number}{c.complement?", "+c.complement:""} — {c.neighborhood}, {c.city}/{c.state} · CEP {c.postalCode}</p>}
+                  {c?.reference&&<p>Referência: {c.reference}</p>}
+                </div>
+                <div>
+                  <p className="font-black">Modalidade e frete</p>
+                  <p className="mt-1">{b.fulfillment_method==="pickup"?"Retirada no local":"Entrega no endereço cadastrado"}</p>
+                  {o&&<p>Origem: {o.label}, {o.street}, {o.number} — {o.city}/{o.state}</p>}
+                  <p>Frete: {b.freight_minor!==null?money.format(b.freight_minor/100):"Não calculado"}</p>
+                  {b.min_business_days!==null&&b.max_business_days!==null&&
+                    <p>Prazo estimado: {b.min_business_days}–{b.max_business_days} dias úteis</p>}
+                </div>
+              </div>;
+            })()}
             <ul className="mt-4 space-y-2 border-t border-line pt-4">
               {items.map(q=>{
                 const name=productById.get(skuById.get(offerById.get(q.offer_id)??"")??"")

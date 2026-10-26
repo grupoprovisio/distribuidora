@@ -71,6 +71,13 @@ export type Database = {
           region_code: string
           fulfillment_method: "delivery" | "pickup"
           item_fingerprint: string
+          recipient_snapshot: Json | null
+          origin_snapshot: Json | null
+          delivery_postal_code: string | null
+          freight_rate_id: string | null
+          freight_minor: number | null
+          min_business_days: number | null
+          max_business_days: number | null
           payment_status: "unpaid" | "paid" | "refunded"
           created_at: string
         }
@@ -82,6 +89,13 @@ export type Database = {
           region_code: string
           fulfillment_method: "delivery" | "pickup"
           item_fingerprint: string
+          recipient_snapshot?: Json | null
+          origin_snapshot?: Json | null
+          delivery_postal_code?: string | null
+          freight_rate_id?: string | null
+          freight_minor?: number | null
+          min_business_days?: number | null
+          max_business_days?: number | null
           payment_status?: "unpaid" | "paid" | "refunded"
           created_at?: string
         }
@@ -93,6 +107,13 @@ export type Database = {
           region_code?: string
           fulfillment_method?: "delivery" | "pickup"
           item_fingerprint?: string
+          recipient_snapshot?: Json | null
+          origin_snapshot?: Json | null
+          delivery_postal_code?: string | null
+          freight_rate_id?: string | null
+          freight_minor?: number | null
+          min_business_days?: number | null
+          max_business_days?: number | null
           payment_status?: "unpaid" | "paid" | "refunded"
           created_at?: string
         }
@@ -269,6 +290,66 @@ export type Database = {
           product_name?:string; category_id?:string|null; region_code?:string;
           base_unit?:string; pack_quantity?:number; pack_unit?:string; base_price_minor?:number;
           available_quantity?:number; status?:string; created_at?:string
+        }
+        Relationships: []
+      }
+      buyer_contact_profiles: {
+        Row: {
+          user_id:string; buyer_org_id:string; full_name:string; contact_email:string;
+          phone:string; postal_code:string; street:string; street_number:string;
+          complement:string; neighborhood:string; city:string; state_code:string;
+          reference:string; updated_at:string
+        }
+        Insert: {
+          user_id:string; buyer_org_id:string; full_name:string; contact_email:string;
+          phone:string; postal_code:string; street:string; street_number:string;
+          complement?:string; neighborhood:string; city:string; state_code:string;
+          reference?:string; updated_at?:string
+        }
+        Update: {
+          user_id?:string; buyer_org_id?:string; full_name?:string; contact_email?:string;
+          phone?:string; postal_code?:string; street?:string; street_number?:string;
+          complement?:string; neighborhood?:string; city?:string; state_code?:string;
+          reference?:string; updated_at?:string
+        }
+        Relationships: []
+      }
+      provisio_shipping_origin: {
+        Row: {
+          id:number; label:string; postal_code:string; street:string; street_number:string;
+          complement:string; neighborhood:string; city:string; state_code:string;
+          pickup_instructions:string; pickup_enabled:boolean; active:boolean;
+          updated_at:string
+        }
+        Insert: {
+          id?:number; label:string; postal_code:string; street:string; street_number:string;
+          complement?:string; neighborhood:string; city:string; state_code:string;
+          pickup_instructions?:string; pickup_enabled?:boolean; active?:boolean;
+          updated_at?:string
+        }
+        Update: {
+          id?:number; label?:string; postal_code?:string; street?:string; street_number?:string;
+          complement?:string; neighborhood?:string; city?:string; state_code?:string;
+          pickup_instructions?:string; pickup_enabled?:boolean; active?:boolean;
+          updated_at?:string
+        }
+        Relationships: []
+      }
+      provisio_shipping_rates: {
+        Row: {
+          id:string; origin_id:number; label:string; postal_start:number; postal_end:number;
+          destination_state:string; price_minor:number; min_business_days:number;
+          max_business_days:number; active:boolean; created_at:string; updated_at:string
+        }
+        Insert: {
+          id?:string; origin_id?:number; label:string; postal_start:number; postal_end:number;
+          destination_state:string; price_minor:number; min_business_days:number;
+          max_business_days:number; active?:boolean; created_at?:string; updated_at?:string
+        }
+        Update: {
+          id?:string; origin_id?:number; label?:string; postal_start?:number; postal_end?:number;
+          destination_state?:string; price_minor?:number; min_business_days?:number;
+          max_business_days?:number; active?:boolean; created_at?:string; updated_at?:string
         }
         Relationships: []
       }
