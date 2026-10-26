@@ -75,7 +75,7 @@ select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-000
 do $supplier_diag$
 declare uid uuid; cap boolean; sess boolean; cnt integer;
 begin
-  uid := (select auth.uid());
+  uid := current_setting('request.jwt.claim.sub',true)::uuid;
   cap := marketplace_private.has_active_capability(
     '10000000-0000-4000-8000-000000000001','SUPPLIER');
   sess := marketplace_private.has_live_auth_session();
