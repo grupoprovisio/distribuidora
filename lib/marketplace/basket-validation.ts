@@ -47,6 +47,7 @@ export async function validateBuyerBasket(
   if(buyer.error||allowed.error)return empty("catalog_unavailable");
   if(!buyer.data||buyer.data.kind!=="BUYER"||buyer.data.status!=="approved"||!allowed.data)
     return empty("region_not_authorized");
+  const buyerRealm=buyer.data.qa_only;
   const ids=selected.map(l=>l.offerId);
   const now=new Date().toISOString();
   const offers=await db.from("offers")
@@ -108,7 +109,7 @@ export async function validateBuyerBasket(
     const product=sku?productMap.get(sku.product_id):undefined;
     const inv=offer?stockMap.get(offer.supplier_product_id+":"+offer.supplier_org_id):undefined;
     const available=inv?Math.max(0,Number(inv.available_quantity)-Number(inv.reserved_quantity)):0;
-    const sameRealm=!!seller && seller.qa_only===buyer.data.qa_only;
+    const sameRealm=!!seller && seller.qa_only===buyerRealm;
     const priceTiers:BasketPriceTier[]=(tiers.data??[])
       .filter(t=>t.offer_id===offerId && Number.isSafeInteger(t.min_quantity)
         && Number.isSafeInteger(t.unit_price_minor)&&t.unit_price_minor>0)
