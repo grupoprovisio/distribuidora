@@ -103,7 +103,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
     finally{setSubmitting(false);}
   }
   const productsTotal=validation?.totalMinor??0;
-  const shippingMinor=method==="pickup"&&mode==="checkout"?0:
+  const shippingMinor=method==="pickup"&&mode==="checkout"?(freight?.pickupAvailable?0:null):
     (freight?.available&&freight.quote&&freight.cep===normalizeCep(cep)?freight.quote.freightMinor:null);
   const total=productsTotal+(shippingMinor??0);
   const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
