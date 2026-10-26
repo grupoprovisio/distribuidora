@@ -65,10 +65,35 @@ test("Portais privados refletem permissao QA sem habilitar compras comerciais", 
     assert.match(source,/transactionAccessMode\(await getMarketplaceAccess\(\)\)/);
     assert.match(source,/transactionMode=\{mode\}/);
   }
-  assert.match(portal,/transactionMode === "qa"/);
-  assert.match(portal,/Homologação QA habilitada/);
-  assert.match(portal,/Teste QA autorizado/);
-  assert.match(portal,/faturamento fiscal e pagamentos permanecem desativados/);
+  assert.doesNotMatch(portal,/Homologação QA habilitada|Teste QA autorizado/);
+  assert.match(portal,/Minha cesta/);
+  assert.match(portal,/Minhas solicitações/);
+  assert.match(file("lib/marketplace/qa-transaction-gate.ts"),/MARKETPLACE_TRANSACTIONS_ENABLED/);
+});
+
+test("Checkout B2B e cesta mantêm RLS, escopo QA e pagamento bloqueado", () => {
+  const card=file("components/buyer-catalog-browser.tsx");
+  const cart=file("components/buyer-basket-checkout.tsx");
+  const api=file("app/api/marketplace/baskets/route.ts");
+  const migration=file("db/migrations/0029_marketplace_quote_baskets_payment_gate.sql");
+  const validation=file("lib/marketplace/basket-validation.ts");
+  assert.match(card,/grid-cols-2/);
+  assert.match(card,/Minha cesta/);
+  assert.match(cart,/Solicitar cotação/);
+  assert.match(cart,/buyerOrgId/);
+  assert.match(api,/validateBuyerBasket/);
+  assert.match(api,/marketplace_submit_quote_basket/);
+  assert.match(api,/transactionAccessMode\(access\)!=="qa"/);
+  assert.match(validation,/inventory_positions/);
+  assert.match(validation,/offer_price_tiers/);
+  assert.match(migration,/create table public.quote_baskets/);
+  assert.match(migration,/create function marketplace_private.create_quote_basket/);
+  assert.match(migration,/basket_confirm_requires_payment/);
+  assert.match(migration,/payment_status/);
+  assert.doesNotMatch(migration,/grant (insert|update|delete) on public.quote_baskets/i);
+  for (const slug of ["cesta","checkout","solicitacoes"]) {
+    assert.ok(existsSync(path.join(root,"app/app/comprador/"+slug+"/page.tsx")));
+  }
 });
 
 test("Painel QA em hospedagem não confunde Free, SQL persistido e HTTP", () => {
