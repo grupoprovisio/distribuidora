@@ -48,7 +48,7 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "catalogo", name: "Produtos, fotos, categorias e estoque", weight: 16,
     code: 4, tests: 3, production: 1, priority: "P0",
-    evidence: "Migrações 0016–0026 hospedadas, 19 tabelas públicas com RLS; existem 2 produtos, 2 ofertas e 1 imagem no Storage privado. Upload WebP autenticado e aprovação completa via navegador ainda não foram comprovados.",
+    evidence: "Migrações de catálogo 0016–0026 e proteção 0027 hospedadas; 19 tabelas públicas com RLS, 2 produtos, 2 ofertas, 1 imagem privada; 24/24 E2E locais, com upload WebP. Upload autenticado hospedado segue pendente.",
     next: "Validar o upload WebP pelo navegador autenticado, conferir Storage privado, preços progressivos e aprovar produto/oferta com ADM + MFA.",
     href: "/admin/marketplace/prontidao",
   },
@@ -68,23 +68,23 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   },
   {
     id: "cotacoes", name: "Cotações e propostas (RFQ)", weight: 10,
-    code: 3, tests: 4, production: 0, priority: "P1",
-    evidence: "Migração 0022; 21 testes E2E padrão e 3 QA locais, incluindo propostas com sessões independentes, rejeição do fornecedor errado e idempotência; SQL hospedado revertido.",
-    next: "Com flag global desativada e QA restrita, executar cotação e proposta em produção com JWTs reais, validar auditoria persistida e limpar registros descartáveis.",
+    code: 3, tests: 4, production: 1, priority: "P1",
+    evidence: "Migração 0022; 24/24 E2E locais aprovados; 1 cotação e 1 proposta QA persistidas no PostgreSQL hospedado, com isolamento do fornecedor B e idempotência por contexto SQL. Ainda sem comprovação HTTP hospedada.",
+    next: "Validar a mesma cotação/proposta pela API HTTP hospedada com sessão assinada de comprador e fornecedor; não confundir o teste SQL persistido com autenticação HTTP.",
     href: "/app/comprador/cotacoes",
   },
   {
     id: "pedidos", name: "Pedidos e reservas", weight: 10,
-    code: 3, tests: 4, production: 0, priority: "P1",
-    evidence: "Migração 0023; testes locais do modo QA provaram reserva única após confirmação repetida, bloqueio de pedido de outro fornecedor e estoque 50/0→50/3; SQL hospedado revertido.",
-    next: "Validar checkout HTTP hospedado com BUYER exclusivo, fornecedor correto, idempotência, cancelamento e auditoria, sem liberar a chave global comercial.",
+    code: 3, tests: 4, production: 1, priority: "P1",
+    evidence: "Migração 0023; 24/24 E2E locais. 1 pedido QA confirmado e persistido no Supabase hospedado, com reserva única, bloqueio de fornecedor errado, estoque QA 20→17 após expedição e auditoria; teste direto SQL, não HTTP.",
+    next: "Comprovar checkout e reserva por HTTP hospedado nas sessões reais e repetir cancelamento/idempotência; flag comercial permanece desligada.",
     href: "/app/comprador/pedidos",
   },
   {
     id: "logistica", name: "Entrega e acompanhamento logístico", weight: 4,
-    code: 2, tests: 3, production: 0, priority: "P2",
-    evidence: "Migração 0024, 3/3 testes de modo QA local e E2E geral: reserva, separação, expedição, baixa para 47 e entrega manual, com 4 eventos de auditoria; SQL hospedado revertido.",
-    next: "Repetir separação, expedição e entrega em navegador hospedado; frete contratado e prova de entrega real continuam fora do QA.",
+    code: 3, tests: 3, production: 1, priority: "P2",
+    evidence: "Migração 0024; etapas de separação, Faturamento interno, expedição e entrega manual implementadas. 24/24 E2E locais e 1 entrega QA registrada no Supabase hospedado com 4 eventos logísticos; sem transportadora/NF-e.",
+    next: "Comprovar execução logística pelo navegador/HTTP hospedado; frete contratado, confirmação externa de entrega e NF-e são escopo comercial posterior.",
     href: "/como-funciona",
   },
   {
@@ -97,8 +97,8 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "qualidade", name: "Segurança, CI e publicação", weight: 4,
     code: 3, tests: 3, production: 2, priority: "P0",
-    evidence: "PR #51 integrado à main, migração 0026 aplicada ao banco hospedado; 21 testes gerais e 3 QA locais, SQL reversível e HTTP assinado de Fornecedor A. 19/19 tabelas públicas com RLS.",
-    next: "Concluir E2E HTTP hospedado de comprador, fornecedores A/B e ADM MFA, WebP no Storage e proteção de senhas vazadas (disponível no Supabase Pro).",
+    evidence: "PR #52 integrada, migrações 0026/0027 hospedadas, 24/24 E2E locais, 19/19 tabelas públicas com RLS e isolamento QA/comercial comprovado; 1 operação QA persistida por SQL.",
+    next: "Concluir HTTP hospedado com identidades independentes e WebP real; no plano Free, proteção de senhas vazadas segue como risco registrado e melhoria futura, não bloqueio de QA.",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
