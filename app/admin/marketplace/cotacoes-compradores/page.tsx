@@ -17,12 +17,37 @@ export default async function AdminBuyerBasketsPage(){
     .order("created_at",{ascending:false}).limit(60);
   const ids=(baskets.data??[]).map(b=>b.id);
   const lines=ids.length?await db.from("quote_requests")
-    .select("id,basket_id,supplier_org_id,quantity,status").in("basket_id",ids).limit(200):null;
+    .select("id,basket_id,offer_id,supplier_org_id,quantity,status").in("basket_id",ids).limit(200):null;
   const buyerIds=[...new Set((baskets.data??[]).map(b=>b.buyer_org_id))];
   const buyers=buyerIds.length?await db.from("organizations")
     .select("id,trade_name,legal_name").in("id",buyerIds):null;
-  const error=!!(baskets.error||lines?.error||buyers?.error);
+  const quoteRows=lines?.data??[];
+  const offerIds=[...new Set(quoteRows.map(q=>q.offer_id))];
+  const supplierIds=[...new Set(quoteRows.map(q=>q.supplier_org_id))];
+  const quoteIds=quoteRows.map(q=>q.id);
+  const [offers,suppliers,proposals]=await Promise.all([
+    offerIds.length?db.from("offers").select("id,supplier_product_id").in("id",offerIds):null,
+    supplierIds.length?db.from("organizations")
+      .select("id,trade_name,legal_name").in("id",supplierIds):null,
+    quoteIds.length?db.from("quote_proposals")
+      .select("quote_request_id,unit_price_minor,status").in("quote_request_id",quoteIds):null,
+  ]);
+  const skuIds=[...new Set((offers?.data??[]).map(o=>o.supplier_product_id))];
+  const skus=skuIds.length?await db.from("supplier_products")
+    .select("id,product_id").in("id",skuIds):null;
+  const productIds=[...new Set((skus?.data??[]).map(s=>s.product_id))];
+  const products=productIds.length?await db.from("products")
+    .select("id,name").in("id",productIds):null;
+  const error=!!(baskets.error||lines?.error||buyers?.error||offers?.error||
+    suppliers?.error||proposals?.error||skus?.error||products?.error);
   const orgById=new Map((buyers?.data??[]).map(o=>[o.id,o.trade_name||o.legal_name]));
+  const supplierById=new Map((suppliers?.data??[]).map(o=>[o.id,o.trade_name||o.legal_name]));
+  const productById=new Map((products?.data??[]).map(o=>[o.id,o.name]));
+  const skuById=new Map((skus?.data??[]).map(o=>[o.id,o.product_id]));
+  const offerById=new Map((offers?.data??[]).map(o=>[o.id,o.supplier_product_id]));
+  const proposalByQuote=new Map((proposals?.data??[]).filter(p=>p.status==="proposed")
+    .map(p=>[p.quote_request_id,p.unit_price_minor]));
+  const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="wine" title="Cotações recebidas" backHref="/admin/marketplace" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
@@ -62,12 +87,27 @@ export default async function AdminBuyerBasketsPage(){
                 </span>
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
-              {items.map(q=><span key={q.id}
-                className="rounded-xl bg-canvas px-3 py-2 text-xs font-semibold text-muted">
-                {q.quantity} un · {q.status==="converted"?"Pedido gerado":"Cotação em andamento"}
-              </span>)}
-            </div>
+            <ul className="mt-4 space-y-2 border-t border-line pt-4">
+              {items.map(q=>{
+                const name=productById.get(skuById.get(offerById.get(q.offer_id)??"")??"")
+                  ??"Produto indisponível";
+                const proposal=proposalByQuote.get(q.id);
+                return <li key={q.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-canvas px-4 py-3">
+                  <div>
+                    <p className="text-sm font-extrabold text-forest-deep">{name}</p>
+                    <p className="mt-1 text-xs font-medium text-muted">
+                      {supplierById.get(q.supplier_org_id)??"Fornecedor"} · {q.quantity} un.
+                    </p>
+                    <p className="mt-1 text-xs text-muted">
+                      {q.status==="converted"?"Pedido gerado":"Cotação aguardando análise"}
+                    </p>
+                  </div>
+                  <span className="text-sm font-black tabular-nums text-forest">
+                    {proposal!==undefined?money.format(proposal*q.quantity/100):"Proposta pendente"}
+                  </span>
+                </li>;
+              })}
+            </ul>
           </article>;
         })}
       </div>}
