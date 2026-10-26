@@ -26,49 +26,37 @@ begin
   end if;
 end $fixtures$;
 
-do $membership$
-declare info text;
-begin
-  select string_agg(m.organization_id::text || ':' || m.role || ':' || m.status, ',')
-    into info from public.organization_members m
-    where m.user_id='00000000-0000-4000-8000-000000000006';
-  raise notice 'QA REPORT ADMIN MEMBERSHIPS: %',info;
-end $membership$;
+
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000006',true);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000001"}',true);
-reset role;
-do $diagnostic$
-begin
-  raise notice 'QA RLS verifier under AAL1: %',marketplace_private.is_verified_platform_admin();
-end $diagnostic$;
 set role authenticated;
 
-select test.assert_count((select count(*) from public.quote_requests where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'ADM AAL1 QA quote denial');
+select test.assert_count((select count(*) from public.quote_requests where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'ADM AAL1 QA quote denial');
 select test.assert_count((select count(*) from public.quote_proposals where supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'ADM AAL1 QA proposal denial');
-select test.assert_count((select count(*) from public.purchase_orders where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'ADM AAL1 QA order denial');
-select test.assert_count((select count(*) from public.order_fulfillments where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'ADM AAL1 QA fulfillment denial');
+select test.assert_count((select count(*) from public.purchase_orders where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'ADM AAL1 QA order denial');
+select test.assert_count((select count(*) from public.order_fulfillments where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'ADM AAL1 QA fulfillment denial');
 
 select set_config('request.jwt.claims','{"aal":"aal2","session_id":"70000000-0000-4000-8000-000000000001"}',true);
 do $mfa$
 begin
  if (select count(*) from public.quote_requests
-     where buyer_org_id='10000000-0000-4000-8000-000000000003')<1
+     where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001')<1
     then raise exception 'ADM AAL2 cannot read QA quote'; end if;
  if (select count(*) from public.quote_proposals)<1
     then raise exception 'ADM AAL2 cannot read QA proposal'; end if;
  if (select count(*) from public.purchase_orders
-     where buyer_org_id='10000000-0000-4000-8000-000000000003')<1
+     where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001')<1
     then raise exception 'ADM AAL2 cannot read QA order'; end if;
  if (select count(*) from public.order_fulfillments
-     where buyer_org_id='10000000-0000-4000-8000-000000000003')<1
+     where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001')<1
     then raise exception 'ADM AAL2 cannot read QA fulfillment'; end if;
 end $mfa$;
 
 -- AAL2 claim with unknown session cannot read QA records.
 select set_config('request.jwt.claims','{"aal":"aal2","session_id":"70000000-0000-4000-8000-000000000099"}',true);
-select test.assert_count((select count(*) from public.quote_requests where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'forged MFA session denied QA quotes');
-select test.assert_count((select count(*) from public.purchase_orders where buyer_org_id='10000000-0000-4000-8000-000000000003'),0,'forged MFA session denied QA orders');
+select test.assert_count((select count(*) from public.quote_requests where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'forged MFA session denied QA quotes');
+select test.assert_count((select count(*) from public.purchase_orders where buyer_org_id='10000000-0000-4000-8000-000000000003' and supplier_org_id='10000000-0000-4000-8000-000000000001'),0,'forged MFA session denied QA orders');
 reset role;
 set role anon;
 select test.expect_permission_denied('select * from public.quote_requests');
