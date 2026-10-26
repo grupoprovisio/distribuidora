@@ -70,13 +70,38 @@ async function readHostedQaSummary():Promise<QaIdentitySnapshot|null> {
   });
 }
 
+type QaPersistenceSnapshot={quotes:number;proposals:number;orders:number;delivered:number};
+const qaPersistenceSteps=[
+  {key:"quotes",label:"Cotações QA gravadas"},
+  {key:"proposals",label:"Propostas QA gravadas"},
+  {key:"orders",label:"Pedidos QA gravados"},
+  {key:"delivered",label:"Entregas QA registradas"},
+] as const;
+async function readHostedQaTransactions():Promise<QaPersistenceSnapshot|null>{
+  const scope=readQaTransactionScope(process.env);
+  if(!scope || process.env.MARKETPLACE_TRANSACTIONS_ENABLED==="true") return null;
+  const db=await createClient();
+  // Only configured QA orgs. Migration 0028 requires PLATFORM_ADMIN with live MFA AAL2.
+  const [quotes,proposals,orders,delivered]=await Promise.all([
+    db.from("quote_requests").select("id",{head:true,count:"exact"}).eq("buyer_org_id",scope.buyer),
+    db.from("quote_proposals").select("id",{head:true,count:"exact"}).in("supplier_org_id",[...scope.suppliers]),
+    db.from("purchase_orders").select("id",{head:true,count:"exact"}).eq("buyer_org_id",scope.buyer),
+    db.from("order_fulfillments").select("id",{head:true,count:"exact"})
+      .eq("buyer_org_id",scope.buyer).eq("status","delivered"),
+  ]);
+  if([quotes,proposals,orders,delivered].some(item=>item.error || item.count===null))return null;
+  return {quotes:quotes.count??0,proposals:proposals.count??0,
+    orders:orders.count??0,delivered:delivered.count??0};
+}
+
 const priorityLabels={P0:"Bloqueio imediato",P1:"Essencial para testar",P2:"Operação ampliada",P3:"Comercialização completa"} as const;
 
 export default async function ProgressPage(){
-  const [live,qa]=await Promise.all([readLiveSnapshot(),readHostedQaSummary()]);
+  const [live,qa,qaPersistence]=await Promise.all([readLiveSnapshot(),readHostedQaSummary(),readHostedQaTransactions()]);
   const transactionalEnabled=process.env.MARKETPLACE_TRANSACTIONS_ENABLED==="true";
   const qaTransactionEnabled=!transactionalEnabled && readQaTransactionScope(process.env)!==null;
   const blockers=PROJECT_AREAS.filter(area=>area.priority==="P0"||area.priority==="P1");
+  const persistedSteps=qaPersistence?qaPersistenceSteps.filter(step=>qaPersistence[step.key]>0).length:0;
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="wine" title="Progresso do projeto" backHref="/admin/marketplace" showListButton={false}/>
     <main className={WRAP+" py-8 sm:py-12"}>
@@ -187,6 +212,50 @@ export default async function ProgressPage(){
           Homologação isolada: <strong>{qaTransactionEnabled?"ativa somente para as três organizações QA autorizadas":"desativada"}</strong>.
           Esta seção comprova somente pré-requisitos de identidade, não login de cada conta,
           teste adversarial RLS, upload, cotação ou pedido; nada aqui altera o avanço geral.
+        </p>
+      </section>
+
+      <section aria-labelledby="qa-persistence-title" className="mt-8 rounded-3xl border border-line bg-paper p-5 sm:p-7">
+        <h2 id="qa-persistence-title" className="text-xl font-black text-forest-deep">Evidências QA persistidas no Supabase</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
+          Leitura ao vivo das organizações autorizadas de homologação com RLS e MFA administrativo.
+          Não representa faturamento, pagamento ou operação com clientes comerciais.
+        </p>
+        {!qaPersistence?<p role="alert" className="mt-5 text-sm text-muted">
+          Evidência indisponível: confirme a configuração QA, a sessão ADM com MFA e as permissões de leitura.
+          Nenhum percentual foi presumido.
+        </p>:<>
+          <div className="mt-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-3xl font-black tabular-nums text-forest">{Math.round(persistedSteps*100/qaPersistenceSteps.length)}%</p>
+              <p className="mt-1 text-xs text-muted">{persistedSteps} de {qaPersistenceSteps.length} tipos de registro presentes</p>
+            </div>
+            <p className="text-xs font-semibold text-muted">Portão SQL QA · não é o avanço geral</p>
+          </div>
+          <div role="progressbar" aria-label="Registros persistidos do fluxo QA" aria-valuemin={0}
+            aria-valuemax={qaPersistenceSteps.length} aria-valuenow={persistedSteps}
+            className="mt-3 h-2.5 overflow-hidden rounded-full bg-canvas">
+            <div className="h-full rounded-full bg-forest" style={{width:(100*persistedSteps/qaPersistenceSteps.length)+"%"}}/>
+          </div>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {qaPersistenceSteps.map(step=><li key={step.key} className="rounded-2xl border border-line p-4">
+              <p className="text-xs font-semibold text-muted">{step.label}</p>
+              <p className="mt-2 text-2xl font-black tabular-nums text-forest-deep">{qaPersistence[step.key]}</p>
+            </li>)}
+          </ul>
+        </>}
+        <p className="mt-5 text-xs leading-relaxed text-muted">
+          Estes registros podem decorrer de testes SQL com contexto de autenticação simulado.
+          Mesmo 4/4 não comprova cotação → entrega via HTTP hospedado com sessões reais independentes.
+          Vendas comerciais permanecem bloqueadas.
+        </p>
+      </section>
+      <section aria-labelledby="free-qa-title" className="mt-5 rounded-2xl border border-line bg-paper p-5">
+        <h2 id="free-qa-title" className="text-base font-black text-forest-deep">Homologação no Supabase Free</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          O plano Free não impede a homologação QA. A proteção nativa contra senhas vazadas, disponível no
+          Supabase Pro, permanece como risco registrado para revisão antes da abertura comercial,
+          sem bloquear esta fase. MFA administrativo, RLS, sessões e isolamento QA/comercial seguem obrigatórios.
         </p>
       </section>
 

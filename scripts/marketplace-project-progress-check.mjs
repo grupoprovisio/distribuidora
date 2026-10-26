@@ -40,8 +40,8 @@ for(const stage of PROGRESS_DIMENSIONS){
 const expected=Math.round(PROGRESS_DIMENSIONS.reduce((sum,stage)=>sum+
   TOTAL_PROGRESS[stage]*STAGE_WEIGHTS[stage],0)/100);
 assert.equal(OVERALL_PROGRESS,expected);
-assert.ok(PROJECT_AREAS.some(area=>area.id==="cotacoes"&&area.production===0));
-assert.ok(PROJECT_AREAS.some(area=>area.id==="pedidos"&&area.production===0));
+assert.ok(PROJECT_AREAS.some(area=>area.id==="cotacoes"&&area.production===1));
+assert.ok(PROJECT_AREAS.some(area=>area.id==="pedidos"&&area.production===1));
 assert.ok(PROJECT_AREAS.some(area=>area.id==="financeiro"&&area.code===0));
 for(const track of ["frontend","backend"]){
   const areaIds=DELIVERY_TRACKS[track].areaIds;
@@ -51,7 +51,12 @@ for(const track of ["frontend","backend"]){
   assert.equal(DELIVERY_PROGRESS[track],deliveryTrackPercent(track));
   assert.ok(DELIVERY_PROGRESS[track]>=0&&DELIVERY_PROGRESS[track]<=100);
 }
-assert.equal(DELIVERY_PROGRESS.frontend,83);
-assert.equal(DELIVERY_PROGRESS.backend,81);
-console.log("PASS: Provisio progress weighted gates, honest production scores, exactly 2 public personas");
+assert.equal(DELIVERY_PROGRESS.frontend,84);
+assert.equal(DELIVERY_PROGRESS.backend,82);
+assert.equal(TOTAL_PROGRESS.code,84,"implementation advanced only with completed logistics");
+assert.equal(TOTAL_PROGRESS.tests,83,"no unsupported HTTP test credit");
+assert.equal(TOTAL_PROGRESS.production,41,"QA SQL persistence gives partial hosted evidence");
+assert.equal(OVERALL_PROGRESS,73,"do not claim 100% before real HTTP acceptance");
+assert.ok(PROJECT_AREAS.some(area=>area.id==="qualidade"&&area.next.includes("plano Free")));
+console.log("PASS: QA persisted milestone credited without misclassifying HTTP proof");
 console.log("Progress snapshot:",JSON.stringify({overall:OVERALL_PROGRESS,...TOTAL_PROGRESS,tracks:DELIVERY_PROGRESS}));

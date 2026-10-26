@@ -71,6 +71,19 @@ test("Portais privados refletem permissao QA sem habilitar compras comerciais", 
   assert.match(portal,/faturamento fiscal e pagamentos permanecem desativados/);
 });
 
+test("Painel QA em hospedagem não confunde Free, SQL persistido e HTTP", () => {
+  const source=file("app/admin/marketplace/progresso/page.tsx");
+  const migration=file("db/migrations/0028_admin_qa_readonly_mfa_evidence.sql");
+  assert.match(source,/readHostedQaTransactions/);
+  assert.match(source,/readQaTransactionScope\(process\.env\)/);
+  assert.match(source,/Supabase Free/);
+  assert.match(source,/não comprova cotação/);
+  assert.match(source,/item\.error|item\.count===null/);
+  assert.match(migration,/is_verified_platform_admin/);
+  assert.match(migration,/qa_only=true/);
+  assert.doesNotMatch(migration,/grant (insert|update|delete)/i);
+});
+
 test("Ofertas de terceiros nao sao convertidas em catalogo comercial", () => {
   const catalog=file("lib/marketplace/catalog.ts");
   assert.match(catalog,/AUTHORIZED_SOURCES/);
