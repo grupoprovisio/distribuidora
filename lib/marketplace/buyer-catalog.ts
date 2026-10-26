@@ -21,7 +21,8 @@ const SOURCES = new Set(["MANUAL_AUTHORIZED","SUPPLIER_CSV_AUTHORIZED","SUPPLIER
 const PAGE_SIZE = 24;
 
 /** Only the authenticated user's RLS-visible rows are used; no service_role key. */
-export async function buyerCatalog(client: Client, region: string, page: number): Promise<BuyerCatalogResult> {
+export async function buyerCatalog(client: Client, region: string, page: number,
+  buyerOrgId: string): Promise<BuyerCatalogResult> {
   const empty: BuyerCatalogResult = { items: [], error: false, hasMore: false };
   const regionCodes=allowedBuyerRegionCodes(region);
   if (!regionCodes.length || !Number.isSafeInteger(page) || page < 1 || page > 1000) return {...empty,error:true};
@@ -30,10 +31,25 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const normalized=region.trim().toUpperCase();
   const uf=normalized.startsWith("BR-")?normalized.slice(3):normalized;
   if(normalized==="BR" || !/^[A-Z]{2}$/.test(uf)) return {...empty,error:true};
-  const allowedRegion=await client.from("buyer_delivery_regions")
-    .select("buyer_org_id").eq("region_code","BR-"+uf).limit(1);
-  if(allowedRegion.error)return {...empty,error:true};
-  if(!allowedRegion.data?.length)return {...empty,regionNotAuthorized:true};
+  const [buyer,allowedRegion]=await Promise.all([
+    client.from("organizations").select("id,kind,status,qa_only")
+      .eq("id",buyerOrgId).maybeSingle(),
+    client.from("buyer_delivery_regions")
+      .select("buyer_org_id").eq("buyer_org_id",buyerOrgId)
+      .eq("region_code","BR-"+uf).maybeSingle()
+  ]);
+  if(buyer.error||allowedRegion.error)return {...empty,error:true};
+  if(!buyer.data||buyer.data.kind!=="BUYER"||buyer.data.status!=="approved"
+    ||!allowedRegion.data)return {...empty,regionNotAuthorized:true};
+  // Admin/BUYER accounts can read more RLS-visible rows than the buyer
+  // company itself is eligible to buy. Always restrict the catalog to the
+  // chosen buyer's QA/commercial realm before server-side pagination.
+  const sellerResult=await client.from("organizations").select("id")
+    .eq("qa_only",buyer.data.qa_only).eq("status","approved")
+    .in("kind",["SUPPLIER","PLATFORM_OPERATOR"]).limit(500);
+  if(sellerResult.error)return {...empty,error:true};
+  const entitledSellerIds=(sellerResult.data??[]).map(s=>s.id);
+  if(!entitledSellerIds.length)return empty;
   const now = new Date().toISOString();
   const offset = (page - 1) * PAGE_SIZE;
   // Filter by selected delivery region BEFORE paginating; a buyer may be
@@ -43,6 +59,7 @@ export async function buyerCatalog(client: Client, region: string, page: number)
   const query = await client.from("offers")
     .select("id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from,valid_to,offer_regions!inner(region_code)")
     .in("offer_regions.region_code",regionCodes)
+    .in("supplier_org_id",entitledSellerIds)
     .eq("status","approved").lte("valid_from",now)
     .or("valid_to.is.null,valid_to.gt." + now)
     .order("created_at",{ascending:false}).range(offset,offset+PAGE_SIZE);
