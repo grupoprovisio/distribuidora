@@ -58,7 +58,7 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId}:{
     if(next>item.availableQuantity||next>100000)return;
     if(basket.setQuantity(item.id,next))setLastMessage(
       next===0?item.productName+" removido da cesta":item.productName+" atualizado na cesta");
-    else setLastMessage("A cesta permite até 30 ofertas por solicitação.");
+    else setLastMessage("A cesta permite até 100 ofertas por solicitação.");
   }
   return <>
     <div className="border-b border-line bg-paper p-4 sm:p-6">
