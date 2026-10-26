@@ -118,7 +118,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     }catch{setError("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setSubmitting(false);}
   }
-  const productsTotal=validation?.totalMinor??null;
+  const productsTotal=validation?.lines.some(line=>line.valid)
+    ?validation.totalMinor:null;
   const shippingMinor=method==="pickup"?0:
     (freight?.available&&freight.quote&&freight.cep===normalizeCep(cep)?freight.quote.freightMinor:null);
   const total=productsTotal!==null&&shippingMinor!==null&&validation?.ready
