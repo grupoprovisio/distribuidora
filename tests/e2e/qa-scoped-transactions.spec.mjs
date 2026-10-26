@@ -70,6 +70,19 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
         where id in ('${ORGS.supplierA}','${ORGS.supplierB}','${ORGS.buyerA}');
       insert into public.buyer_delivery_regions(buyer_org_id,region_code)
         values ('${ORGS.buyerB}','BR-SP') on conflict do nothing;
+      insert into public.provisio_shipping_origin
+        (id,label,postal_code,street,street_number,neighborhood,city,state_code,pickup_enabled,active)
+        values (1,'Unidade QA local','01001000','Rua Unidade QA','123','Centro','Sao Paulo','SP',true,true);
+      insert into public.provisio_shipping_rates
+        (origin_id,label,postal_start,postal_end,destination_state,price_minor,min_business_days,max_business_days)
+        values (1,'Frete QA local',1000000,1999999,'SP',1490,2,4);
+      insert into public.buyer_contact_profiles
+        (user_id,buyer_org_id,full_name,contact_email,phone,postal_code,street,street_number,
+         complement,neighborhood,city,state_code,reference)
+        values ('${cfg.users.buyerA.id}','${ORGS.buyerA}','Comprador Local Teste',
+          'buyer-a@example.invalid','11999999999','01001000','Rua Teste Local','50',
+          'Sala QA','Centro','Sao Paulo','SP','Portaria QA');
+
       insert into public.products(id,slug,name,base_unit,status) values
         ('${f.product}','qa-isolated-offer','QA local commodity','un','active'),
         ('${f.realProduct}','non-qa-commercial-offer','Non QA test offer','un','active');
