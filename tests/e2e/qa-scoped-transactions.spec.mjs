@@ -291,7 +291,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await expect(pages.buyerA.getByText('QA segundo produto')).toBeVisible();
     await pages.buyerA.getByRole('link',{name:/Revisar solicitação/}).click();
     await expect(pages.buyerA.getByRole('button',{name:/Solicitar cotação/})).toBeEnabled();
-    await pages.buyerA.getByLabel('Retirada na Provisio').check();
+    await pages.buyerA.getByRole('radio',{name:/Retirar no local/}).check();
     await pages.buyerA.getByRole('button',{name:/Solicitar cotação/}).click();
     await pages.buyerA.waitForURL(/\/app\/comprador\/solicitacoes\?enviada=/);
     await expect(pages.buyerA.getByText('Solicitação registrada.',{exact:false})).toBeVisible();
@@ -343,10 +343,10 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await page.goto('/app/comprador/catalogo?regiao=SP');
     await page.getByRole('button',{name:'Adicionar QA local commodity à cesta'}).click();
     await page.getByRole('link',{name:/Minha cesta/}).first().click();
-    await page.getByLabel('CEP do endereço de entrega').fill('01001000');
+    await page.getByLabel('CEP de entrega').fill('01001000');
     await page.getByRole('button',{name:'Calcular frete'}).click();
     await expect(page.getByText('R$ 14,90',{exact:false}).first()).toBeVisible();
-    await expect(page.getByText('2 a 4 dias úteis',{exact:false})).toBeVisible();
+    await expect(page.getByText('2–4 dias úteis',{exact:false})).toBeVisible();
     await page.getByRole('link',{name:/Revisar solicitação/}).click();
     await expect(page.getByLabel('Complemento (opcional)')).toHaveValue('Sala QA 2');
     await expect(page.getByRole('button',{name:'Solicitar cotação'})).toBeEnabled();
