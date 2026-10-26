@@ -35,9 +35,17 @@ export function BuyerFreightCalculator({buyerOrgId,postalCode,onPostalCodeChange
  useEffect(()=>{
    if(!auto||normalizeCep(postalCode).length!==8)return;
    const controller=new AbortController();
-   void quote(postalCode,controller.signal);
+   const cep=normalizeCep(postalCode);
+   const params=new URLSearchParams({buyer:buyerOrgId,cep});
+   void fetch("/api/marketplace/frete?"+params.toString(),{
+     credentials:"same-origin",cache:"no-store",signal:controller.signal
+   }).then(async r=>{if(!r.ok)throw Error();return await r.json() as FreightInfo;})
+     .then(data=>{if(!controller.signal.aborted){setShown(data);onQuote(data);setMessage("");}})
+     .catch(()=>{if(!controller.signal.aborted){
+       setMessage("Não foi possível calcular o frete.");onQuote(null);
+     }});
    return ()=>controller.abort();
- },[auto,postalCode,quote]);
+ },[auto,postalCode,buyerOrgId,onQuote]);
  const current=shown?.cep===normalizeCep(postalCode)?shown:null;
  return <section aria-label="Calcular frete" className="space-y-3 rounded-2xl border border-line bg-canvas p-4">
    <h3 className="flex items-center gap-2 text-sm font-black text-forest-deep">
