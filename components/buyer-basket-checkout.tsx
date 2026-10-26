@@ -19,7 +19,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
   const [error,setError]=useState("");
   const [method,setMethod]=useState<"delivery"|"pickup">("delivery");
   const serialized=JSON.stringify(basket.items);
-  const rows=useMemo(()=>basket.items,[serialized]); // stable while quantity data is unchanged
+  const rows=basket.items;
   useEffect(()=>{
     if(rows.length===0){setValidation(null);setLoading(false);return;}
     const controller=new AbortController();
