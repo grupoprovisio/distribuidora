@@ -62,12 +62,49 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_baskets: {
+        Row: {
+          id: string
+          buyer_org_id: string
+          created_by: string
+          request_key: string
+          region_code: string
+          fulfillment_method: "delivery" | "pickup"
+          item_fingerprint: string
+          payment_status: "unpaid" | "paid" | "refunded"
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          buyer_org_id: string
+          created_by: string
+          request_key: string
+          region_code: string
+          fulfillment_method: "delivery" | "pickup"
+          item_fingerprint: string
+          payment_status?: "unpaid" | "paid" | "refunded"
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          buyer_org_id?: string
+          created_by?: string
+          request_key?: string
+          region_code?: string
+          fulfillment_method?: "delivery" | "pickup"
+          item_fingerprint?: string
+          payment_status?: "unpaid" | "paid" | "refunded"
+          created_at?: string
+        }
+        Relationships: []
+      }
       quote_requests: {
         Row: {
           id: string
           buyer_org_id: string
           supplier_org_id: string
           offer_id: string
+          basket_id: string | null
           created_by: string
           request_key: string
           quantity: number
@@ -81,6 +118,7 @@ export type Database = {
           buyer_org_id: string
           supplier_org_id: string
           offer_id: string
+          basket_id: string | null
           created_by: string
           request_key: string
           quantity: number
@@ -94,6 +132,7 @@ export type Database = {
           buyer_org_id?: string
           supplier_org_id?: string
           offer_id?: string
+          basket_id?: string | null
           created_by?: string
           request_key?: string
           quantity?: number
@@ -632,6 +671,16 @@ export type Database = {
       }
       marketplace_transition_order: {
         Args: { order_id: string; action: string }
+        Returns: string
+      }
+      marketplace_submit_quote_basket: {
+        Args: {
+          buyer_org_id: string
+          region_code: string
+          fulfillment_method: "delivery" | "pickup"
+          lines: Json
+          request_key: string
+        }
         Returns: string
       }
       marketplace_create_quote: {
