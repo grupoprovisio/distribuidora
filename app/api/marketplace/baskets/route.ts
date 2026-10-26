@@ -60,7 +60,7 @@ export async function GET(request:Request){
   if(buyer&&buyer!==scope.buyer)return respond({ok:false,reason:"forbidden"},403);
   const db=await createClient();
   const baskets=await db.from("quote_baskets")
-    .select("id,buyer_org_id,region_code,fulfillment_method,payment_status,created_at")
+    .select("id,buyer_org_id,region_code,fulfillment_method,payment_status,created_at,recipient_snapshot,origin_snapshot,freight_minor,min_business_days,max_business_days,delivery_postal_code")
     .eq("buyer_org_id",scope.buyer).order("created_at",{ascending:false}).limit(30);
   if(baskets.error)return respond({ok:false,reason:"query_failed"},503);
   const basketIds=(baskets.data??[]).map(b=>b.id);
