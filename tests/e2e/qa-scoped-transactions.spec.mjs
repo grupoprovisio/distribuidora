@@ -255,4 +255,63 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     expect((await get('supplierB', 'supplier_orders')).items).toEqual([]);
     expect((await get('buyerB', 'orders')).status).toBe(503);
   });
+  test('04 — cesta multi-fornecedor registra uma cotação agrupada e impede confirmação sem pagamento', async () => {
+    const id={product:randomUUID(),sku:randomUUID(),offer:randomUUID()};
+    sql(`begin;
+      insert into public.products(id,slug,name,base_unit,status)
+      values ('${id.product}','qa-segundo-item','QA segundo produto','un','active');
+      insert into public.supplier_products(id,supplier_org_id,product_id,supplier_sku,pack_quantity,pack_unit,status)
+      values ('${id.sku}','${ORGS.supplierB}','${id.product}','QA-B-2',1,'un','approved');
+      insert into public.inventory_positions(supplier_product_id,supplier_org_id,available_quantity,reserved_quantity)
+      values ('${id.sku}','${ORGS.supplierB}',40,0);
+      insert into public.offers(id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from)
+      values ('${id.offer}','${id.sku}','${ORGS.supplierB}','MANUAL_AUTHORIZED',2300,1,'approved',now()-interval '1 day');
+      insert into public.offer_regions(offer_id,region_code) values ('${id.offer}','BR-SP');
+      commit;`);
+    await pages.buyerA.goto('/app/comprador/catalogo?regiao=SP');
+    await expect(pages.buyerA.getByRole('button',{name:'Adicionar QA local commodity à cesta'})).toBeVisible();
+    await expect(pages.buyerA.getByRole('button',{name:'Adicionar QA segundo produto à cesta'})).toBeVisible();
+    await pages.buyerA.getByRole('button',{name:'Adicionar QA local commodity à cesta'}).click();
+    await pages.buyerA.getByRole('button',{name:'Adicionar QA segundo produto à cesta'}).click();
+    await pages.buyerA.getByRole('link',{name:/Minha cesta/}).first().click();
+    await expect(pages.buyerA.getByRole('heading',{name:'Minha cesta'})).toBeVisible();
+    await expect(pages.buyerA.getByText('QA segundo produto')).toBeVisible();
+    await pages.buyerA.getByRole('link',{name:/Revisar solicitação/}).click();
+    await expect(pages.buyerA.getByRole('button',{name:/Solicitar cotação/})).toBeEnabled();
+    await pages.buyerA.getByLabel('Retirada na Provisio').check();
+    await pages.buyerA.getByRole('button',{name:/Solicitar cotação/}).click();
+    await pages.buyerA.waitForURL(/\/app\/comprador\/solicitacoes\?enviada=/);
+    await expect(pages.buyerA.getByText('Solicitação registrada.',{exact:false})).toBeVisible();
+    const baskets=rows(`select b.id,b.payment_status,b.fulfillment_method,
+      (select count(*) from public.quote_requests q where q.basket_id=b.id) as lines
+      from public.quote_baskets b where b.buyer_org_id='${ORGS.buyerA}'`);
+    expect(baskets).toHaveLength(1);
+    expect(baskets[0].lines).toBe(2);
+    expect(baskets[0].payment_status).toBe('unpaid');
+    expect(baskets[0].fulfillment_method).toBe('pickup');
+    const lines=rows(`select id,supplier_org_id from public.quote_requests
+      where basket_id='${baskets[0].id}'`);
+    const a=lines.find(l=>l.supplier_org_id===ORGS.supplierA);
+    const b=lines.find(l=>l.supplier_org_id===ORGS.supplierB);
+    expect(a).toBeTruthy();expect(b).toBeTruthy();
+    const proposed=await post('supplierA',{action:'proposal',quoteRequestId:a.id,priceMinor:1250,
+      expiresAt:new Date(Date.now()+3*86400000).toISOString()});
+    expect(proposed.status).toBe(201);
+    const checkout=await post('buyerA',{action:'checkout',buyerOrgId:ORGS.buyerA,
+      quoteRequestId:a.id,proposalId:proposed.id,idempotencyKey:randomUUID()});
+    expect(checkout.status).toBe(201);
+    const unpaid=await post('supplierA',{action:'order_transition',
+      orderId:checkout.id,transition:'supplier_confirm'});
+    expect(unpaid.status).toBe(422);
+    expect(rows(`select count(*) as n from public.order_fulfillments
+      where order_id='${checkout.id}'`)[0].n).toBe(0);
+    expect(rows(`select status from public.purchase_orders where id='${checkout.id}'`)[0].status)
+      .toBe('awaiting_supplier_confirmation');
+    const buyerB=await pages.buyerB.evaluate(async ()=>{
+      const r=await fetch('/api/marketplace/baskets');
+      return r.status;
+    });
+    expect(buyerB).toBe(503);
+  });
+
 });
