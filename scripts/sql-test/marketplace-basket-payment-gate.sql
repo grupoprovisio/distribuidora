@@ -19,6 +19,10 @@ where id in ('10000000-0000-4000-8000-000000000001',
 update public.organizations set qa_only=true
 where id in ('10000000-0000-4000-8000-000000000001',
              '10000000-0000-4000-8000-000000000003');
+insert into public.offer_price_tiers(offer_id,min_quantity,unit_price_minor)
+ values('40000000-0000-4000-8000-000000000001',5,900)
+ on conflict(offer_id,min_quantity) do update set unit_price_minor=excluded.unit_price_minor;
+
 insert into auth.sessions(id,user_id,aal,not_after) values
  ('70000000-0000-4000-8000-000000000011','00000000-0000-4000-8000-000000000001','aal1',now()+interval '1 day'),
  ('70000000-0000-4000-8000-000000000013','00000000-0000-4000-8000-000000000003','aal1',now()+interval '1 day')
@@ -27,6 +31,9 @@ on conflict(id) do update set not_after=excluded.not_after;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
 select set_config('request.jwt.claims','{"aal":"aal1","session_id":"70000000-0000-4000-8000-000000000013"}',true);
+select test.assert_count((select count(*) from public.offer_price_tiers
+ where offer_id='40000000-0000-4000-8000-000000000001' and min_quantity=5),1,
+ 'authorized QA buyer can read progressive price tiers via RLS');
 select public.marketplace_submit_quote_basket(
  '10000000-0000-4000-8000-000000000003','BR-SP','pickup',
  '[{"offerId":"40000000-0000-4000-8000-000000000001","quantity":2}]'::jsonb,
