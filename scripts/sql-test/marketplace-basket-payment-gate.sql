@@ -32,6 +32,12 @@ insert into public.provisio_shipping_rates
 (origin_id,label,postal_start,postal_end,destination_state,price_minor,min_business_days,max_business_days)
 values (1,'Tarifa QA Capital',1000000,1999999,'SP',1780,2,4);
 
+-- Statewide rates are set by ADM, not by a fabricated application default.
+-- A specific active CEP band overrides this statewide price.
+insert into public.provisio_shipping_state_rates
+(origin_id,state_code,label,price_minor,min_business_days,max_business_days)
+values (1,'SP','Cobertura geral SP QA',3250,3,7);
+
 insert into public.offer_price_tiers(offer_id,min_quantity,unit_price_minor)
  values('40000000-0000-4000-8000-000000000001',5,900)
  on conflict(offer_id,min_quantity) do update set unit_price_minor=excluded.unit_price_minor;
@@ -73,6 +79,49 @@ select test.assert_count((select count(*) from public.quote_baskets
  and freight_minor=1780 and min_business_days=2 and max_business_days=4
  and recipient_snapshot->>'reference'='Portaria QA'),1,
  'delivery freight and recipient reference come only from saved server data');
+select test.assert_count((select count(*) from public.quote_baskets
+ where request_key='90000000-0000-4000-8000-000000000093' and freight_source='cep_range'),1,
+ 'specific CEP tariff must override the statewide fallback');
+select test.assert_count((select count(*) from public.provisio_shipping_state_rates
+ where state_code='SP' and active=true),1,
+ 'QA buyer can read the enabled state default but cannot write it');
+
+-- The same SP statewide price automatically applies to an interior CEP,
+-- without inserting any individual postcode in the rates table.
+update public.buyer_contact_profiles set postal_code='14801000',
+ city='Araraquara',updated_at=now()
+where user_id='00000000-0000-4000-8000-000000000003'
+ and buyer_org_id='10000000-0000-4000-8000-000000000003';
+select public.marketplace_submit_quote_basket(
+ '10000000-0000-4000-8000-000000000003','BR-SP','delivery',
+ '[{"offerId":"40000000-0000-4000-8000-000000000001","quantity":1}]'::jsonb,
+ '90000000-0000-4000-8000-000000000094');
+select test.assert_count((select count(*) from public.quote_baskets
+ where request_key='90000000-0000-4000-8000-000000000094'
+ and freight_minor=3250 and min_business_days=3 and max_business_days=7
+ and freight_source='state_default' and freight_rate_id is null),1,
+ 'the statewide default is the only authorized freight for uncovered SP CEPs');
+
+-- Sending an out-of-state ZIP while claiming an SP address cannot obtain
+-- the SP default rate.
+update public.buyer_contact_profiles set postal_code='21000000' where
+ user_id='00000000-0000-4000-8000-000000000003'
+ and buyer_org_id='10000000-0000-4000-8000-000000000003';
+do $bad_zip$
+declare denied boolean:=false;
+begin
+ begin
+  perform public.marketplace_submit_quote_basket(
+    '10000000-0000-4000-8000-000000000003','BR-SP','delivery',
+    '[{"offerId":"40000000-0000-4000-8000-000000000001","quantity":1}]'::jsonb,
+    '90000000-0000-4000-8000-000000000095');
+ exception when sqlstate '22023' then denied:=true;end;
+ if not denied then raise exception 'out-of-state ZIP used the SP base freight';end if;
+end $bad_zip$;
+update public.buyer_contact_profiles set postal_code='01001000',city='Sao Paulo'
+ where user_id='00000000-0000-4000-8000-000000000003'
+ and buyer_org_id='10000000-0000-4000-8000-000000000003';
+
 
 select test.assert_count((select count(*) from public.quote_requests
  where basket_id in (select id from public.quote_baskets

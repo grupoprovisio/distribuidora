@@ -96,6 +96,30 @@ test("Checkout B2B e cesta mantêm RLS, escopo QA e pagamento bloqueado", () => 
   }
 });
 
+test("Frete automático SP respeita ADM, CEP específico e escolha de retirada",()=>{
+  const migration=file("db/migrations/0031_provisio_shipping_state_rates.sql");
+  const api=file("app/api/marketplace/frete/route.ts");
+  const admin=file("app/api/marketplace/admin-frete/route.ts");
+  const adminUI=file("components/admin-freight-settings.tsx");
+  const calc=file("components/buyer-freight-calculator.tsx");
+  const cart=file("components/buyer-basket-checkout.tsx");
+  assert.match(migration,/create table public.provisio_shipping_state_rates/);
+  assert.match(migration,/enable row level security/);
+  assert.match(migration,/is_verified_platform_admin/);
+  assert.match(migration,/state_default/);
+  assert.match(migration,/freight_source/);
+  assert.doesNotMatch(migration,/insert into public.provisio_shipping_state_rates/i);
+  assert.match(api,/state_default/);
+  assert.match(api,/viacep.com.br/);
+  assert.match(admin,/state_rate/);
+  assert.match(adminUI,/Frete automático/);
+  assert.match(calc,/basket-delivery-method/);
+  assert.match(calc,/Calcular frete/);
+  assert.match(calc,/Retirar no local/);
+  assert.match(cart,/recebimento/);
+  assert.match(cart,/method==="pickup"/);
+});
+
 test("Painel QA em hospedagem não confunde Free, SQL persistido e HTTP", () => {
   const source=file("app/admin/marketplace/progresso/page.tsx");
   const migration=file("db/migrations/0028_admin_qa_readonly_mfa_evidence.sql");

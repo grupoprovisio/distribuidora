@@ -25,12 +25,13 @@ const positive=(v:unknown,max:number)=>typeof v==="number"&&Number.isSafeInteger
 export async function GET(){
  const a=await secureAdmin();
  if("status" in a)return reply({ok:false,reason:"forbidden"},a.status);
- const [origin,rates]=await Promise.all([
+ const [origin,rates,stateRate]=await Promise.all([
   a.db.from("provisio_shipping_origin").select("*").eq("id",1).maybeSingle(),
   a.db.from("provisio_shipping_rates").select("*").order("postal_start",{ascending:true}).limit(100),
+  a.db.from("provisio_shipping_state_rates").select("*").eq("origin_id",1).eq("state_code","SP").maybeSingle(),
  ]);
- if(origin.error||rates.error)return reply({ok:false,reason:"query_failed"},503);
- return reply({ok:true,origin:origin.data,rates:rates.data??[]});
+ if(origin.error||rates.error||stateRate.error)return reply({ok:false,reason:"query_failed"},503);
+ return reply({ok:true,origin:origin.data,rates:rates.data??[],stateRate:stateRate.data});
 }
 export async function POST(request:Request){
  if(!isSameOriginRequest(request))return reply({ok:false,reason:"invalid_origin"},403);
@@ -62,6 +63,34 @@ export async function POST(request:Request){
      pickup_enabled:x.pickupEnabled,active:true,updated_at:new Date().toISOString(),
    },{onConflict:"id"}).select("id").single();
    return result.error?reply({ok:false,reason:"save_denied"},403):reply({ok:true});
+ }
+ if(body.action==="state_rate"){
+   // One approved value for all SP CEPs; exact ZIP bands take precedence.
+   const p=body.rate;
+   if(!p||typeof p!=="object"||Array.isArray(p))
+     return reply({ok:false,reason:"invalid_state_rate"},422);
+   const x=p as Record<string,unknown>;
+   const label=text(x.label,100,3);
+   if(!label||x.state!=="SP"||
+      !positive(x.priceMinor,100000000)||!positive(x.minBusinessDays,90)||
+      !positive(x.maxBusinessDays,120)||
+      (x.minBusinessDays as number)<1||
+      (x.maxBusinessDays as number)<(x.minBusinessDays as number))
+     return reply({ok:false,reason:"invalid_state_rate_fields"},422);
+   const result=await a.db.from("provisio_shipping_state_rates").upsert({
+     origin_id:1,state_code:"SP",label,price_minor:x.priceMinor as number,
+     min_business_days:x.minBusinessDays as number,
+     max_business_days:x.maxBusinessDays as number,
+     active:true,updated_at:new Date().toISOString(),
+   },{onConflict:"origin_id,state_code"}).select("state_code").single();
+   return result.error?reply({ok:false,reason:"state_rate_save_denied"},403):
+     reply({ok:true,state:result.data.state_code});
+ }
+ if(body.action==="state_disable"){
+   const result=await a.db.from("provisio_shipping_state_rates")
+     .update({active:false,updated_at:new Date().toISOString()})
+     .eq("origin_id",1).eq("state_code","SP").select("state_code").single();
+   return result.error?reply({ok:false,reason:"state_rate_disable_denied"},403):reply({ok:true});
  }
  if(body.action==="rate"){
    const p=body.rate;

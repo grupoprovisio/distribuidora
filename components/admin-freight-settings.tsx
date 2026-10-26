@@ -8,6 +8,12 @@ type OriginRecord={
 };
 type RateRecord={id:string;label:string;postal_start:number;postal_end:number;
   destination_state:string;price_minor:number;min_business_days:number;max_business_days:number;active:boolean};
+type StateRateRecord={origin_id:number;state_code:string;label:string;
+ price_minor:number;min_business_days:number;max_business_days:number;active:boolean};
+type StateRateDraft={label:string;price:string;minBusinessDays:string;maxBusinessDays:string};
+const blankStateRate:StateRateDraft={
+ label:"Entrega regional — Estado de São Paulo",price:"",minBusinessDays:"2",maxBusinessDays:"5"
+};
 type OriginDraft={
  label:string;postalCode:string;street:string;number:string;complement:string;
  neighborhood:string;city:string;state:string;pickupInstructions:string;pickupEnabled:boolean;
@@ -31,6 +37,11 @@ const originFields=[
 ] as const;
 const brl=(n:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n/100);
 const z=(n:number)=>String(n).padStart(8,"0");
+const parsePriceMinor=(value:string)=>{
+ const match=value.trim().match(/^([0-9]{1,7})(?:[,.]([0-9]{1,2}))?$/);
+ return match?Number(match[1])*100+Number((match[2]??"").padEnd(2,"0")):null;
+};
+const formatPrice=(minor:number)=>(minor/100).toFixed(2).replace(".",",");
 const toDraft=(v:OriginRecord):OriginDraft=>({
  label:v.label,postalCode:v.postal_code,street:v.street,number:v.street_number,
  complement:v.complement,neighborhood:v.neighborhood,city:v.city,state:v.state_code,
@@ -41,6 +52,8 @@ export function AdminFreightSettings(){
  const [hasOrigin,setHasOrigin]=useState(false);
  const [rates,setRates]=useState<RateRecord[]>([]);
  const [rate,setRate]=useState<RateDraft>(blankRate);
+ const [stateRate,setStateRate]=useState<StateRateRecord|null>(null);
+ const [stateDraft,setStateDraft]=useState<StateRateDraft>(blankStateRate);
  const [loaded,setLoaded]=useState(false);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState("");
@@ -48,24 +61,33 @@ export function AdminFreightSettings(){
  const reload=useCallback(async()=>{
    try{
     const r=await fetch("/api/marketplace/admin-frete",{credentials:"same-origin",cache:"no-store"});
-    const data=await r.json() as {ok:boolean;origin:OriginRecord|null;rates:RateRecord[]};
+    const data=await r.json() as {ok:boolean;origin:OriginRecord|null;rates:RateRecord[];stateRate:StateRateRecord|null};
     if(!r.ok||!data.ok)throw Error();
     setHasOrigin(!!data.origin);
     if(data.origin)setOrigin(toDraft(data.origin));
     setRates(data.rates);
+    setStateRate(data.stateRate);
+    if(data.stateRate)setStateDraft({label:data.stateRate.label,price:formatPrice(data.stateRate.price_minor),
+      minBusinessDays:String(data.stateRate.min_business_days),
+      maxBusinessDays:String(data.stateRate.max_business_days)});
    }catch{setError("Não foi possível carregar as regras de frete. Verifique a autenticação ADM com MFA.");}
    finally{setLoaded(true);}
  },[]);
  useEffect(()=>{
    let active=true;
    void fetch("/api/marketplace/admin-frete",{credentials:"same-origin",cache:"no-store"})
-     .then(async r=>{if(!r.ok)throw Error();return await r.json() as {ok:boolean;origin:OriginRecord|null;rates:RateRecord[]};})
+     .then(async r=>{if(!r.ok)throw Error();return await r.json() as {ok:boolean;origin:OriginRecord|null;rates:RateRecord[];stateRate:StateRateRecord|null};})
      .then(data=>{
        if(!active)return;
        if(!data.ok)throw Error();
        setHasOrigin(!!data.origin);
        if(data.origin)setOrigin(toDraft(data.origin));
        setRates(data.rates);
+       setStateRate(data.stateRate);
+       if(data.stateRate)setStateDraft({label:data.stateRate.label,
+         price:formatPrice(data.stateRate.price_minor),
+         minBusinessDays:String(data.stateRate.min_business_days),
+         maxBusinessDays:String(data.stateRate.max_business_days)});
      })
      .catch(()=>{if(active)setError("Não foi possível carregar as regras de frete. Verifique a sessão ADM.");})
      .finally(()=>{if(active)setLoaded(true);});
@@ -89,10 +111,17 @@ export function AdminFreightSettings(){
  async function saveOrigin(e:React.FormEvent){e.preventDefault();
    await send({action:"origin",origin});
  }
+ async function saveStateRate(e:React.FormEvent){
+   e.preventDefault();
+   const priceMinor=parsePriceMinor(stateDraft.price);
+   if(priceMinor===null){setError("Informe a tarifa de São Paulo em reais.");return;}
+   const min=Number(stateDraft.minBusinessDays),max=Number(stateDraft.maxBusinessDays);
+   await send({action:"state_rate",rate:{state:"SP",label:stateDraft.label,
+     priceMinor,minBusinessDays:min,maxBusinessDays:max}});
+ }
  async function saveRate(e:React.FormEvent){e.preventDefault();
-   const match=rate.price.trim().match(/^([0-9]{1,7})(?:[,.]([0-9]{1,2}))?$/);
-   if(!match){setError("Informe o preço em reais, por exemplo: 19,90.");return;}
-   const priceMinor=Number(match[1])*100+Number((match[2]??"").padEnd(2,"0"));
+   const priceMinor=parsePriceMinor(rate.price);
+   if(priceMinor===null){setError("Informe o preço em reais, por exemplo: 19,90.");return;}
    const ok=await send({action:"rate",rate:{
      id:rate.id??null,label:rate.label,postalStart:rate.postalStart.replace(/\D/g,""),
      postalEnd:rate.postalEnd.replace(/\D/g,""),state:rate.state.toUpperCase(),
@@ -137,13 +166,63 @@ export function AdminFreightSettings(){
   </section>
 
   <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-7">
+    <div className="mb-5 flex items-start gap-3">
+      <Truck size={24} className="shrink-0 text-forest" aria-hidden/>
+      <div>
+        <h2 className="text-xl font-black text-forest-deep">Frete automático — São Paulo inteiro</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Configure <strong>uma única tarifa-base</strong> para os CEPs paulistas de 01000-000 até 19999-999.
+          Quem comprar informa o CEP e recebe o preço e o prazo automaticamente. Não é necessário
+          cadastrar CEP por CEP.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-muted">
+          Valores devem refletir seu custo operacional ou tabela de transportadora.
+          As faixas específicas cadastradas abaixo prevalecem sobre esta tarifa estadual.
+          O CEP identifica a região; esta opção não consulta preços em tempo real de transportadoras.
+        </p>
+      </div>
+    </div>
+    {stateRate&&<p className="mb-4 rounded-xl bg-canvas px-4 py-3 text-xs font-semibold text-forest">
+      {stateRate.active?"Tarifa geral ativa: ":"Tarifa geral inativa: "}
+      {brl(stateRate.price_minor)} · {stateRate.min_business_days}–{stateRate.max_business_days} dias úteis
+    </p>}
+    <form onSubmit={e=>void saveStateRate(e)} className="grid gap-4 sm:grid-cols-2">
+      {([
+        ["label","Descrição da tarifa","São Paulo — entrega regional"],
+        ["price","Frete base (R$)","Ex.: 25,00"],
+        ["minBusinessDays","Prazo mínimo (dias úteis)","2"],
+        ["maxBusinessDays","Prazo máximo (dias úteis)","5"],
+      ] as const).map(([key,label,placeholder])=><label key={key}
+         className="grid gap-1.5 text-xs font-extrabold text-forest">
+         {label}
+         <input required value={stateDraft[key]} placeholder={placeholder}
+           inputMode={key==="price"?"decimal":key==="label"?"text":"numeric"}
+           onChange={e=>setStateDraft(v=>({...v,[key]:e.target.value}))}
+           className="min-h-12 w-full rounded-xl border border-line bg-canvas px-4 text-sm font-medium text-ink focus-visible:outline-2 focus-visible:outline-forest"/>
+      </label>)}
+      <div className="flex flex-wrap gap-2 sm:col-span-2">
+        <button type="submit" disabled={busy||!hasOrigin}
+          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-forest px-6 text-sm font-extrabold text-white disabled:opacity-50">
+          <Save size={17} aria-hidden/>{stateRate?.active?"Atualizar tarifa-base":"Ativar tarifa para todo o estado"}
+        </button>
+        {stateRate?.active&&<button type="button" disabled={busy}
+          onClick={()=>{if(window.confirm("Desativar a tarifa geral de São Paulo?"))void send({action:"state_disable"});}}
+          className="min-h-12 rounded-full border border-line px-5 text-sm font-bold text-forest">
+          Desativar tarifa geral
+        </button>}
+      </div>
+    </form>
+  </section>
+
+  <section className="rounded-[1.75rem] border border-line bg-paper p-5 sm:p-7">
     <div className="mb-5 flex gap-3">
       <Truck size={24} className="shrink-0 text-forest" aria-hidden/>
       <div>
         <h2 className="text-xl font-black text-forest-deep">Fretes por faixa de CEP</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           Informe as tarifas reais da operação e o prazo em dias úteis para cada faixa.
-          Os intervalos ativos não podem se sobrepor. Sem faixa cadastrada, o comprador verá frete indisponível.
+          Os intervalos específicos ativos não podem se sobrepor. Se não houver faixa específica,
+          o sistema usa a tarifa-base estadual cadastrada acima.
         </p>
       </div>
     </div>

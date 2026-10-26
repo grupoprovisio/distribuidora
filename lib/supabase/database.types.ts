@@ -76,6 +76,7 @@ export type Database = {
           delivery_postal_code: string | null
           freight_rate_id: string | null
           freight_minor: number | null
+          freight_source: string | null
           min_business_days: number | null
           max_business_days: number | null
           payment_status: "unpaid" | "paid" | "refunded"
@@ -94,6 +95,7 @@ export type Database = {
           delivery_postal_code?: string | null
           freight_rate_id?: string | null
           freight_minor?: number | null
+          freight_source?: string | null
           min_business_days?: number | null
           max_business_days?: number | null
           payment_status?: "unpaid" | "paid" | "refunded"
@@ -112,6 +114,7 @@ export type Database = {
           delivery_postal_code?: string | null
           freight_rate_id?: string | null
           freight_minor?: number | null
+          freight_source?: string | null
           min_business_days?: number | null
           max_business_days?: number | null
           payment_status?: "unpaid" | "paid" | "refunded"
@@ -332,6 +335,24 @@ export type Database = {
           complement?:string; neighborhood?:string; city?:string; state_code?:string;
           pickup_instructions?:string; pickup_enabled?:boolean; active?:boolean;
           updated_at?:string
+        }
+        Relationships: []
+      }
+      provisio_shipping_state_rates: {
+        Row: {
+          origin_id:number; state_code:string; label:string;
+          price_minor:number; min_business_days:number; max_business_days:number;
+          active:boolean; updated_at:string
+        }
+        Insert: {
+          origin_id?:number; state_code?:string; label:string;
+          price_minor:number; min_business_days:number; max_business_days:number;
+          active?:boolean; updated_at?:string
+        }
+        Update: {
+          origin_id?:number; state_code?:string; label?:string;
+          price_minor?:number; min_business_days?:number; max_business_days?:number;
+          active?:boolean; updated_at?:string
         }
         Relationships: []
       }
