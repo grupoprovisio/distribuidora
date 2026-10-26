@@ -133,10 +133,10 @@ export async function validateBuyerBasket(
       quantity<minQuantity?"Quantidade mínima: "+minQuantity+" unidades.":
       available<quantity?"Estoque insuficiente para esta quantidade.":
       "Oferta suspensa, expirada ou sem preço válido.";
-    return {offerId,productName:visible?product.name:"Produto indisponível",
-      supplier:visible?(seller.trade_name||seller.legal_name):"",
-      sku:visible?sku.supplier_sku:"",pack:visible?String(sku.pack_quantity)+" "+sku.pack_unit:"",
-      imageUrl:visible?imagesMap.get(product.id)??null:null,
+    return {offerId,productName:visible?(product?.name??"Produto indisponível"):"Produto indisponível",
+      supplier:visible?(seller?.trade_name||seller?.legal_name||""):"",
+      sku:visible?(sku?.supplier_sku??""):"",pack:visible&&sku?String(sku.pack_quantity)+" "+sku.pack_unit:"",
+      imageUrl:visible&&product?imagesMap.get(product.id)??null:null,
       quantity,minQuantity,available:visible?available:0,
       unitPriceMinor:valid?unit:0,subtotalMinor:sub,
       tiers:valid?priceTiers:[],valid,reason};
