@@ -13,12 +13,24 @@ import { BuyerFreightCalculator, type FreightInfo } from "@/components/buyer-fre
 
 type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout";initialMethod?:"delivery"|"pickup"};
 type BasketResponse=BasketValidation&{id?:string;status?:string;paymentStatus?:string};
+type BasketSnapshot={key:string;value:BasketValidation|null;failure?:string};
+const failureText=(code?:string)=>{
+  switch(code){
+    case "session_expired": return "Sua sessão precisa ser renovada para consultar os valores. Os produtos continuam na cesta.";
+    case "buyer_not_authorized":return "Esta conta não possui permissão de comprador para os produtos da cesta.";
+    case "region_not_authorized":return "Sua empresa ainda não tem autorização para esta região de entrega.";
+    case "catalog_unavailable":case "offers_unavailable":
+      return "O catálogo não respondeu à consulta de preços. Tente atualizar os valores.";
+    default:return "Não foi possível confirmar os preços no momento. Os produtos foram preservados.";
+  }
+};
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const brl=(value:number)=>money.format(value/100);
 const URL="/api/marketplace/baskets";
 export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod="delivery"}:Props){
   const basket=useBuyerBasket(userId,buyerOrgId,region);
-  const [snapshot,setSnapshot]=useState<{key:string;value:BasketValidation|null}|null>(null);
+  const [snapshot,setSnapshot]=useState<BasketSnapshot|null>(null);
+  const [refresh,setRefresh]=useState(0);
   const [submitting,setSubmitting]=useState(false);
   const [error,setError]=useState("");
   const [method,setMethod]=useState<"delivery"|"pickup">(initialMethod);
@@ -32,32 +44,36 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   const handlePostal=useCallback((next:string)=>{setCep(next);setFreight(null);},[]);
   const handleFreight=useCallback((value:FreightInfo|null)=>{setFreight(value);},[]);
   const router=useRouter();
-  const serialized=JSON.stringify(basket.items);
   const rows=basket.items;
+  // Names/supplier labels cached for display never enter the API. The server
+  // accepts only offerId+quantity, and is the sole source of pricing.
+  const selected=useMemo(()=>rows.map(({offerId,quantity})=>({offerId,quantity})),[rows]);
+  const serialized=JSON.stringify(selected);
   const validation=rows.length>0&&snapshot?.key===serialized?snapshot.value:null;
   const loading=rows.length>0&&snapshot?.key!==serialized;
+  const validationIssue=rows.length>0&&snapshot?.key===serialized?snapshot.failure:undefined;
   useEffect(()=>{
     if(rows.length===0)return;
     const controller=new AbortController();
     void fetch(URL,{
       method:"POST",headers:{"content-type":"application/json"},
       credentials:"same-origin",cache:"no-store",signal:controller.signal,
-      body:JSON.stringify({action:"validate",buyerOrgId,region,lines:rows}),
+      body:JSON.stringify({action:"validate",buyerOrgId,region,lines:selected}),
     }).then(async response=>{
       const data=await response.json() as BasketResponse;
-      if(!controller.signal.aborted) {
-        setSnapshot({key:serialized,value:data.ok?data:null});
-        if(!data.ok)setError("Não foi possível atualizar os valores. Verifique sua sessão ou suas permissões.");
-        else setError("");
+      if(!controller.signal.aborted){
+        setSnapshot({key:serialized,value:response.ok&&data.ok?data:null,
+          failure:response.ok&&data.ok?undefined:
+            response.status===401?"session_expired":response.status===403?"buyer_not_authorized":
+            data.reason??"request_failed"});
       }
     }).catch(()=>{if(!controller.signal.aborted){
-      setSnapshot({key:serialized,value:null});
-      setError("Não foi possível consultar o catálogo. Tente novamente.");
+      setSnapshot({key:serialized,value:null,failure:"network_error"});
     }});
     return ()=>controller.abort();
-  },[serialized,buyerOrgId,region,rows]);
+  },[serialized,buyerOrgId,region,refresh,selected]);
   async function submit(){
-    if(submitting||!validation?.ready||!basket.items.length)return;
+    if(submitting||!validation?.ready||!validation.quoteEnabled||!selected.length)return;
     if(mode!=="checkout"||!savedContact){
       setError("Confira e salve seu cadastro de contato e endereço antes de solicitar a cotação.");
       return;
@@ -88,7 +104,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       const response=await fetch(URL,{
         method:"POST",headers:{"content-type":"application/json"},
         credentials:"same-origin",cache:"no-store",
-        body:JSON.stringify({action:"submit",buyerOrgId,region,lines:basket.items,method,requestKey}),
+        body:JSON.stringify({action:"submit",buyerOrgId,region,lines:selected,method,requestKey}),
       });
       const data=await response.json() as BasketResponse;
       if(!response.ok||!data.ok||!data.id){
@@ -102,23 +118,45 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     }catch{setError("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setSubmitting(false);}
   }
-  const productsTotal=validation?.totalMinor??0;
+  const productsTotal=validation?.totalMinor??null;
   const shippingMinor=method==="pickup"?0:
     (freight?.available&&freight.quote&&freight.cep===normalizeCep(cep)?freight.quote.freightMinor:null);
-  const total=productsTotal+(shippingMinor??0);
+  const total=productsTotal!==null&&shippingMinor!==null&&validation?.ready
+    ?productsTotal+shippingMinor:null;
   const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
     !!(freight?.available&&freight.quote&&savedContact&&
       freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
   const checkoutReady=!!(mode==="checkout"&&savedContact&&
     normalizeCep(cep)===savedContact.postalCode&&deliveryValid);
+  const visibleLines=useMemo(()=>{
+    const byId=new Map((validation?.lines??[]).map(line=>[line.offerId,line]));
+    return rows.map((cached):ValidatedBasketLine=>{
+      const live=byId.get(cached.offerId);
+      if(live)return {
+        ...live,
+        productName:live.valid?live.productName:
+          cached.productName||live.productName,
+        supplier:live.valid?live.supplier:cached.supplier||live.supplier,
+        pack:live.valid?live.pack:cached.pack||live.pack
+      };
+      return {offerId:cached.offerId,quantity:cached.quantity,
+        productName:cached.productName||"Produto aguardando conferência",
+        supplier:cached.supplier||"",sku:"",pack:cached.pack||"",
+        imageUrl:null,minQuantity:1,available:0,unitPriceMinor:0,
+        subtotalMinor:0,tiers:[],valid:false,
+        reason:validationIssue?failureText(validationIssue):"Consultando preço e estoque..."}
+    });
+  },[rows,validation,validationIssue]);
+  const invalidLines=visibleLines.filter(line=>!line.valid);
   const grouped=useMemo(()=>{
     const map=new Map<string,ValidatedBasketLine[]>();
-    for(const item of validation?.lines??[]){
-      const current=map.get(item.supplier)??[];
-      current.push(item);map.set(item.supplier,current);
+    for(const item of visibleLines){
+      const seller=item.supplier||"Itens que precisam de revisão";
+      const current=map.get(seller)??[];
+      current.push(item);map.set(seller,current);
     }
     return [...map.entries()];
-  },[validation]);
+  },[visibleLines]);
   const checkoutHref="/app/comprador/checkout?regiao="+encodeURIComponent(region)+
     "&recebimento="+(method==="pickup"?"retirada":"entrega");
   const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
