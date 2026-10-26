@@ -58,7 +58,7 @@ begin
     or p_region !~ '^BR-[A-Z]{2}$'
     or p_method not in ('delivery','pickup')
     or p_lines is null or jsonb_typeof(p_lines)<>'array'
-    or jsonb_array_length(p_lines) not between 1 and 30 then
+    or jsonb_array_length(p_lines) not between 1 and 100 then
     raise exception 'invalid_basket' using errcode='22023';
   end if;
   if not marketplace_private.has_active_capability(p_buyer,'BUYER')
