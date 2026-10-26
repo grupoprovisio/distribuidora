@@ -97,6 +97,17 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
   });
 
   test('01 — modo QA libera comprador e dois fornecedores, mas bloqueia ADM, perfil misto e outra empresa', async () => {
+    await pages.buyerA.goto('/app/comprador');
+    await expect(pages.buyerA.getByText('Homologação QA habilitada', { exact: false })).toBeVisible();
+    await expect(pages.buyerA.getByText('Teste QA autorizado')).toHaveCount(2);
+    await pages.supplierA.goto('/app/fornecedor');
+    await expect(pages.supplierA.getByText('Homologação QA habilitada', { exact: false })).toBeVisible();
+    await expect(pages.supplierA.getByText('Teste QA autorizado')).toHaveCount(2);
+    await pages.supplierB.goto('/app/fornecedor');
+    await expect(pages.supplierB.getByText('Homologação QA habilitada', { exact: false })).toBeVisible();
+    await pages.buyerB.goto('/app/comprador');
+    await expect(pages.buyerB.getByText('Homologação QA habilitada', { exact: false })).toHaveCount(0);
+
     await pages.buyerA.goto('/app/comprador/cotacoes');
     await expect(pages.buyerA.getByRole('heading', { name: 'Solicitações de cotação' })).toBeVisible();
     await expect(pages.buyerA.getByRole('button', { name: 'Solicitar cotação' })).toBeVisible();
@@ -149,6 +160,20 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     });
     expect(bypassA.error?.code).toBe('22023');
     expect(bypassB.error?.code).toBe('22023');
+
+    // Regression: a real signed buyer JWT linked to QA and commercial BUYER
+    // organizations must not quote a QA offer for the commercial company.
+    // The trigger in 0027 closes the multi-membership cross-realm bypass.
+    sql(`insert into public.organization_members(organization_id,user_id,role,status)
+      values ('${ORGS.buyerB}','${cfg.users.buyerA.id}','BUYER','active')`);
+    const crossOrg = await buyerAClient.rpc('marketplace_create_quote',{
+      buyer_org_id:ORGS.buyerB,offer_id:fixture.offer,quantity:2,
+      region_code:'BR-SP',notes:'QA cross buyer realm must be blocked',
+      request_key:randomUUID(),
+    });
+    expect(crossOrg.error?.code).toBe('22023');
+    sql(`delete from public.organization_members
+      where organization_id='${ORGS.buyerB}' and user_id='${cfg.users.buyerA.id}'`);
     // Global sign-out would revoke the separate Playwright browser sessions.
     await Promise.all([buyerAClient.auth.signOut({scope:'local'}),buyerBClient.auth.signOut({scope:'local'})]);
 

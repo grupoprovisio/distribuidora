@@ -58,6 +58,19 @@ test("Portais mantêm autorizacao do servidor e isolamento em consultas", () => 
   assert.match(file("lib/marketplace/my-organizations.ts"),/requireMarketplacePortal\(portal\)/);
 });
 
+test("Portais privados refletem permissao QA sem habilitar compras comerciais", () => {
+  const portal=file("components/marketplace-portal.tsx");
+  for(const profile of ["comprador","fornecedor"]){
+    const source=file("app/app/"+profile+"/page.tsx");
+    assert.match(source,/transactionAccessMode\(await getMarketplaceAccess\(\)\)/);
+    assert.match(source,/transactionMode=\{mode\}/);
+  }
+  assert.match(portal,/transactionMode === "qa"/);
+  assert.match(portal,/Homologação QA habilitada/);
+  assert.match(portal,/Teste QA autorizado/);
+  assert.match(portal,/faturamento fiscal e pagamentos permanecem desativados/);
+});
+
 test("Ofertas de terceiros nao sao convertidas em catalogo comercial", () => {
   const catalog=file("lib/marketplace/catalog.ts");
   assert.match(catalog,/AUTHORIZED_SOURCES/);
