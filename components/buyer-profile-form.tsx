@@ -1,5 +1,5 @@
 "use client";
-import { useCallback,useEffect,useState } from "react";
+import { useEffect,useState } from "react";
 import { CheckCircle2,MapPin,Save,UserRound } from "lucide-react";
 import { BuyerContact,EMPTY_BUYER_CONTACT,parseBuyerContact } from "@/lib/marketplace/buyer-contact";
 
@@ -26,22 +26,24 @@ export function BuyerProfileForm({buyerOrgId,onSaved,onEdited,compact=false}:Pro
  const [status,setStatus]=useState<"idle"|"saved"|"error">("idle");
  const [error,setError]=useState("");
  // Every response belongs to the signed in buyer and organization, never a public profile.
- const loaded=useCallback(async(signal:AbortSignal)=>{
-   try{
-     const r=await fetch("/api/marketplace/buyer-profile?buyer="+encodeURIComponent(buyerOrgId),{
-       credentials:"same-origin",cache:"no-store",signal,
-     });
-     const j=await r.json() as {ok:boolean;profile:BuyerContact|null;loginEmail?:string};
-     if(!r.ok||!j.ok)throw Error();
-     if(!signal.aborted){
-       const saved=j.profile??{...EMPTY_BUYER_CONTACT,email:j.loginEmail??""};
-       setProfile(saved);setStatus(j.profile?"saved":"idle");
-       if(j.profile)onSaved?.(saved);
-     }
-   }catch{if(!signal.aborted){setError("Não foi possível carregar seus dados cadastrais.");setStatus("error");}}
-   finally{if(!signal.aborted)setLoad(false);}
+ useEffect(()=>{
+   const controller=new AbortController();
+   void fetch("/api/marketplace/buyer-profile?buyer="+encodeURIComponent(buyerOrgId),{
+     credentials:"same-origin",cache:"no-store",signal:controller.signal,
+   }).then(async r=>{
+     if(!r.ok)throw Error();
+     return await r.json() as {ok:boolean;profile:BuyerContact|null;loginEmail?:string};
+   }).then(data=>{
+     if(controller.signal.aborted)return;
+     if(!data.ok)throw Error();
+     const saved=data.profile??{...EMPTY_BUYER_CONTACT,email:data.loginEmail??""};
+     setProfile(saved);setStatus(data.profile?"saved":"idle");
+     if(data.profile)onSaved?.(saved);
+   }).catch(()=>{if(!controller.signal.aborted){
+     setError("Não foi possível carregar seus dados cadastrais.");setStatus("error");
+   }}).finally(()=>{if(!controller.signal.aborted)setLoad(false);});
+   return ()=>controller.abort();
  },[buyerOrgId,onSaved]);
- useEffect(()=>{const c=new AbortController();void loaded(c.signal);return ()=>c.abort();},[loaded]);
  function edit(k:Field,value:string){
    setProfile(prev=>({...prev,[k]:k==="state"?value.toUpperCase().slice(0,2):value}));
    setStatus("idle");setError("");onEdited?.();
