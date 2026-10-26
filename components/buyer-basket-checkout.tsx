@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Minus, Plus, ShoppingBasket, Trash2 } from "lucide-react";
@@ -13,18 +14,18 @@ const brl=(value:number)=>money.format(value/100);
 const URL="/api/marketplace/baskets";
 export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
   const basket=useBuyerBasket(userId,buyerOrgId,region);
-  const [validation,setValidation]=useState<BasketValidation|null>(null);
-  const [loading,setLoading]=useState(true);
+  const [snapshot,setSnapshot]=useState<{key:string;value:BasketValidation|null}|null>(null);
   const [submitting,setSubmitting]=useState(false);
   const [error,setError]=useState("");
   const [method,setMethod]=useState<"delivery"|"pickup">("delivery");
+  const router=useRouter();
   const serialized=JSON.stringify(basket.items);
   const rows=basket.items;
+  const validation=rows.length>0&&snapshot?.key===serialized?snapshot.value:null;
+  const loading=rows.length>0&&snapshot?.key!==serialized;
   useEffect(()=>{
-    if(rows.length===0){setValidation(null);setLoading(false);return;}
+    if(rows.length===0)return;
     const controller=new AbortController();
-    setLoading(true);
-    setValidation(null);
     void fetch(URL,{
       method:"POST",headers:{"content-type":"application/json"},
       credentials:"same-origin",cache:"no-store",signal:controller.signal,
@@ -32,12 +33,14 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
     }).then(async response=>{
       const data=await response.json() as BasketResponse;
       if(!controller.signal.aborted) {
-        setValidation(data.ok?data:null);
+        setSnapshot({key:serialized,value:data.ok?data:null});
         if(!data.ok)setError("Não foi possível atualizar os valores. Verifique sua sessão ou suas permissões.");
         else setError("");
       }
-    }).catch(()=>{if(!controller.signal.aborted)setError("Não foi possível consultar o catálogo. Tente novamente.");})
-      .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+    }).catch(()=>{if(!controller.signal.aborted){
+      setSnapshot({key:serialized,value:null});
+      setError("Não foi possível consultar o catálogo. Tente novamente.");
+    }});
     return ()=>controller.abort();
   },[serialized,buyerOrgId,region,rows]);
   async function submit(){
@@ -65,7 +68,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
       }
       basket.clear();
       try{window.sessionStorage.removeItem(storageKey);}catch{}
-      window.location.assign("/app/comprador/solicitacoes?enviada="+encodeURIComponent(data.id));
+      router.push("/app/comprador/solicitacoes?enviada="+encodeURIComponent(data.id));
     }catch{setError("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setSubmitting(false);}
   }
