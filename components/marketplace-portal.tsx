@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Boxes, ClipboardList, FileText, MapPin, ShieldCheck, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ArrowRight, Boxes, ClipboardList, FileText, MapPin, ShieldCheck, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
@@ -7,7 +7,7 @@ import type { MarketplaceOrganizationSummary } from "@/lib/marketplace/my-organi
 
 type Portal = "comprador" | "fornecedor";
 const content = {
-  comprador: { title: "Área do comprador", eyebrow: "Operação de compras", intro: "Organize catálogo, cotações e pedidos para sua empresa.", theme: "forest" as const, cards: [[ShoppingCart, "Catálogo autorizado", "Encontre produtos e ofertas homologadas.", "/app/comprador/catalogo"], [FileText, "Cotações", "Compare respostas internas sem misturar fornecedores.", "/app/comprador/cotacoes"], [ClipboardList, "Pedidos", "Acompanhe pedidos e subpedidos por organização.", "/app/comprador/pedidos"]], links: [["/compradores", "Como funciona"]] },
+  comprador: { title: "Área do comprador", eyebrow: "Operação de compras", intro: "Organize catálogo, cotações e pedidos para sua empresa.", theme: "forest" as const, cards: [[ShoppingCart, "Catálogo de produtos", "Escolha produtos e compare preços por volume.", "/app/comprador/catalogo"], [ShoppingBasket, "Minha cesta", "Revise quantidades e solicite sua cotação.", "/app/comprador/cesta"], [ClipboardList, "Minhas solicitações", "Acompanhe cada cotação e resposta recebida.", "/app/comprador/solicitacoes"], [FileText, "Propostas recebidas", "Revise os valores enviados pelos fornecedores.", "/app/comprador/cotacoes"], [ClipboardList, "Pedidos", "Acompanhe pedidos por fornecedor.", "/app/comprador/pedidos"]], links: [["/compradores", "Como funciona"]] },
   fornecedor: { title: "Área do fornecedor", eyebrow: "Operação de oferta", intro: "Acompanhe catálogo, ofertas e homologação da sua organização.", theme: "terra" as const, cards: [[Boxes, "Catálogo", "Mantenha SKUs e embalagens autorizados.", "/app/fornecedor/catalogo"], [MapPin, "Regiões e prazos", "Defina onde sua operação atende.", "/app/fornecedor/operacao"], [ShieldCheck, "Homologação", "Acompanhe documentos e aprovação de ofertas.", "/app/fornecedor/homologacao"], [FileText, "Cotações recebidas", "Analise solicitações e prepare propostas para compradores autorizados.", "/app/fornecedor/cotacoes"], [ClipboardList, "Pedidos recebidos", "Acompanhe solicitações sujeitas à confirmação comercial.", "/app/fornecedor/pedidos"]], links: [["/fornecedores", "Ver requisitos"]] },
 } as const;
 
