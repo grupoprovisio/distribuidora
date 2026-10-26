@@ -274,7 +274,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await pages.buyerA.getByRole('button',{name:'Adicionar QA local commodity à cesta'}).click();
     await pages.buyerA.getByRole('button',{name:'Adicionar QA segundo produto à cesta'}).click();
     await pages.buyerA.getByRole('link',{name:/Minha cesta/}).first().click();
-    await expect(pages.buyerA.getByRole('heading',{name:'Minha cesta'})).toBeVisible();
+    await expect(pages.buyerA.getByRole('heading',{name:'Minha cesta'}).last()).toBeVisible();
     await expect(pages.buyerA.getByText('QA segundo produto')).toBeVisible();
     await pages.buyerA.getByRole('link',{name:/Revisar solicitação/}).click();
     await expect(pages.buyerA.getByRole('button',{name:/Solicitar cotação/})).toBeEnabled();
