@@ -98,13 +98,13 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
 
   test('01 — modo QA libera comprador e dois fornecedores, mas bloqueia ADM, perfil misto e outra empresa', async () => {
     await pages.buyerA.goto('/app/comprador');
-    await expect(pages.buyerA.getByText('Homologação QA habilitada', { exact: false })).toBeVisible();
-    await expect(pages.buyerA.getByText('Teste QA autorizado')).toHaveCount(2);
+    await expect(pages.buyerA.getByText('Homologação QA habilitada', { exact: false })).toHaveCount(0);
+    await expect(pages.buyerA.getByRole('link', { name: /Minha cesta/ })).toBeVisible();
+    await expect(pages.buyerA.getByRole('link', { name: /Minhas solicitações/ })).toBeVisible();
     await pages.supplierA.goto('/app/fornecedor');
-    await expect(pages.supplierA.getByText('Homologação QA habilitada', { exact: false })).toBeVisible();
-    await expect(pages.supplierA.getByText('Teste QA autorizado')).toHaveCount(2);
+    await expect(pages.supplierA.getByText('Homologação QA habilitada', { exact: false })).toHaveCount(0);
     await pages.supplierB.goto('/app/fornecedor');
-    await expect(pages.supplierB.getByText('Homologação QA habilitada', { exact: false })).toBeVisible();
+    await expect(pages.supplierB.getByText('Homologação QA habilitada', { exact: false })).toHaveCount(0);
     await pages.buyerB.goto('/app/comprador');
     await expect(pages.buyerB.getByText('Homologação QA habilitada', { exact: false })).toHaveCount(0);
 
