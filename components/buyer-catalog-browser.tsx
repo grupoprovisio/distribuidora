@@ -56,7 +56,9 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId}:{
   },[items,search,sort]);
   function update(item:PrivateOffer,next:number){
     if(next>item.availableQuantity||next>100000)return;
-    if(basket.setQuantity(item.id,next))setLastMessage(
+    if(basket.setQuantity(item.id,next,{
+      productName:item.productName,supplier:item.supplier,pack:item.pack
+    }))setLastMessage(
       next===0?item.productName+" removido da cesta":item.productName+" atualizado na cesta");
     else setLastMessage("A cesta permite até 100 ofertas por solicitação.");
   }

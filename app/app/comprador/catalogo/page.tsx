@@ -21,10 +21,11 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   // Both helpers independently verify the authenticated user and enforce RLS.
   const summary=await myMarketplaceOrganizations("comprador");
   const access=await getMarketplaceAccess();
-  const catalog:BuyerCatalogResult=!summary.error && summary.organizations.length
-    ? await buyerCatalog(await createClient(),region,page)
-    : {items:[],error:summary.error,hasMore:false};
   const buyerOrgId=summary.organizations[0]?.id??"";
+  const catalog:BuyerCatalogResult=!summary.error && buyerOrgId &&
+    access?.organizationIds.comprador.includes(buyerOrgId)
+    ? await buyerCatalog(await createClient(),region,page,buyerOrgId)
+    : {items:[],error:summary.error||!buyerOrgId||!access?.organizationIds.comprador.includes(buyerOrgId),hasMore:false};
   const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1);
   const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1);
   return <div className="min-h-dvh bg-canvas">

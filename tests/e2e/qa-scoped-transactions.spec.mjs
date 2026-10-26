@@ -368,4 +368,68 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     expect(latest[0].origin_snapshot.label).toBe('Unidade QA local');
   });
 
+  test('06 — cesta mantém itens e calcula total somente com ofertas autorizadas',async()=>{
+    const valid=fixture.offer,nonQa=fixture.realOffer,missing=randomUUID();
+    const buyerPayload={action:'validate',buyerOrgId:ORGS.buyerA,region:'BR-SP',
+      lines:[{offerId:valid,quantity:2},{offerId:nonQa,quantity:1},{offerId:missing,quantity:1}]};
+    // Mixed ADM/supplier+buyer identity can READ buyer prices, but may not
+    // SUBMIT any QA transaction. The opposite commercial realm is redacted.
+    const preview=await pages.dual.evaluate(async payload=>{
+      const r=await fetch('/api/marketplace/baskets',{method:'POST',
+        headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(payload)});
+      return {status:r.status,...await r.json()};
+    },buyerPayload);
+    expect(preview.status).toBe(200);
+    expect(preview.ok).toBe(true);
+    expect(preview.quoteEnabled).toBe(false);
+    expect(preview.ready).toBe(false);
+    expect(preview.lines).toHaveLength(3);
+    expect(preview.lines[0].productName).toBe('QA local commodity');
+    expect(preview.lines[0].subtotalMinor).toBe(2500);
+    expect(preview.totalMinor).toBe(2500);
+    expect(preview.lines[1].valid).toBe(false);
+    expect(preview.lines[1].unitPriceMinor).toBe(0);
+    expect(preview.lines[1].productName).toBe('Produto indisponível');
+    expect(preview.lines[2].valid).toBe(false);
+    const denied=await pages.dual.evaluate(async payload=>{
+      const r=await fetch('/api/marketplace/baskets',{method:'POST',
+        headers:{'Content-Type':'application/json'},credentials:'same-origin',
+        body:JSON.stringify({...payload,action:'submit',method:'pickup',requestKey:'90000000-0000-4000-8000-000000000055'})});
+      return r.status;
+    },buyerPayload);
+    expect(denied).toBe(503);
+    const otherBuyer=await pages.buyerB.evaluate(async payload=>{
+      const r=await fetch('/api/marketplace/baskets',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      return r.status;
+    },buyerPayload);
+    expect(otherBuyer).toBe(403);
+
+    const page=pages.buyerA;
+    const key='provisio-b2b-cesta-v2:'+cfg.users.buyerA.id+':'+ORGS.buyerA+':BR-SP';
+    await page.goto('/app/comprador/cesta?regiao=BR-SP');
+    await page.evaluate(({key,valid,missing})=>{
+      window.localStorage.setItem(key,JSON.stringify([
+        {offerId:valid,quantity:2,productName:'QA local commodity',supplier:'Fornecedor QA'},
+        {offerId:missing,quantity:1,productName:'Produto antigo',supplier:'Fornecedor QA'}
+      ]));
+      window.dispatchEvent(new Event('provisio:basket-changed'));
+    },{key,valid,missing});
+    await expect(page.getByText('QA local commodity',{exact:true})).toBeVisible();
+    await expect(page.getByText('Produto antigo',{exact:true})).toBeVisible();
+    await expect(page.getByText('Produtos disponíveis',{exact:true})).toBeVisible();
+    await expect(page.getByText('Total pendente de revisão',{exact:true})).toBeVisible();
+    await page.getByRole('button',{name:'Remover itens indisponíveis'}).click();
+    await expect(page.getByText('Produto antigo',{exact:true})).toHaveCount(0);
+    await expect(page.getByText('R$ 25,00',{exact:true}).last()).toBeVisible();
+    await page.getByLabel('CEP de entrega').fill('01001000');
+    await page.getByRole('button',{name:'Calcular frete'}).click();
+    await expect(page.getByText('R$ 39,90',{exact:true})).toBeVisible();
+    await expect(page.getByText('Total estimado (produtos + frete)',{exact:true})).toBeVisible();
+    await page.getByRole('radio',{name:/Retirar no local/}).check();
+    await expect(page.getByText('R$ 25,00',{exact:true}).last()).toBeVisible();
+    await page.evaluate(key=>{window.localStorage.removeItem(key);
+      window.dispatchEvent(new Event('provisio:basket-changed'));},key);
+  });
+
 });

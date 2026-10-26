@@ -614,6 +614,7 @@ export type Database = {
           created_at: string
           id: string
           is_platform_owned: boolean
+          qa_only: boolean
           kind: string
           legal_name: string
           status: string
@@ -625,6 +626,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_platform_owned?: boolean
+          qa_only?: boolean
           kind: string
           legal_name: string
           status?: string
@@ -636,6 +638,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_platform_owned?: boolean
+          qa_only?: boolean
           kind?: string
           legal_name?: string
           status?: string

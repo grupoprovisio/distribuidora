@@ -13,7 +13,7 @@ export type ValidatedBasketLine={
   tiers:BasketPriceTier[];valid:boolean;reason:string|null;
 };
 export type BasketValidation={ok:boolean;reason?:string;lines:ValidatedBasketLine[];
-  totalMinor:number;ready:boolean;region:string};
+  totalMinor:number;ready:boolean;region:string;quoteEnabled?:boolean};
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function validateBasketInput(lines:unknown):lines is BasketSelection[] {
   return Array.isArray(lines) && lines.length>0 && lines.length<=100 &&
@@ -35,9 +35,19 @@ export async function validateBuyerBasket(
   const empty=(reason:string):BasketValidation=>({ok:false,reason,lines:[],totalMinor:0,ready:false,region});
   if(!access.organizationIds.comprador.includes(buyerOrgId)||!access.allowed.includes("comprador")
     ||!/^BR-[A-Z]{2}$/.test(region)||!validateBasketInput(selected))return empty("invalid_request");
-  const allowed=await db.from("buyer_delivery_regions").select("buyer_org_id")
-    .eq("buyer_org_id",buyerOrgId).eq("region_code",region).maybeSingle();
-  if(allowed.error||!allowed.data)return empty("region_not_authorized");
+  // The signed-in buyer may belong to multiple companies. Resolve and pin the
+  // exact buyer organization before reading priced offers; an ADM session must
+  // never mix QA supplier prices with a non-QA buyer or vice versa.
+  const [buyer,allowed]=await Promise.all([
+    db.from("organizations").select("id,kind,status,qa_only")
+      .eq("id",buyerOrgId).maybeSingle(),
+    db.from("buyer_delivery_regions").select("buyer_org_id")
+      .eq("buyer_org_id",buyerOrgId).eq("region_code",region).maybeSingle(),
+  ]);
+  if(buyer.error||allowed.error)return empty("catalog_unavailable");
+  if(!buyer.data||buyer.data.kind!=="BUYER"||buyer.data.status!=="approved"||!allowed.data)
+    return empty("region_not_authorized");
+  const buyerRealm=buyer.data.qa_only;
   const ids=selected.map(l=>l.offerId);
   const now=new Date().toISOString();
   const offers=await db.from("offers")
@@ -47,11 +57,19 @@ export async function validateBuyerBasket(
   const rows=offers.data??[];
   const skuIds=[...new Set(rows.map(o=>o.supplier_product_id))];
   const supplierIds=[...new Set(rows.map(o=>o.supplier_org_id))];
-  if(!skuIds.length)return empty("offers_unavailable");
+  // A removed/previously authorized offer must not blank the complete basket.
+  // Keep its selection visible so the buyer can remove it or return to catalog.
+  if(!skuIds.length)return {ok:true,region,totalMinor:0,ready:false,
+    lines:selected.map(({offerId,quantity})=>({
+      offerId,productName:"Produto indisponível",supplier:"",sku:"",pack:"",
+      imageUrl:null,quantity,minQuantity:1,available:0,unitPriceMinor:0,
+      subtotalMinor:0,tiers:[],valid:false,
+      reason:"Esta oferta não está mais disponível para sua empresa."
+    }))};
   const [skus,suppliers,inventory,regions,tiers,caps]=await Promise.all([
     db.from("supplier_products").select("id,product_id,supplier_org_id,supplier_sku,pack_quantity,pack_unit,status")
       .in("id",skuIds),
-    db.from("organizations").select("id,trade_name,legal_name,kind,status")
+    db.from("organizations").select("id,trade_name,legal_name,kind,status,qa_only")
       .in("id",supplierIds),
     db.from("inventory_positions").select("supplier_product_id,supplier_org_id,available_quantity,reserved_quantity")
       .in("supplier_product_id",skuIds),
@@ -91,6 +109,7 @@ export async function validateBuyerBasket(
     const product=sku?productMap.get(sku.product_id):undefined;
     const inv=offer?stockMap.get(offer.supplier_product_id+":"+offer.supplier_org_id):undefined;
     const available=inv?Math.max(0,Number(inv.available_quantity)-Number(inv.reserved_quantity)):0;
+    const sameRealm=!!seller && seller.qa_only===buyerRealm;
     const priceTiers:BasketPriceTier[]=(tiers.data??[])
       .filter(t=>t.offer_id===offerId && Number.isSafeInteger(t.min_quantity)
         && Number.isSafeInteger(t.unit_price_minor)&&t.unit_price_minor>0)
@@ -98,7 +117,7 @@ export async function validateBuyerBasket(
       .sort((a,b)=>a.minQuantity-b.minQuantity);
     const minQuantity=offer?.min_quantity??1;
     const unit=offer?basketUnitPrice(offer.base_price_minor,priceTiers,quantity):0;
-    const valid=!!(offer&&sku&&seller&&product&&inv&&product.status==="active"
+    const valid=!!(offer&&sku&&seller&&product&&inv&&sameRealm&&product.status==="active"
       && sku.status==="approved" && sku.supplier_org_id===offer.supplier_org_id
       && (seller.kind==="SUPPLIER"||seller.kind==="PLATFORM_OPERATOR") && seller.status==="approved"
       && entitled.has(offer.supplier_org_id)&&offerRegions.has(offerId)
@@ -109,12 +128,19 @@ export async function validateBuyerBasket(
       && unit*quantity<=Number.MAX_SAFE_INTEGER);
     const sub=valid?unit*quantity:0;
     total+=sub;
-    return {offerId,productName:product?.name??"Produto indisponível",
-      supplier:seller?.trade_name||seller?.legal_name||"Fornecedor",
-      sku:sku?.supplier_sku??"",pack:sku?String(sku.pack_quantity)+" "+sku.pack_unit:"",
-      imageUrl:product?imagesMap.get(product.id)??null:null,
-      quantity,minQuantity,available,unitPriceMinor:unit,
-      subtotalMinor:sub,tiers:priceTiers,valid,reason:valid?null:"Oferta, quantidade ou estoque indisponível"};
+    const visible=!!(offer&&sku&&seller&&product&&sameRealm);
+    const reason=valid?null:
+      !visible?"Oferta removida ou indisponível para sua empresa.":
+      quantity<minQuantity?"Quantidade mínima: "+minQuantity+" unidades.":
+      available<quantity?"Estoque insuficiente para esta quantidade.":
+      "Oferta suspensa, expirada ou sem preço válido.";
+    return {offerId,productName:visible?(product?.name??"Produto indisponível"):"Produto indisponível",
+      supplier:visible?(seller?.trade_name||seller?.legal_name||""):"",
+      sku:visible?(sku?.supplier_sku??""):"",pack:visible&&sku?String(sku.pack_quantity)+" "+sku.pack_unit:"",
+      imageUrl:visible&&product?imagesMap.get(product.id)??null:null,
+      quantity,minQuantity,available:visible?available:0,
+      unitPriceMinor:valid?unit:0,subtotalMinor:sub,
+      tiers:valid?priceTiers:[],valid,reason};
   });
   return {ok:true,lines,totalMinor:total,ready:lines.length>0
     && lines.every(line=>line.valid),region};

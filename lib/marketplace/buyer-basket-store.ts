@@ -1,7 +1,12 @@
 "use client";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
-export type BasketItem={offerId:string;quantity:number};
+export type BasketItem={
+  offerId:string;quantity:number;productName?:string;supplier?:string;pack?:string
+};
+export type BasketDisplay={productName:string;supplier:string;pack:string};
+const display=(v:unknown,max:number)=>typeof v==="string"?
+ v.trim().slice(0,max):undefined;
 const EVENT="provisio:basket-changed";
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const parse=(value:string):BasketItem[]=>{
@@ -16,7 +21,12 @@ const parse=(value:string):BasketItem[]=>{
       if(typeof offerId!=="string"||!UUID.test(offerId)||seen.has(offerId)
         ||typeof quantity!=="number"||!Number.isSafeInteger(quantity)
         ||quantity<1||quantity>100000)continue;
-      seen.add(offerId);rows.push({offerId,quantity});
+      seen.add(offerId);
+      const values=item as Partial<BasketItem>;
+      rows.push({offerId,quantity,
+        productName:display(values.productName,160),
+        supplier:display(values.supplier,140),
+        pack:display(values.pack,100)});
       if(rows.length===100)break;
     }
     return rows;
@@ -34,7 +44,7 @@ function save(key:string,items:BasketItem[]){
   window.dispatchEvent(new Event(EVENT));
   return true;
 }
-/** Only offer ids and quantities are cached. Prices and approval are server-only. */
+/** The browser keeps ids, quantities and display-only labels; prices are always server-verified. */
 export function useBuyerBasket(userId:string,orgId:string,region:string){
   const key=keyFor(userId,orgId,region);
   const subscribe=useCallback((onChange:()=>void)=>{
@@ -44,16 +54,20 @@ export function useBuyerBasket(userId:string,orgId:string,region:string){
   },[]);
   const raw=useSyncExternalStore(subscribe,()=>current(key),()=>"[]");
   const items=useMemo(()=>parse(raw),[raw]);
-  const setQuantity=useCallback((offerId:string,quantity:number)=>{
+  const setQuantity=useCallback((offerId:string,quantity:number,info?:BasketDisplay)=>{
     if(!UUID.test(offerId)||!Number.isSafeInteger(quantity)||quantity<0||quantity>100000)return false;
     const values=parse(current(key));
     const index=values.findIndex(row=>row.offerId===offerId);
+    const cached=info?{
+      productName:display(info.productName,160),
+      supplier:display(info.supplier,140),pack:display(info.pack,100)
+    }:{};
     if(index>=0){
       if(quantity===0)values.splice(index,1);
-      else values[index]={offerId,quantity};
+      else values[index]={...values[index],...cached,offerId,quantity};
     }else if(quantity>0){
       if(values.length>=100)return false;
-      values.push({offerId,quantity});
+      values.push({offerId,quantity,...cached});
     }
     return save(key,values);
   },[key]);
