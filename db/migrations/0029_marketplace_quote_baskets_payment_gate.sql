@@ -16,6 +16,13 @@ create table public.quote_baskets (
   created_at timestamptz not null default now(),
   unique (buyer_org_id,request_key)
 );
+-- Buyers may see progressive prices ONLY on offers they are already entitled
+-- to view. This helper checks live session, approved offers, buyer/supplier
+-- matching realm, approved capabilities, region and available stock.
+create policy price_tiers_read_authorized_buyer on public.offer_price_tiers
+  for select to authenticated
+  using (marketplace_private.buyer_can_see_offer(offer_id));
+
 create index quote_baskets_buyer_date_idx on public.quote_baskets(buyer_org_id,created_at desc);
 alter table public.quote_baskets enable row level security;
 alter table public.quote_baskets force row level security;
