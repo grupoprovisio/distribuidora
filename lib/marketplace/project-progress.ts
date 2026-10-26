@@ -48,8 +48,8 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "catalogo", name: "Produtos, fotos, categorias e estoque", weight: 16,
     code: 4, tests: 3, production: 1, priority: "P0",
-    evidence: "Migrações 0016–0021 hospedadas, RLS de solicitações A/B validada, produtos/SKU/ofertas aprovados apenas em transação revertida; WebP local e bucket privado sem imagens hospedadas.",
-    next: "Enviar imagem WebP pelo navegador autenticado, validar Storage privado e aprovar produto/preço via sessão real ADM + MFA.",
+    evidence: "Migrações 0016–0026 hospedadas, 19 tabelas públicas com RLS; existem 2 produtos, 2 ofertas e 1 imagem no Storage privado. Upload WebP autenticado e aprovação completa via navegador ainda não foram comprovados.",
+    next: "Validar o upload WebP pelo navegador autenticado, conferir Storage privado, preços progressivos e aprovar produto/oferta com ADM + MFA.",
     href: "/admin/marketplace/prontidao",
   },
   {
@@ -97,11 +97,47 @@ export const PROJECT_AREAS: readonly ProjectArea[] = [
   {
     id: "qualidade", name: "Segurança, CI e publicação", weight: 4,
     code: 3, tests: 3, production: 2, priority: "P0",
-    evidence: "PRs #39–#44 integrados; 21 testes gerais e 3 QA locais, SQL reversível e HTTP assinado de Fornecedor A. 19/19 tabelas públicas com RLS e RPCs comerciais vedadas ao anon.",
+    evidence: "PR #51 integrado à main, migração 0026 aplicada ao banco hospedado; 21 testes gerais e 3 QA locais, SQL reversível e HTTP assinado de Fornecedor A. 19/19 tabelas públicas com RLS.",
     next: "Concluir E2E HTTP hospedado de comprador, fornecedores A/B e ADM MFA, WebP no Storage e proteção de senhas vazadas (disponível no Supabase Pro).",
     href: "/admin/marketplace/prontidao",
   },
 ] as const;
+
+/**
+ * Recortes das mesmas notas de implementação por camada técnica.
+ * Uma área full-stack aparece nos dois recortes; não são medições independentes
+ * de cobertura de testes ou de funcionamento hospedado.
+ */
+export const DELIVERY_TRACKS = {
+  frontend: {
+    title: "Frontend",
+    summary: "Site, portais, jornadas visuais, cadastro, catálogo e operação.",
+    areaIds: ["institucional", "autenticacao", "administracao", "catalogo", "fornecedor",
+      "comprador", "cotacoes", "pedidos", "logistica", "financeiro"],
+  },
+  backend: {
+    title: "Backend",
+    summary: "Identidade, autorização, catálogo, transações, logística e infraestrutura.",
+    areaIds: ["autenticacao", "administracao", "catalogo", "fornecedor", "comprador",
+      "cotacoes", "pedidos", "logistica", "financeiro", "qualidade"],
+  },
+} as const;
+export type DeliveryTrack = keyof typeof DELIVERY_TRACKS;
+
+export function deliveryTrackPercent(track: DeliveryTrack) {
+  const areaIds: readonly string[] = DELIVERY_TRACKS[track].areaIds;
+  const relevant = PROJECT_AREAS.filter(area => areaIds.includes(area.id));
+  const weights = relevant.reduce((sum, area) => sum + area.weight, 0);
+  return weights === 0 ? 0 : Math.round(
+    relevant.reduce((sum, area) => sum + area.weight * area.code, 0) /
+      (weights * MAX_CHECKPOINTS) * 100
+  );
+}
+
+export const DELIVERY_PROGRESS = {
+  frontend: deliveryTrackPercent("frontend"),
+  backend: deliveryTrackPercent("backend"),
+} as const;
 
 export const STAGE_WEIGHTS = { code: 45, tests: 30, production: 25 } as const;
 export const PROGRESS_DIMENSIONS: readonly ProgressDimension[] = ["code","tests","production"] as const;
