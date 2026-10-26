@@ -327,4 +327,45 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     expect(buyerB).toBe(503);
   });
 
+  test('05 — cadastro editável, frete real de tabela por CEP e endereço persistido na cotação',async()=>{
+    const page=pages.buyerA;
+    await page.goto('/app/comprador/cadastro');
+    await expect(page.getByLabel('Nome completo')).toHaveValue('Comprador Local Teste');
+    await page.getByLabel('Complemento (opcional)').fill('Sala QA 2');
+    await page.getByRole('button',{name:'Salvar meus dados'}).click();
+    await expect(page.getByText('Dados salvos')).toBeVisible();
+    const buyerBForbidden=await pages.buyerB.evaluate(async buyer=>{
+      const r=await fetch('/api/marketplace/buyer-profile?buyer='+buyer);
+      return r.status;
+    },ORGS.buyerA);
+    expect(buyerBForbidden).toBe(403);
+
+    await page.goto('/app/comprador/catalogo?regiao=SP');
+    await page.getByRole('button',{name:'Adicionar QA local commodity à cesta'}).click();
+    await page.getByRole('link',{name:/Minha cesta/}).first().click();
+    await page.getByLabel('CEP do endereço de entrega').fill('01001000');
+    await page.getByRole('button',{name:'Calcular frete'}).click();
+    await expect(page.getByText('R$ 14,90',{exact:false})).toBeVisible();
+    await expect(page.getByText('2 a 4 dias úteis',{exact:false})).toBeVisible();
+    await page.getByRole('link',{name:/Revisar solicitação/}).click();
+    await expect(page.getByLabel('Complemento (opcional)')).toHaveValue('Sala QA 2');
+    await expect(page.getByRole('button',{name:'Solicitar cotação'})).toBeEnabled();
+    await page.getByRole('button',{name:'Solicitar cotação'}).click();
+    await page.waitForURL(/\/app\/comprador\/solicitacoes\?enviada=/);
+    await expect(page.getByText('Solicitação registrada.',{exact:false})).toBeVisible();
+    const latest=rows(`select recipient_snapshot,origin_snapshot,freight_minor,
+      min_business_days,max_business_days,delivery_postal_code,fulfillment_method
+      from public.quote_baskets where buyer_org_id='${ORGS.buyerA}'
+      and fulfillment_method='delivery' order by created_at desc limit 1`);
+    expect(latest).toHaveLength(1);
+    expect(latest[0].recipient_snapshot.complement).toBe('Sala QA 2');
+    expect(latest[0].recipient_snapshot.fullName).toBe('Comprador Local Teste');
+    expect(latest[0].recipient_snapshot.reference).toBe('Portaria QA');
+    expect(latest[0].delivery_postal_code).toBe('01001000');
+    expect(latest[0].freight_minor).toBe(1490);
+    expect(latest[0].min_business_days).toBe(2);
+    expect(latest[0].max_business_days).toBe(4);
+    expect(latest[0].origin_snapshot.label).toBe('Unidade QA local');
+  });
+
 });
