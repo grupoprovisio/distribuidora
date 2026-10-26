@@ -11,17 +11,17 @@ import { normalizeCep } from "@/lib/marketplace/buyer-contact";
 import { BuyerProfileForm } from "@/components/buyer-profile-form";
 import { BuyerFreightCalculator, type FreightInfo } from "@/components/buyer-freight-calculator";
 
-type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout"};
+type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout";initialMethod?:"delivery"|"pickup"};
 type BasketResponse=BasketValidation&{id?:string;status?:string;paymentStatus?:string};
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const brl=(value:number)=>money.format(value/100);
 const URL="/api/marketplace/baskets";
-export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
+export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod="delivery"}:Props){
   const basket=useBuyerBasket(userId,buyerOrgId,region);
   const [snapshot,setSnapshot]=useState<{key:string;value:BasketValidation|null}|null>(null);
   const [submitting,setSubmitting]=useState(false);
   const [error,setError]=useState("");
-  const [method,setMethod]=useState<"delivery"|"pickup">("delivery");
+  const [method,setMethod]=useState<"delivery"|"pickup">(initialMethod);
   const [savedContact,setSavedContact]=useState<BuyerContact|null>(null);
   const [cep,setCep]=useState("");
   const [freight,setFreight]=useState<FreightInfo|null>(null);
@@ -103,7 +103,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
     finally{setSubmitting(false);}
   }
   const productsTotal=validation?.totalMinor??0;
-  const shippingMinor=method==="pickup"&&mode==="checkout"?(freight?.pickupAvailable?0:null):
+  const shippingMinor=method==="pickup"?0:
     (freight?.available&&freight.quote&&freight.cep===normalizeCep(cep)?freight.quote.freightMinor:null);
   const total=productsTotal+(shippingMinor??0);
   const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
@@ -119,7 +119,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
     }
     return [...map.entries()];
   },[validation]);
-  const checkoutHref="/app/comprador/checkout?regiao="+encodeURIComponent(region);
+  const checkoutHref="/app/comprador/checkout?regiao="+encodeURIComponent(region)+
+    "&recebimento="+(method==="pickup"?"retirada":"entrega");
   const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
   return <div className="space-y-6 pb-20">
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -190,6 +191,12 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
       </section>
       <aside className="sticky top-4 rounded-[1.75rem] bg-paper p-5 shadow-card ring-1 ring-line/70">
         <h2 className="text-xl font-black text-forest-deep">Resumo da cesta</h2>
+        <div className="mt-5 rounded-2xl border border-line bg-canvas p-3">
+          <BuyerFreightCalculator buyerOrgId={buyerOrgId}
+            postalCode={cep} onPostalCodeChange={handlePostal} onQuote={handleFreight}
+            method={method} onMethodChange={setMethod}
+            auto={mode==="checkout"&&!!savedContact}/>
+        </div>
         <dl className="mt-5 space-y-3 text-sm text-muted">
           <div className="flex justify-between"><dt>Produtos diferentes</dt><dd className="font-bold text-ink">{basket.distinctCount}</dd></div>
           <div className="flex justify-between"><dt>Unidades</dt><dd className="font-bold text-ink">{basket.count}</dd></div>
@@ -203,31 +210,6 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode}:Props){
            {shippingMinor!==null?"Total estimado":"Subtotal dos produtos"}
           </span>
           <strong className="text-xl font-black tabular-nums text-forest-deep">{brl(total)}</strong>
-        </div>
-        {mode==="checkout"&&<fieldset className="mt-6 space-y-3">
-          <legend className="text-sm font-extrabold text-forest-deep">
-            Como deseja receber seus produtos?
-          </legend>
-          <p className="text-xs leading-relaxed text-muted">
-            Escolha entrega no endereço cadastrado ou retirada na unidade Provisio.
-            O valor do frete e o prazo serão incluídos na cotação enviada.
-          </p>
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 text-sm">
-            <input type="radio" checked={method==="delivery"} onChange={()=>setMethod("delivery")} name="method"/>
-            Entrega no endereço cadastrado
-          </label>
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 text-sm">
-            <input type="radio" checked={method==="pickup"} onChange={()=>setMethod("pickup")} name="method"/>
-            Retirada na Provisio
-          </label>
-          {method==="pickup"&&<p className="text-xs text-muted">
-            Retirada sujeita à unidade cadastrada no ADM. Consulte o endereço abaixo.
-          </p>}
-        </fieldset>}
-        <div className="mt-5">
-          <BuyerFreightCalculator buyerOrgId={buyerOrgId}
-            postalCode={cep} onPostalCodeChange={handlePostal}
-            onQuote={handleFreight} auto={mode==="checkout"&&!!savedContact}/>
         </div>
         {mode==="checkout"&&!savedContact&&
           <p className="mt-3 text-xs font-semibold text-muted">
