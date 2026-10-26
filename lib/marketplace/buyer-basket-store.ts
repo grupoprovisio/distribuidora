@@ -17,7 +17,7 @@ const parse=(value:string):BasketItem[]=>{
         ||typeof quantity!=="number"||!Number.isSafeInteger(quantity)
         ||quantity<1||quantity>100000)continue;
       seen.add(offerId);rows.push({offerId,quantity});
-      if(rows.length===30)break;
+      if(rows.length===100)break;
     }
     return rows;
   }catch{return [];}
@@ -52,7 +52,7 @@ export function useBuyerBasket(userId:string,orgId:string,region:string){
       if(quantity===0)values.splice(index,1);
       else values[index]={offerId,quantity};
     }else if(quantity>0){
-      if(values.length>=30)return false;
+      if(values.length>=100)return false;
       values.push({offerId,quantity});
     }
     return save(key,values);
