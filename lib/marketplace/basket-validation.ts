@@ -16,7 +16,7 @@ export type BasketValidation={ok:boolean;reason?:string;lines:ValidatedBasketLin
   totalMinor:number;ready:boolean;region:string};
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function validateBasketInput(lines:unknown):lines is BasketSelection[] {
-  return Array.isArray(lines) && lines.length>0 && lines.length<=30 &&
+  return Array.isArray(lines) && lines.length>0 && lines.length<=100 &&
     lines.every(line=>line && typeof line==="object" && !Array.isArray(line)
       && Object.keys(line).sort().join(",")==="offerId,quantity"
       && typeof line.offerId==="string" && UUID.test(line.offerId)
@@ -42,7 +42,7 @@ export async function validateBuyerBasket(
   const now=new Date().toISOString();
   const offers=await db.from("offers")
     .select("id,supplier_product_id,supplier_org_id,base_price_minor,min_quantity,status,valid_from,valid_to,source_type")
-    .in("id",ids).limit(30);
+    .in("id",ids).limit(100);
   if(offers.error)return empty("offers_unavailable");
   const rows=offers.data??[];
   const skuIds=[...new Set(rows.map(o=>o.supplier_product_id))];
