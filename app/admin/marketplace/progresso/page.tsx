@@ -6,7 +6,7 @@ import { AdminNav } from "@/components/admin-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { createClient } from "@/lib/supabase/server";
 import {
-  areaPercent, OVERALL_PROGRESS, PROJECT_AREAS, REVIEW_DATE, STAGE_WEIGHTS,
+  areaPercent, DELIVERY_PROGRESS, DELIVERY_TRACKS, OVERALL_PROGRESS, PROJECT_AREAS, REVIEW_DATE, STAGE_WEIGHTS,
   TOTAL_PROGRESS, type ProgressDimension
 } from "@/lib/marketplace/project-progress";
 import { WRAP } from "@/lib/ui";
@@ -110,6 +110,31 @@ export default async function ProgressPage(){
         </div>
       </section>
 
+      <section aria-labelledby="technical-progress-title" className="mt-5">
+        <h2 id="technical-progress-title" className="text-xl font-black text-forest-deep">
+          Avanço do frontend e backend
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Recortes da implementação por camada, com critérios compartilhados entre as duas frentes.
+          Estas notas representam o código preparado, não aprovação de testes hospedados.
+        </p>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {(["frontend", "backend"] as const).map(track => (
+            <article key={track} className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
+              <div className="flex items-end justify-between gap-3">
+                <h3 className="font-black text-forest-deep">{DELIVERY_TRACKS[track].title}</h3>
+                <p className="text-3xl font-black tabular-nums text-forest">{DELIVERY_PROGRESS[track]}%</p>
+              </div>
+              <div role="progressbar" aria-label={"Implementação "+DELIVERY_TRACKS[track].title}
+                aria-valuemin={0} aria-valuemax={100} aria-valuenow={DELIVERY_PROGRESS[track]}
+                className="mt-3 h-2 overflow-hidden rounded-full bg-canvas">
+                <div className="h-full rounded-full bg-forest" style={{width: DELIVERY_PROGRESS[track]+"%"}}/>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-muted">{DELIVERY_TRACKS[track].summary}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       <section aria-label="Etapas independentes do projeto" className="mt-5 grid gap-3 md:grid-cols-3">
         {DIMENSIONS.map(stage=><article key={stage.key} className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
           <h2 className="text-sm font-black text-forest-deep">{stage.title}</h2>
