@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { UF_CODES } from "@/lib/marketplace/brazil-regions";
 import { createClient } from "@/lib/supabase/server";
 import { requireMarketplacePortal } from "@/lib/marketplace/session";
+import { SupplierCompanyEditor } from "@/components/supplier-company-editor";
 import {
   addCapability, addMembership, addBuyerRegion, revokeBuyerRegion, createOrganization,
   setCapabilityStatus, setMembershipStatus, setOrganizationStatus, setProfileStatus,
@@ -25,7 +26,7 @@ export default async function AccessAdminPage(){
   const client=await createClient();
   const [profiles,orgs,members,caps,buyerRegions]=await Promise.all([
     client.from("profiles").select("id,display_name,status").order("created_at",{ascending:false}).limit(100),
-    client.from("organizations").select("id,legal_name,kind,status,is_platform_owned").order("created_at",{ascending:false}).limit(100),
+    client.from("organizations").select("id,legal_name,trade_name,kind,status,is_platform_owned").order("created_at",{ascending:false}).limit(100),
     client.from("organization_members").select("id,organization_id,user_id,role,status").order("created_at",{ascending:false}).limit(100),
     client.from("organization_capabilities").select("organization_id,capability,status").limit(100),
     client.from("buyer_delivery_regions").select("buyer_org_id,region_code").order("region_code").limit(200),
@@ -40,6 +41,7 @@ export default async function AccessAdminPage(){
   const entitledBuyers=new Set(capabilities.filter(c=>c.capability==="BUYER"&&c.status==="approved").map(c=>c.organization_id));
   const buyers=organizations.filter(o=>o.kind==="BUYER"&&o.status==="approved"&&entitledBuyers.has(o.id));
   const orgNames=new Map(organizations.map(o=>[o.id,o.legal_name]));
+  const supplierIds=new Set(capabilities.filter(c=>c.capability==="SUPPLIER").map(c=>c.organization_id));
 
 
   return <main className="mx-auto max-w-6xl px-5 py-8 pb-24">
@@ -74,7 +76,7 @@ export default async function AccessAdminPage(){
         <button className={buttonClass}>Criar pendente</button>
       </form>
       <div className="mt-5 space-y-3">
-        {organizations.map(org=><div key={org.id} className="rounded-2xl border border-line p-4">
+        {organizations.map(org=><div key={org.id} data-company-id={org.id} className="rounded-2xl border border-line p-4">
           <div className="flex flex-wrap justify-between gap-2">
             <div><strong className="text-sm text-forest">{org.legal_name}</strong>
               <p className="mt-1 text-xs text-muted">{capabilityLabels[org.kind]??org.kind} · {org.is_platform_owned?"Plataforma · ":""}{org.id}</p>
@@ -87,6 +89,8 @@ export default async function AccessAdminPage(){
               <button className={buttonClass}>Salvar</button>
             </form>}
           </div>
+          {supplierIds.has(org.id)&&<SupplierCompanyEditor key={org.id+":"+org.legal_name+":"+org.trade_name}
+            organizationId={org.id} legalName={org.legal_name} tradeName={org.trade_name}/>}
         </div>)}
       </div>
     </section>

@@ -135,6 +135,25 @@ test("Cesta reutiliza autorização e consulta preços em paralelo sem ignorar R
   assert.match(validation,/sameRealm/);
 });
 
+test("Edicao de empresas fornecedoras exige ADM com MFA e altera somente nomes",()=>{
+  const supplier=file("app/app/fornecedor/homologacao/page.tsx");
+  const action=file("app/app/fornecedor/homologacao/actions.ts");
+  const editor=file("components/supplier-company-editor.tsx");
+  const admin=file("app/admin/acessos/page.tsx");
+  assert.match(supplier,/requireMarketplacePortal\("fornecedor"\)/);
+  assert.match(supplier,/getAuthenticatorAssuranceLevel/);
+  assert.match(supplier,/currentLevel==="aal2"/);
+  assert.match(supplier,/canEdit&&<SupplierCompanyEditor/);
+  assert.match(admin,/supplierIds.has\(org.id\)&&<SupplierCompanyEditor/);
+  assert.match(action,/access\?\.allowed\.includes\("admin"\)/);
+  assert.match(action,/currentLevel!=="aal2"/);
+  assert.match(action,/\.eq\("capability","SUPPLIER"\)/);
+  assert.match(action,/\.update\(\{legal_name:legalName,trade_name:tradeName\|\|null\}\)/);
+  assert.doesNotMatch(action,/service_role|sb_secret_|update\(\{status|update\(\{tax_id|update\(\{qa_only/);
+  assert.match(editor,/Editar dados cadastrais/);
+  assert.match(editor,/Salvar dados cadastrais/);
+});
+
 test("Frete automático SP respeita ADM, CEP específico e escolha de retirada",()=>{
   const migration=file("db/migrations/0031_provisio_shipping_state_rates.sql");
   const api=file("app/api/marketplace/frete/route.ts");

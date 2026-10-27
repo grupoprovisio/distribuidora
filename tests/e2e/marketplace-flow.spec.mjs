@@ -174,6 +174,38 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     await expect(page).toHaveURL(/admin\/marketplace/);
   });
 
+  test('02b - ADM com MFA edita nomes da empresa sem liberar acesso ao fornecedor',async()=>{
+    const original=rows(`select legal_name,trade_name from public.organizations where id='${ORGS.supplierA}'`)[0];
+    const limited=pages.supplierA;
+    await limited.goto('/app/fornecedor/homologacao');
+    await expect(limited.locator(`[data-company-id="${ORGS.supplierA}"]`)).toBeVisible();
+    await expect(limited.getByRole('button',{name:'Editar dados cadastrais'})).toHaveCount(0);
+
+    const admin=pages.admin;
+    await admin.goto('/admin/acessos');
+    const card=admin.locator(`[data-company-id="${ORGS.supplierA}"]`);
+    await expect(card).toBeVisible();
+    await card.getByRole('button',{name:'Editar dados cadastrais'}).click();
+    await card.getByLabel('Razão social / nome legal').fill('FORNECEDOR A RAZAO QA ATUALIZADA');
+    await card.getByLabel('Nome fantasia / nome exibido').fill('Fornecedor A nome atualizado');
+    await card.getByRole('button',{name:'Salvar dados cadastrais'}).click();
+    await expect(card.getByText('Cadastro da empresa atualizado.')).toBeVisible();
+    expect(rows(`select legal_name,trade_name from public.organizations where id='${ORGS.supplierA}'`)[0])
+      .toEqual({legal_name:'FORNECEDOR A RAZAO QA ATUALIZADA',trade_name:'Fornecedor A nome atualizado'});
+
+    await limited.reload();
+    await expect(limited.locator(`[data-company-id="${ORGS.supplierA}"]`).getByRole('heading',{name:'Fornecedor A nome atualizado'})).toBeVisible();
+    await admin.reload();
+    const restored=admin.locator(`[data-company-id="${ORGS.supplierA}"]`);
+    await restored.getByRole('button',{name:'Editar dados cadastrais'}).click();
+    await restored.getByLabel('Razão social / nome legal').fill(original.legal_name);
+    await restored.getByLabel('Nome fantasia / nome exibido').fill(original.trade_name??'');
+    await restored.getByRole('button',{name:'Salvar dados cadastrais'}).click();
+    await expect(restored.getByText('Cadastro da empresa atualizado.')).toBeVisible();
+    expect(rows(`select legal_name,trade_name from public.organizations where id='${ORGS.supplierA}'`)[0])
+      .toEqual(original);
+  });
+
   test('03 - fornecedores A e B cadastram produtos; pendências não aparecem ao comprador',async()=>{
     await submitProduct(A);await submitProduct(B);
     const own=await clients.supplierA.from('supplier_product_submissions').select('id');
