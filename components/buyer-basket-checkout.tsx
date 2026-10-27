@@ -37,8 +37,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   const [savedContact,setSavedContact]=useState<BuyerContact|null>(null);
   const [cep,setCep]=useState("");
   const [freight,setFreight]=useState<FreightInfo|null>(null);
-  const handleSaved=useCallback((profile:BuyerContact)=>{
-    setSavedContact(profile);setCep(profile.postalCode);setFreight(null);
+  const handleSaved=useCallback((profile:BuyerContact|null)=>{
+    setSavedContact(profile);setCep(profile?.postalCode??"");setFreight(null);
   },[]);
 
   const handlePostal=useCallback((next:string)=>{setCep(next);setFreight(null);},[]);
@@ -256,7 +256,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
           </article>)}
         </section>)}
         {mode==="checkout"&&<BuyerCheckoutContactSummary buyerOrgId={buyerOrgId}
-           onLoaded={profile=>{if(profile)handleSaved(profile);else{setSavedContact(null);setFreight(null);}}}/>}
+           onLoaded={handleSaved}/>}
         <button type="button" onClick={()=>{if(window.confirm("Remover todos os produtos da cesta?"))basket.clear();}}
           className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-muted">
           <Trash2 size={16} aria-hidden/> Limpar cesta
