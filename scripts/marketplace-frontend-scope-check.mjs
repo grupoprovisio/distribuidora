@@ -135,6 +135,20 @@ test("Cesta reutiliza autorização e consulta preços em paralelo sem ignorar R
   assert.match(validation,/sameRealm/);
 });
 
+test("Governanca exibe nomes e status em portugues e permite manutencao auditada",()=>{
+  const page=file("app/admin/acessos/page.tsx");
+  const actions=file("app/admin/acessos/actions.ts");
+  const migration=file("db/migrations/0032_admin_profile_display_name.sql");
+  assert.match(page,/friendlyUser/);
+  assert.match(page,/orgNames.get\(m.organization_id\)/);
+  assert.match(page,/statusLabels\[v\]\?\?v/);
+  assert.match(page,/setMembershipRole/);
+  assert.match(page,/setProfileName/);
+  assert.match(actions,/authorizedClient\(\)/);
+  assert.match(actions,/PLATFORM_ADMIN/);
+  assert.match(migration,/grant update \(display_name\)/);
+});
+
 test("Edicao de empresas fornecedoras exige ADM com MFA e altera somente nomes",()=>{
   const supplier=file("app/app/fornecedor/homologacao/page.tsx");
   const action=file("app/app/fornecedor/homologacao/actions.ts");

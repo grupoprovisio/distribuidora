@@ -129,3 +129,35 @@ export async function revokeBuyerRegion(data:FormData) {
   revalidatePath("/admin/acessos");
   revalidatePath("/app/comprador/catalogo");
 }
+
+/** Updates remain restricted to an already authenticated PLATFORM_ADMIN at AAL2;
+ * policies and audit triggers enforce the final database authorization. */
+export async function setProfileName(data:FormData) {
+  const client=await authorizedClient();
+  const userId=id(data,"user_id");
+  const name=field(data,"display_name",160);
+  if(name.length<2)throw new Error("Nome deve ter pelo menos dois caracteres.");
+  await updated("profiles",client.from("profiles").update({display_name:name}).eq("id",userId).select("id"));
+}
+export async function setOrganizationTaxId(data:FormData) {
+  const client=await authorizedClient();
+  const org=id(data,"organization_id");
+  const raw=data.get("tax_id");
+  if(typeof raw!=="string"||raw.length>18||!/^[\d.\/-]*$/.test(raw))throw new Error("Documento inválido.");
+  const taxId=raw.replace(/\D/g,"");
+  if(taxId&&![11,14].includes(taxId.length))throw new Error("Informe CPF com 11 ou CNPJ com 14 dígitos.");
+  const existing=await client.from("organizations").select("id,is_platform_owned").eq("id",org).maybeSingle();
+  if(existing.error||!existing.data||existing.data.is_platform_owned)throw new Error("Empresa protegida ou indisponível.");
+  await updated("organizations",client.from("organizations").update({tax_id:taxId||null}).eq("id",org).eq("is_platform_owned",false).select("id"));
+}
+export async function setMembershipRole(data:FormData) {
+  const client=await authorizedClient();
+  const membershipId=id(data,"membership_id");
+  const role=field(data,"role",30);
+  if(!enumIs(role,["ORG_ADMIN","BUYER","REQUESTER","APPROVER","FINANCE","READER","SUPPLIER_ADMIN"] as const))
+    throw new Error("Função inválida.");
+  const previous=await client.from("organization_members").select("role").eq("id",membershipId).maybeSingle();
+  if(previous.error||!previous.data||previous.data.role==="PLATFORM_ADMIN")throw new Error("Função administrativa protegida.");
+  await updated("organization_members",client.from("organization_members")
+    .update({role}).eq("id",membershipId).neq("role","PLATFORM_ADMIN").select("id"));
+}
