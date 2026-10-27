@@ -764,6 +764,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      provisio_public_product_showcase: {
+        Args: { p_search?: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          slug: string
+          product_name: string
+          category_name: string
+          regions: string[]
+        }[]
+      }
       marketplace_advance_fulfillment: {
         Args: {
           order_id: string
