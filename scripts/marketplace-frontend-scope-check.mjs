@@ -166,7 +166,7 @@ test("Vitrine publica exige publicacao explicita e assina somente foto seleciona
   assert.doesNotMatch(db,/alter bucket|update storage\.buckets set public=true|service_role/);
   assert.match(action,/requireMarketplacePortal\("admin"\)/);
   assert.match(action,/public_catalog_listings/);
-  assert.match(action,/N[AÃ]O COMERCIAL/);
+  assert.match(action,/Produto de teste\/não comercial não pode ser publicado/);
   assert.match(ui,/Publicar produto e foto/);
   assert.match(ui,/Retirar da vitrine/);
 });
