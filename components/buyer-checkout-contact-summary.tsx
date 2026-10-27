@@ -15,7 +15,6 @@ export function BuyerCheckoutContactSummary({
   const [error,setError]=useState(false);
   useEffect(()=>{
     const controller=new AbortController();
-    setLoading(true);setProfile(null);setError(false);onLoaded(null);
     void fetch("/api/marketplace/buyer-profile?buyer="+encodeURIComponent(buyerOrgId),{
       credentials:"same-origin",cache:"no-store",signal:controller.signal,
     }).then(async response=>{
