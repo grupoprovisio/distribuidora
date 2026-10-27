@@ -89,7 +89,7 @@ export default async function AccessAdminPage(){
               <button className={buttonClass}>Salvar</button>
             </form>}
           </div>
-          {supplierIds.has(org.id)&&<SupplierCompanyEditor key={org.id+":"+org.legal_name+":"+org.trade_name}
+          {supplierIds.has(org.id)&&<SupplierCompanyEditor key={org.id}
             organizationId={org.id} legalName={org.legal_name} tradeName={org.trade_name}/>}
         </div>)}
       </div>

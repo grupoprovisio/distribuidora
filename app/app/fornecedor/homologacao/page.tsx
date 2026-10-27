@@ -69,7 +69,7 @@ export default async function SupplierApprovalPage() {
                 <div className="rounded-xl bg-canvas p-4"><p className="text-xs text-muted">Ofertas cadastradas</p><p className="mt-1 text-2xl font-black tabular-nums">{orgOffers.length}</p></div>
               </div>
               <p className="mt-5 text-xs leading-relaxed text-muted">Produtos pendentes: {products.filter(item => item.status === "pending").length}. Ofertas pendentes: {orgOffers.filter(item => item.status === "pending").length}.</p>
-              {canEdit&&<SupplierCompanyEditor key={org.id+":"+org.legal_name+":"+org.trade_name}
+              {canEdit&&<SupplierCompanyEditor key={org.id}
                 organizationId={org.id} legalName={org.legal_name} tradeName={org.trade_name}/>}
             </article>;
           })}
