@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Boxes, PackageSearch, Search, ShieldCheck } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -24,8 +25,15 @@ export default async function ProductsPage({searchParams}:{
   const {data,error}=await db.rpc("provisio_public_product_showcase",{
     p_search:search,p_limit:PAGE_SIZE+1,p_offset:(page-1)*PAGE_SIZE
   });
-  const products=(data??[]).slice(0,PAGE_SIZE);
   const more=(data?.length??0)>PAGE_SIZE;
+  // Only paths explicitly published by the ADM can pass the Storage RLS
+  // check. Signed links expire in five minutes; other photos stay private.
+  const products=await Promise.all((data??[]).slice(0,PAGE_SIZE).map(async product=>{
+    if(!product.image_storage_path)return {...product,imageUrl:null as string|null};
+    const photo=await db.storage.from("provisio-produtos")
+      .createSignedUrl(product.image_storage_path,5*60);
+    return {...product,imageUrl:photo.data?.signedUrl??null};
+  }));
   const linkTo=(n:number)=>"/produtos?"+new URLSearchParams({
     ...(search?{busca:search}:{}),pagina:String(n)
   }).toString();
@@ -39,7 +47,7 @@ export default async function ProductsPage({searchParams}:{
           Produtos com origem, oferta e responsabilidade claras.
         </h1>
         <p className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-white/70 sm:text-base">
-          Conheça o catálogo de produtos aprovados. Preços, fotos privadas e cotações são disponibilizados no acesso empresarial, conforme sua região de atendimento.
+          Conheça produtos aprovados com fotos autorizadas para exibição pública. Preços e cotações ficam disponíveis no acesso empresarial, conforme sua região de atendimento.
         </p>
       </section>
       <section className="mt-8 rounded-[2rem] bg-paper p-5 shadow-card ring-1 ring-line/70 sm:p-8" aria-labelledby="products-heading">
@@ -67,8 +75,12 @@ export default async function ProductsPage({searchParams}:{
         </div>:products.length?<div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {products.map(product=><article key={product.slug}
             className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-paper p-3 sm:p-4">
-            <div className="grid aspect-square place-items-center rounded-xl bg-canvas text-forest">
-              <Boxes size={40} strokeWidth={1.5} aria-hidden/>
+            <div className="relative grid aspect-square place-items-center overflow-hidden rounded-xl bg-canvas text-forest">
+              {product.imageUrl?<Image src={product.imageUrl}
+                alt={"Foto de "+product.product_name} fill unoptimized
+                sizes="(max-width:640px) 46vw, (max-width:1024px) 30vw, 235px"
+                className="object-contain p-2"/>:
+                <Boxes size={40} strokeWidth={1.5} aria-hidden/>}
             </div>
             <p className="mt-4 text-xs font-extrabold uppercase tracking-wide text-muted">
               {product.category_name}
@@ -98,7 +110,7 @@ export default async function ProductsPage({searchParams}:{
       </section>
       <p className="mt-5 flex items-start gap-2 rounded-2xl bg-lime-soft p-4 text-xs leading-relaxed text-forest">
         <ShieldCheck size={18} className="shrink-0" aria-hidden/>
-        A vitrine pública não exibe preços nem imagens armazenadas de forma privada. A consulta de ofertas e a solicitação de cotação exigem login e elegibilidade regional.
+        A vitrine só mostra produtos publicados pelo ADM. Apenas a foto escolhida para a vitrine fica disponível por link temporário; demais imagens do armazenamento privado, preços e cotações permanecem protegidos.
       </p>
     </main>
     <SiteFooter/>

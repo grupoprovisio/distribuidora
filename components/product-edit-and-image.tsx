@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { editCatalogProduct } from "@/app/admin/marketplace/cadastro/edit-actions";
+import { setPublicProductListing } from "@/app/admin/marketplace/cadastro/actions";
 import { optimizeProductImage } from "@/lib/marketplace/optimize-product-image";
 import { createClient } from "@/lib/supabase/client";
 
@@ -74,10 +76,18 @@ function ProductImageManager({product}:{product:Product}){
   </div>
  </div>;
 }
-export function ProductEditAndImage({products}:{products:Product[]}){
+export function ProductEditAndImage({products,publicListingIds}:{
+  products:Product[];publicListingIds:string[];
+}){
+ const router=useRouter();
  const [state,action,pending]=useActionState(editCatalogProduct,initial);
+ const [publication,publicationAction,publicationPending]=useActionState(setPublicProductListing,initial);
  const [selected,setSelected]=useState("");
  const product=products.find(p=>p.id===selected);
+ const isPublic=selected!==""&&publicListingIds.includes(selected);
+ useEffect(()=>{
+   if(publication.status==="success")router.refresh();
+ },[publication.status,router]);
  return <section className="mt-7 rounded-3xl border border-line bg-paper p-6 text-forest-deep">
   <h2 className="text-xl font-black">Editar produtos e fotos</h2>
   <p className="mt-2 text-sm text-muted">Somente Administração com MFA. A imagem é convertida para WebP antes de sair do navegador.</p>
@@ -104,6 +114,27 @@ export function ProductEditAndImage({products}:{products:Product[]}){
     {state.message&&<p role={state.status==="error"?"alert":"status"} className="text-sm">{state.message}</p>}
    </form>
    <ProductImageManager key={"images:"+product.id} product={product}/>
+  </div>}
+  {product&&<div className="mt-5 rounded-2xl border border-line bg-canvas p-4">
+    <h3 className="text-sm font-black text-forest-deep">Publicação na vitrine pública</h3>
+    <p className="mt-2 text-xs leading-relaxed text-muted">
+      {isPublic?"Publicado na vitrine.":"Ainda não publicado na vitrine."}
+      {" "}Somente o ADM com MFA pode publicar a foto escolhida. Produtos de teste/não comerciais
+      não devem ser divulgados. A oferta continua sujeita a estoque, vigência e homologação.
+    </p>
+    <form action={publicationAction} className="mt-3 flex flex-wrap gap-2">
+      <input type="hidden" name="product_id" value={product.id}/>
+      <button type="submit" name="publication_action" value="publish" disabled={publicationPending}
+        className="min-h-11 rounded-full bg-forest px-4 text-xs font-bold text-white disabled:opacity-50">
+        {isPublic?"Atualizar foto pública":"Publicar produto e foto"}
+      </button>
+      {isPublic&&<button type="submit" name="publication_action" value="unpublish" disabled={publicationPending}
+        className="min-h-11 rounded-full border border-wine px-4 text-xs font-bold text-wine disabled:opacity-50">
+        Retirar da vitrine
+      </button>}
+    </form>
+    {publication.message&&<p role={publication.status==="error"?"alert":"status"}
+      className="mt-3 text-xs font-bold text-forest">{publication.message}</p>}
   </div>}
  </section>;
 }
