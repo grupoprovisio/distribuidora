@@ -159,7 +159,7 @@ test("Vitrine publica exige publicacao explicita e assina somente foto seleciona
   assert.match(db,/create table public\.public_catalog_listings/);
   assert.match(db,/supplier\.qa_only=false/);
   assert.match(db,/listing\.image_storage_path=storage\.objects\.name/);
-  assert.match(db,/join public\.public_catalog_listings listing/);
+  assert.match(db,/from public\.public_catalog_listings listing/);
   assert.match(db,/where p\.slug='papel-higienico-folha-dupla-24-unidades'/);
   assert.doesNotMatch(db,/alter bucket|update storage\.buckets set public=true|service_role/);
   assert.match(action,/requireMarketplacePortal\("admin"\)/);
