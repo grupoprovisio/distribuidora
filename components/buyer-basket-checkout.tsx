@@ -8,7 +8,7 @@ import { useBuyerBasket } from "@/lib/marketplace/buyer-basket-store";
 import type { BasketValidation, ValidatedBasketLine } from "@/lib/marketplace/basket-validation";
 import type { BuyerContact } from "@/lib/marketplace/buyer-contact";
 import { normalizeCep } from "@/lib/marketplace/buyer-contact";
-import { BuyerProfileForm } from "@/components/buyer-profile-form";
+import { BuyerCheckoutContactSummary } from "@/components/buyer-checkout-contact-summary";
 import { BuyerFreightCalculator, type FreightInfo } from "@/components/buyer-freight-calculator";
 
 type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout";initialMethod?:"delivery"|"pickup"};
@@ -37,10 +37,10 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   const [savedContact,setSavedContact]=useState<BuyerContact|null>(null);
   const [cep,setCep]=useState("");
   const [freight,setFreight]=useState<FreightInfo|null>(null);
-  const handleSaved=useCallback((profile:BuyerContact)=>{
-    setSavedContact(profile);setCep(profile.postalCode);setFreight(null);
+  const handleSaved=useCallback((profile:BuyerContact|null)=>{
+    setSavedContact(profile);setCep(profile?.postalCode??"");setFreight(null);
   },[]);
-  const handleEdit=useCallback(()=>{setSavedContact(null);setFreight(null);},[]);
+
   const handlePostal=useCallback((next:string)=>{setCep(next);setFreight(null);},[]);
   const handleFreight=useCallback((value:FreightInfo|null)=>{setFreight(value);},[]);
   const router=useRouter();
@@ -255,8 +255,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
             </div>
           </article>)}
         </section>)}
-        {mode==="checkout"&&<BuyerProfileForm buyerOrgId={buyerOrgId}
-           compact onSaved={handleSaved} onEdited={handleEdit}/>}
+        {mode==="checkout"&&<BuyerCheckoutContactSummary buyerOrgId={buyerOrgId}
+           onLoaded={handleSaved}/>}
         <button type="button" onClick={()=>{if(window.confirm("Remover todos os produtos da cesta?"))basket.clear();}}
           className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-muted">
           <Trash2 size={16} aria-hidden/> Limpar cesta
@@ -292,7 +292,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
           </p>}
         {mode==="checkout"&&!savedContact&&
           <p className="mt-3 text-xs font-semibold text-muted">
-            Preencha e salve os dados do destinatário para prosseguir.
+            Cadastre o destinatário e endereço em Meu cadastro para prosseguir.
           </p>}
         {mode==="checkout"&&method==="delivery"&&freight?.available&&freight.quote&&
           <p className="mt-3 text-xs font-semibold text-forest">
