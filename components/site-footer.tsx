@@ -22,9 +22,6 @@ export function SiteFooter() {
           <p className="mt-4 max-w-sm text-sm font-medium leading-relaxed text-muted">
             Distribuidora própria e marketplace B2B em desenvolvimento, com participação de fornecedores homologados.
           </p>
-          <p className="mt-4 max-w-sm text-xs font-semibold leading-relaxed text-muted">
-            Cadastro, ofertas, pedidos e pagamentos reais ainda não estão disponíveis.
-          </p>
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.14em] text-muted">Explore</p>
