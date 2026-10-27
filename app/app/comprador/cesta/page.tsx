@@ -13,7 +13,7 @@ export default async function BuyerBasketPage({
 }:{searchParams:Promise<{regiao?:string}>}){
   const params=await searchParams;
   const access=await requireMarketplacePortal("comprador");
-  const summary=await myMarketplaceOrganizations("comprador");
+  const summary=await myMarketplaceOrganizations("comprador",access);
   const orgId=summary.organizations[0]?.id;
   const raw=(params.regiao??"BR-SP").trim().toUpperCase();
   const region=/^BR-[A-Z]{2}$/.test(raw)?raw:/^[A-Z]{2}$/.test(raw)?"BR-"+raw:"BR-SP";

@@ -13,20 +13,29 @@ export type MarketplaceOrganizationSummary = {
   error: boolean;
 };
 
-/** Always scoped to the authenticated user, an approved organization and its active capability. */
-export async function myMarketplaceOrganizations(portal: "comprador" | "fornecedor"): Promise<MarketplaceOrganizationSummary> {
-  const access = await requireMarketplacePortal(portal);
+/** Resolve only buyer/supplier organizations already authorized by the checked session.
+ * Pages that already checked their portal may reuse the access result instead of
+ * repeating authentication, profile, membership and capability lookups.
+ */
+export async function myMarketplaceOrganizations(
+  portal: "comprador" | "fornecedor",
+  verifiedAccess?: Awaited<ReturnType<typeof requireMarketplacePortal>>
+): Promise<MarketplaceOrganizationSummary> {
+  const access = verifiedAccess ?? await requireMarketplacePortal(portal);
+  const authorizedIds = access.organizationIds[portal];
+  if (!authorizedIds.length) return { organizations: [], error: false };
   const client = await createClient();
-  const [members, orgs, capabilities] = await Promise.all([
-    client.from("organization_members").select("organization_id,role,status").eq("user_id",access.userId).eq("status","active").limit(100),
-    client.from("organizations").select("id,trade_name,legal_name,status").eq("status","approved").limit(100),
-    client.from("organization_capabilities").select("organization_id,capability,status").eq("capability",portal === "comprador" ? "BUYER" : "SUPPLIER").eq("status","approved").limit(100),
+  const [members, orgs] = await Promise.all([
+    client.from("organization_members").select("organization_id,role,status")
+      .eq("user_id",access.userId).eq("status","active")
+      .in("organization_id",authorizedIds).limit(100),
+    client.from("organizations").select("id,trade_name,legal_name,status")
+      .in("id",authorizedIds).eq("status","approved").limit(100),
   ]);
-  if (members.error || orgs.error || capabilities.error) return { organizations: [], error: true };
-  const caps = new Set((capabilities.data ?? []).map(item=>item.organization_id));
+  if (members.error || orgs.error) return { organizations: [], error: true };
   const memberRoles = new Map((members.data ?? []).map(member=>[member.organization_id,member.role]));
   const organizations: MarketplaceOrganization[] = (orgs.data ?? [])
-    .filter(org=>caps.has(org.id) && memberRoles.has(org.id))
+    .filter(org=>memberRoles.has(org.id))
     .map(org=>({ id:org.id, name:org.trade_name || org.legal_name, role:memberRoles.get(org.id) || "", status:org.status }));
   return { organizations, error: false };
 }
