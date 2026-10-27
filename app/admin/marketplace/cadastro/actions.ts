@@ -148,3 +148,50 @@ export async function approveOffer(_previous:Feedback,data:FormData):Promise<Fee
   return confirmed(db.from("offers").update({status:"approved"}).eq("id",id).eq("status","pending").select("id"),
     "Oferta aprovada no catálogo comercial. Disponibilidade ao comprador depende das políticas comerciais e da sessão.");
 }
+
+/**
+ * Only an MFA-verified platform admin can explicitly publish a product image.
+ * This never changes buyer eligibility, offer approval, commercial price or QA
+ * realm; all such checks remain in the public showcase RPC and private RLS.
+ */
+export async function setPublicProductListing(_previous:Feedback,data:FormData):Promise<Feedback>{
+  const db=await adminDb();
+  const productId=uuid(data,"product_id");
+  const publicationAction=text(data,"publication_action",20);
+  if(!productId||!["publish","unpublish"].includes(publicationAction))
+    return failed("Selecione um produto e uma ação de publicação válidos.");
+
+  if(publicationAction==="unpublish"){
+    const removed=await db.from("public_catalog_listings")
+      .delete().eq("product_id",productId).select("product_id");
+    if(removed.error)return failed("Não foi possível retirar o produto da vitrine.");
+    revalidatePath("/produtos");
+    refreshed();
+    return saved("Produto retirado da vitrine pública. Seu cadastro privado foi preservado.");
+  }
+
+  const product=await db.from("products").select("id,name,status")
+    .eq("id",productId).maybeSingle();
+  if(product.error||!product.data||product.data.status!=="active")
+    return failed("A vitrine exige produto ativo e homologado.");
+  // A realm=false supplier can still own explicitly test-labelled products.
+  // Never let those products enter public discovery by mistake.
+  if(/^\s*\[(?:TESTE|QA)[^\]]*\]/i.test(product.data.name)||
+     /N[AÃ]O COMERCIAL/i.test(product.data.name))
+    return failed("Produto de teste/não comercial não pode ser publicado na vitrine.");
+  const photo=await db.from("product_images").select("storage_path")
+    .eq("product_id",productId).order("created_at",{ascending:false})
+    .limit(1).maybeSingle();
+  if(photo.error||!photo.data?.storage_path)
+    return failed("Cadastre uma foto WebP para publicar este produto na vitrine.");
+
+  const result=await db.from("public_catalog_listings")
+    .upsert({product_id:productId,image_storage_path:photo.data.storage_path},
+      {onConflict:"product_id"}).select("product_id");
+  if(result.error||!result.data?.length)
+    return failed("Não foi possível publicar a vitrine. Confira sua sessão ADM e MFA.");
+
+  revalidatePath("/produtos");
+  refreshed();
+  return saved("Foto comercial publicada. O produto aparece na vitrine quando a oferta, a região e o estoque estão válidos.");
+}

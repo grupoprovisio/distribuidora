@@ -17,6 +17,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      public_catalog_listings: {
+        Row: {product_id:string;image_storage_path:string|null;published_at:string}
+        Insert: {product_id:string;image_storage_path?:string|null;published_at?:string}
+        Update: {product_id?:string;image_storage_path?:string|null;published_at?:string}
+        Relationships: []
+      }
       order_fulfillments: {
         Row: {
           id: string
@@ -771,6 +777,7 @@ export type Database = {
           product_name: string
           category_name: string
           regions: string[]
+          image_storage_path: string | null
         }[]
       }
       marketplace_advance_fulfillment: {

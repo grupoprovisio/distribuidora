@@ -149,6 +149,25 @@ test("Governanca exibe nomes e status em portugues e permite manutencao auditada
   assert.match(migration,/grant update \(display_name\)/);
 });
 
+test("Vitrine publica exige publicacao explicita e assina somente foto selecionada",()=>{
+  const page=file("app/produtos/page.tsx");
+  const db=file("db/migrations/0034_public_catalog_product_photos.sql");
+  const action=file("app/admin/marketplace/cadastro/actions.ts");
+  const ui=file("components/product-edit-and-image.tsx");
+  assert.match(page,/createSignedUrl\(product\.image_storage_path,5\*60\)/);
+  assert.match(page,/product\.imageUrl\?<Image/);
+  assert.match(db,/create table public\.public_catalog_listings/);
+  assert.match(db,/supplier\.qa_only=false/);
+  assert.match(db,/listing\.image_storage_path=storage\.objects\.name/);
+  assert.match(db,/join public\.public_catalog_listings listing/);
+  assert.match(db,/where p\.slug='papel-higienico-folha-dupla-24-unidades'/);
+  assert.doesNotMatch(db,/alter bucket|update storage\.buckets set public=true|service_role/);
+  assert.match(action,/requireMarketplacePortal\("admin"\)/);
+  assert.match(action,/public_catalog_listings/);
+  assert.match(action,/N[AÃ]O COMERCIAL/);
+  assert.match(ui,/Publicar produto e foto/);
+  assert.match(ui,/Retirar da vitrine/);
+});
 test("Vitrine publica apresenta somente produtos comerciais homologados, sem preco ou Storage privado",()=>{
   const catalog=file("app/produtos/page.tsx");
   const db=file("db/migrations/0033_public_catalog_showcase.sql");
