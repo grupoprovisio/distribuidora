@@ -149,6 +149,20 @@ test("Governanca exibe nomes e status em portugues e permite manutencao auditada
   assert.match(migration,/grant update \(display_name\)/);
 });
 
+test("Vitrine publica apresenta somente produtos comerciais homologados, sem preco ou Storage privado",()=>{
+  const catalog=file("app/produtos/page.tsx");
+  const db=file("db/migrations/0033_public_catalog_showcase.sql");
+  assert.match(catalog,/provisio_public_product_showcase/);
+  assert.match(catalog,/product\.product_name/);
+  assert.match(catalog,/Consultar preço/);
+  assert.doesNotMatch(catalog,/Catálogo em preparação|Nenhuma oferta foi publicada nesta demonstração/);
+  assert.match(db,/supplier\.qa_only=false/);
+  assert.match(db,/offer\.status='approved'/);
+  assert.match(db,/p\.status='active'/);
+  assert.match(db,/stock\.available_quantity-stock\.reserved_quantity>=offer\.min_quantity/);
+  assert.match(db,/grant execute on function public\.provisio_public_product_showcase/);
+  assert.doesNotMatch(db,/base_price_minor|storage_path|service_role/);
+});
 test("Edicao de empresas fornecedoras exige ADM com MFA e altera somente nomes",()=>{
   const supplier=file("app/app/fornecedor/homologacao/page.tsx");
   const action=file("app/app/fornecedor/homologacao/actions.ts");
