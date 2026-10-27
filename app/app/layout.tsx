@@ -6,8 +6,8 @@ export default async function MarketplaceLayout({ children }: { children: ReactN
   const access = await requireMarketplaceLogin();
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-paper px-5 py-3 text-xs font-semibold text-forest">
-        <span>Área empresarial Provisio · {access.email}</span>
+      <div className="flex items-center justify-between gap-2 border-b border-line bg-paper px-3 py-2 text-xs font-semibold text-forest sm:px-5 sm:py-3">
+        <span className="min-w-0 truncate" title={access.email}>{access.email}</span>
         <LogoutButton />
       </div>
       {children}
