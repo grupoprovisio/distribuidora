@@ -122,7 +122,9 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     ?validation.totalMinor:null;
   const shippingMinor=method==="pickup"?0:
     (freight?.available&&freight.quote&&freight.cep===normalizeCep(cep)?freight.quote.freightMinor:null);
-  const total=productsTotal!==null&&shippingMinor!==null&&validation?.ready
+  // Show the estimated subtotal of verified available products plus freight,
+  // even when another line needs review. Submission still requires ready=true.
+  const total=productsTotal!==null&&shippingMinor!==null
     ?productsTotal+shippingMinor:null;
   const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
     !!(freight?.available&&freight.quote&&savedContact&&
@@ -269,7 +271,6 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
             auto={mode==="checkout"&&!!savedContact}/>
         </div>
         <dl className="mt-5 space-y-3 text-sm text-muted">
-          <div className="flex justify-between"><dt>Produtos diferentes</dt><dd className="font-bold text-ink">{basket.distinctCount}</dd></div>
           <div className="flex justify-between"><dt>Unidades</dt><dd className="font-bold text-ink">{basket.count}</dd></div>
           <div className="flex justify-between gap-3">
             <dt>{validation?.ready?"Produtos":"Produtos disponíveis"}</dt>
@@ -278,16 +279,17 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
           <div className="flex justify-between"><dt>Frete</dt><dd className="font-semibold">
            {shippingMinor!==null?shippingMinor===0?"Grátis":brl(shippingMinor):"A calcular"}
           </dd></div>
+          <div className="flex justify-between gap-3 border-t border-line pt-4">
+            <dt className="font-black text-forest-deep">Preço Total</dt>
+            <dd className="text-xl font-black tabular-nums text-forest-deep">
+              {total!==null?brl(total):"A confirmar"}
+            </dd>
+          </div>
         </dl>
-        <div className="mt-5 flex justify-between gap-3 border-t border-line pt-4">
-          <span className="font-black text-forest-deep">
-            {total!==null?"Total estimado (produtos + frete)":
-              validation&&!validation.ready?"Total pendente de revisão":"Total a confirmar"}
-          </span>
-          <strong className="text-xl font-black tabular-nums text-forest-deep">
-            {total!==null?brl(total):"—"}
-          </strong>
-        </div>
+        {validation&&!validation.ready&&
+          <p role="status" className="mt-3 text-xs font-semibold text-wine">
+            Produtos sem preço confirmado não entram no total. Revise ou remova os indisponíveis para continuar.
+          </p>}
         {mode==="checkout"&&!savedContact&&
           <p className="mt-3 text-xs font-semibold text-muted">
             Preencha e salve os dados do destinatário para prosseguir.

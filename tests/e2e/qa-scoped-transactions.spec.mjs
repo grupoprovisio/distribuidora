@@ -418,14 +418,19 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await expect(page.getByText('QA local commodity',{exact:true})).toBeVisible();
     await expect(page.getByText('Produto antigo',{exact:true})).toBeVisible();
     await expect(page.getByText('Produtos disponíveis',{exact:true})).toBeVisible();
-    await expect(page.getByText('Total pendente de revisão',{exact:true})).toBeVisible();
-    await page.getByRole('button',{name:'Remover itens indisponíveis'}).click();
-    await expect(page.getByText('Produto antigo',{exact:true})).toHaveCount(0);
+    await expect(page.getByText('Preço Total',{exact:true})).toBeVisible();
+    await expect(page.getByText('Produtos diferentes',{exact:true})).toHaveCount(0);
     await expect(page.getByText('R$ 25,00',{exact:true}).last()).toBeVisible();
     await page.getByLabel('CEP de entrega').fill('01001000');
     await page.getByRole('button',{name:'Calcular frete'}).click();
+    // A valid subtotal + freight is visible while the old product stays blocked.
     await expect(page.getByText('R$ 39,90',{exact:true})).toBeVisible();
-    await expect(page.getByText('Total estimado (produtos + frete)',{exact:true})).toBeVisible();
+    await expect(page.getByText('Produtos sem preço confirmado não entram no total.',{exact:false})).toBeVisible();
+    await expect(page.getByRole('link',{name:/Revisar solicitação/})).toHaveAttribute('aria-disabled','true');
+    await page.getByRole('button',{name:'Remover itens indisponíveis'}).click();
+    await expect(page.getByText('Produto antigo',{exact:true})).toHaveCount(0);
+    await expect(page.getByText('R$ 39,90',{exact:true})).toBeVisible();
+    await expect(page.getByRole('link',{name:/Revisar solicitação/})).toHaveAttribute('aria-disabled','false');
     await page.getByRole('radio',{name:/Retirar no local/}).check();
     await expect(page.getByText('R$ 25,00',{exact:true}).last()).toBeVisible();
     await page.evaluate(key=>{window.localStorage.removeItem(key);

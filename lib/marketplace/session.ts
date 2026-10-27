@@ -20,13 +20,16 @@ export async function getMarketplaceAccess() {
   // getUser() consulta Supabase Auth; cookie/session client-side nao implica permissao.
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user || user.is_anonymous) return null;
-  const { data: profile, error: profileError } = await client
-    .from("profiles").select("id,status").eq("id", user.id).maybeSingle();
+  // Both tables are user-scoped by RLS. Query concurrently after auth.getUser
+  // so the pricing endpoint does not wait for two serial database round trips.
+  const [profileResult, membersResult] = await Promise.all([
+    client.from("profiles").select("id,status").eq("id",user.id).maybeSingle(),
+    client.from("organization_members").select("organization_id,role,status")
+      .eq("user_id",user.id).eq("status","active").limit(100),
+  ]);
+  const {data:profile,error:profileError}=profileResult;
+  const {data:members,error:membersError}=membersResult;
   if (profileError || profile?.status !== "active") return null;
-  const { data: members, error: membersError } = await client
-    .from("organization_members")
-    .select("organization_id,role,status")
-    .eq("user_id",user.id).eq("status","active").limit(100);
   if (membersError || !members?.length) return null;
   const orgIds=[...new Set(members.map(member=>member.organization_id))];
   const [orgResult,capResult]=await Promise.all([

@@ -38,22 +38,24 @@ export async function validateBuyerBasket(
   // The signed-in buyer may belong to multiple companies. Resolve and pin the
   // exact buyer organization before reading priced offers; an ADM session must
   // never mix QA supplier prices with a non-QA buyer or vice versa.
-  const [buyer,allowed]=await Promise.all([
+  const ids=selected.map(l=>l.offerId);
+  const now=new Date().toISOString();
+  // Membership was checked above. These three independent RLS-scoped reads
+  // can run together instead of chaining another pricing round trip.
+  const [buyer,allowed,offers]=await Promise.all([
     db.from("organizations").select("id,kind,status,qa_only")
       .eq("id",buyerOrgId).maybeSingle(),
     db.from("buyer_delivery_regions").select("buyer_org_id")
       .eq("buyer_org_id",buyerOrgId).eq("region_code",region).maybeSingle(),
+    db.from("offers")
+      .select("id,supplier_product_id,supplier_org_id,base_price_minor,min_quantity,status,valid_from,valid_to,source_type")
+      .in("id",ids).limit(100),
   ]);
   if(buyer.error||allowed.error)return empty("catalog_unavailable");
   if(!buyer.data||buyer.data.kind!=="BUYER"||buyer.data.status!=="approved"||!allowed.data)
     return empty("region_not_authorized");
-  const buyerRealm=buyer.data.qa_only;
-  const ids=selected.map(l=>l.offerId);
-  const now=new Date().toISOString();
-  const offers=await db.from("offers")
-    .select("id,supplier_product_id,supplier_org_id,base_price_minor,min_quantity,status,valid_from,valid_to,source_type")
-    .in("id",ids).limit(100);
   if(offers.error)return empty("offers_unavailable");
+  const buyerRealm=buyer.data.qa_only;
   const rows=offers.data??[];
   const skuIds=[...new Set(rows.map(o=>o.supplier_product_id))];
   const supplierIds=[...new Set(rows.map(o=>o.supplier_org_id))];
@@ -81,12 +83,15 @@ export async function validateBuyerBasket(
   if([skus,suppliers,inventory,regions,tiers,caps].some(q=>q.error))
     return empty("catalog_unavailable");
   const productIds=[...new Set((skus.data??[]).map(s=>s.product_id))];
-  const products=await db.from("products").select("id,name,status")
-    .in("id",productIds.length?productIds:["00000000-0000-4000-8000-000000000000"]);
+  // Image metadata and product names have the same input IDs; load in parallel.
+  const [products,images]=await Promise.all([
+    db.from("products").select("id,name,status")
+      .in("id",productIds.length?productIds:["00000000-0000-4000-8000-000000000000"]),
+    productIds.length?db.from("product_images")
+      .select("product_id,storage_path").in("product_id",productIds)
+      .order("created_at",{ascending:false}).limit(100):Promise.resolve(null),
+  ]);
   if(products.error)return empty("catalog_unavailable");
-  const images=productIds.length?await db.from("product_images")
-    .select("product_id,storage_path").in("product_id",productIds)
-    .order("created_at",{ascending:false}).limit(100):null;
   const imageById=new Map<string,string>();
   for(const i of images?.data??[]){if(!imageById.has(i.product_id))imageById.set(i.product_id,i.storage_path);}
   const signed=await Promise.all([...imageById].map(async([id,path])=>{

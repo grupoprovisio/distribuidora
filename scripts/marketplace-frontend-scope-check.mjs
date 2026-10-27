@@ -111,9 +111,28 @@ test("Carrinho exibe itens indisponíveis e preços parciais sem liberar transa�
   assert.doesNotMatch(store,/unitPriceMinor|subtotalMinor/);
   assert.match(cart,/visibleLines/);
   assert.match(cart,/Remover itens indisponíveis/);
-  assert.match(cart,/Total estimado \(produtos \+ frete\)/);
+  assert.match(cart,/Preço Total/);
+  assert.match(cart,/productsTotal!==null&&shippingMinor!==null/);
+  assert.match(cart,/Produtos sem preço confirmado não entram no total/);
+  assert.doesNotMatch(cart,/Produtos diferentes/);
   assert.match(cart,/lines:selected/);
   assert.match(catalog,/qa_only/);
+});
+
+test("Cesta reutiliza autorização e consulta preços em paralelo sem ignorar RLS",()=>{
+  const cartPage=file("app/app/comprador/cesta/page.tsx");
+  const checkoutPage=file("app/app/comprador/checkout/page.tsx");
+  const orgs=file("lib/marketplace/my-organizations.ts");
+  const access=file("lib/marketplace/session.ts");
+  const validation=file("lib/marketplace/basket-validation.ts");
+  assert.match(cartPage,/myMarketplaceOrganizations\("comprador",access\)/);
+  assert.match(checkoutPage,/myMarketplaceOrganizations\("comprador",access\)/);
+  assert.match(orgs,/authorizedIds = access\.organizationIds\[portal\]/);
+  assert.match(orgs,/\.in\("id",authorizedIds\)/);
+  assert.match(access,/\[profileResult, membersResult\] = await Promise\.all/);
+  assert.match(validation,/\[buyer,allowed,offers\]=await Promise\.all/);
+  assert.match(validation,/\[products,images\]=await Promise\.all/);
+  assert.match(validation,/sameRealm/);
 });
 
 test("Frete automático SP respeita ADM, CEP específico e escolha de retirada",()=>{
