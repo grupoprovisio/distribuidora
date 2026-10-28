@@ -1,6 +1,6 @@
 "use client";
 
-import {useActionState,useState,useEffect} from "react";
+import {useActionState,useState,useEffect,useRef} from "react";
 import {createClient} from "@/lib/supabase/client";
 import {optimizeProductImage} from "@/lib/marketplace/optimize-product-image";
 import {publishCommercialBatch} from "@/app/admin/marketplace/cadastro/bulk-publish";
@@ -16,9 +16,10 @@ export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
   const [photos,setPhotos]=useState<Record<number,File>>({});
   const [uploading,setUploading]=useState(false);
   const [uploadMessages,setUploadMessages]=useState<string[]>([]);
-  const [published,setPublished]=useState(false);
+  const processed=useRef<BulkResult["created"]|null>(null);
   useEffect(()=>{
-    if(state.status==="idle"||!state.created.length||uploading||published)return;
+    if(state.status==="idle"||!state.created.length||processed.current===state.created)return;
+    processed.current=state.created;
     let alive=true;
     async function process(){
       setUploading(true);
@@ -44,11 +45,11 @@ export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
           errors.push(...result.errors);
         }catch{errors.push("Não foi possível concluir a publicação. Confira o MFA e as permissões.");}
       }
-      if(alive){setUploadMessages(errors);setUploading(false);setPublished(true);}
+      if(alive){setUploadMessages(errors);setUploading(false);}
     }
     void process();
     return ()=>{alive=false;};
-  },[state,photos,published]);
+  },[state,photos]);
   const [supplier,setSupplier]=useState("");
   const [uf,setUf]=useState("SP");
   const [approve,setApprove]=useState(true);
@@ -76,7 +77,7 @@ export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
       </div>
       <label className="flex items-start gap-3 rounded-xl bg-lime-soft p-4 text-sm font-semibold text-forest">
         <input type="checkbox" name="approve" checked={approve} onChange={e=>setApprove(e.target.checked)} className="mt-1"/>
-        Homologar automaticamente os produtos, SKUs e ofertas deste lote. Desmarque para salvar como rascunho. A publicação de fotos na vitrine continua separada.
+        Homologar automaticamente os produtos, SKUs e ofertas deste lote. Desmarque para salvar como rascunho. Com foto válida, o sistema tentará publicar os produtos após a homologação.
       </label>
       <input type="hidden" name="items" value={JSON.stringify(rows.map(r=>({
         name:r.name,gtin:r.gtin,sku:r.sku,unit:r.unit,pack:Number(r.pack),
