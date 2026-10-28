@@ -55,7 +55,8 @@ export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Pr
   const created:{index:number;productId:string}[]=[];
   let completed=0;
   for(let i=0;i<rows.length;i++){
-    const r=rows[i],prefix="Produto "+(i+1)+" ("+r.name+"): ";\n    if(knownSkus.has(r.sku)){details.push(prefix+"SKU já existente; ignorado para não criar duplicação. Confira a situação e conclua eventuais pendências.");continue;}
+    const r=rows[i],prefix="Produto "+(i+1)+" ("+r.name+"): ";
+    if(knownSkus.has(r.sku)){details.push(prefix+"SKU já existente; ignorado para não criar duplicação. Confira a situação e conclua eventuais pendências.");continue;}
     const product=await db.from("products").insert({
       name:r.name,slug:slug(r.name)+"-"+crypto.randomUUID().slice(0,8),gtin:r.gtin||null,
       base_unit:r.unit,status:"draft"
