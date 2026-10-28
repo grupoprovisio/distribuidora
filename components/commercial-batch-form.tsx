@@ -1,6 +1,9 @@
 "use client";
 
-import {useActionState,useState} from "react";
+import {useActionState,useState,useEffect} from "react";
+import {createClient} from "@/lib/supabase/client";
+import {optimizeProductImage} from "@/lib/marketplace/optimize-product-image";
+import {publishCommercialBatch} from "@/app/admin/marketplace/cadastro/bulk-publish";
 import {saveCommercialBatch,type BulkResult} from "@/app/admin/marketplace/cadastro/bulk-actions";
 
 type Supplier={id:string;label:string};
@@ -10,6 +13,42 @@ const initial:BulkResult={status:"idle",message:"",details:[]};
 export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
   const [rows,setRows]=useState<Product[]>([empty()]);
   const [state,action,pending]=useActionState(saveCommercialBatch,initial);
+  const [photos,setPhotos]=useState<Record<number,File>>({});
+  const [uploading,setUploading]=useState(false);
+  const [uploadMessages,setUploadMessages]=useState<string[]>([]);
+  const [published,setPublished]=useState(false);
+  useEffect(()=>{
+    if(state.status==="idle"||!state.created.length||uploading||published)return;
+    let alive=true;
+    async function process(){
+      setUploading(true);
+      const db=createClient();const errors:string[]=[];const eligible:string[]=[];
+      for(const entry of state.created){
+        const file=photos[entry.index];
+        if(!file){errors.push("Produto "+(entry.index+1)+": falta foto. Não publicado.");continue;}
+        let path="";
+        try{
+          const optimized=await optimizeProductImage(file);
+          path=entry.productId+"/"+crypto.randomUUID()+".webp";
+          const up=await db.storage.from("provisio-produtos").upload(path,optimized,{contentType:"image/webp",cacheControl:"3600",upsert:false});
+          if(up.error)throw new Error("upload recusado");
+          const saved=await db.from("product_images").insert({product_id:entry.productId,storage_path:path,mime_type:"image/webp",size_bytes:optimized.size});
+          if(saved.error){await db.storage.from("provisio-produtos").remove([path]);throw new Error("vínculo da imagem recusado");}
+          eligible.push(entry.productId);
+        }catch(e){errors.push("Produto "+(entry.index+1)+": "+(e instanceof Error?e.message:"erro na foto"));}
+      }
+      if(eligible.length){
+        try{
+          const result=await publishCommercialBatch(eligible);
+          errors.unshift(result.published+" produtos publicados na vitrine.");
+          errors.push(...result.errors);
+        }catch{errors.push("Não foi possível concluir a publicação. Confira o MFA e as permissões.");}
+      }
+      if(alive){setUploadMessages(errors);setUploading(false);setPublished(true);}
+    }
+    void process();
+    return ()=>{alive=false;};
+  },[state,photos,uploading,published]);
   const [supplier,setSupplier]=useState("");
   const [uf,setUf]=useState("SP");
   const [approve,setApprove]=useState(true);
@@ -57,18 +96,24 @@ export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
             <select className={input+" mt-1"} value={r.unit} onChange={e=>update(i,"unit",e.target.value)}>
               <option value="un">Unidade</option><option value="kg">Quilograma</option><option value="l">Litro</option>
             </select></label>
+          <label className="text-xs font-bold sm:col-span-2">Foto do produto (JPG, PNG ou WebP, convertida para WebP)
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+             className={input+" mt-1"} onChange={e=>{const f=e.target.files?.[0];if(f)setPhotos(old=>({...old,[i]:f}));}}/>
+          </label>
         </div>
-        {rows.length>1&&<button type="button" onClick={()=>setRows(old=>old.filter((_,index)=>index!==i))}
+        {rows.length>1&&<button type="button" onClick={()=>{setRows(old=>old.filter((_,index)=>index!==i));setPhotos(old=>{const next:Record<number,File>={};Object.entries(old).forEach(([k,v])=>{const n=Number(k);if(n<i)next[n]=v;else if(n>i)next[n-1]=v;});return next;});}}
           className="mt-3 text-sm font-bold text-terra hover:underline">Remover produto {i+1}</button>}
       </fieldset>)}</div>
       <div className="flex flex-wrap gap-3">
         <button type="button" disabled={rows.length>=15} onClick={()=>setRows(old=>[...old,empty()])}
           className="rounded-xl border border-forest px-5 py-3 text-sm font-bold text-forest disabled:opacity-40">+ Adicionar produto</button>
-        <button type="submit" disabled={pending||!supplier}
+        <button type="submit" disabled={pending||uploading||!supplier}
           className="rounded-xl bg-forest px-6 py-3 text-sm font-bold text-white disabled:opacity-50">
           {pending?"Salvando lote...":approve?"Cadastrar e homologar lote":"Salvar lote como rascunho"}
         </button>
       </div>
+      {uploading&&<p role="status" className="font-bold text-forest">Enviando as fotos e publicando os produtos aprovados…</p>}
+      {!!uploadMessages.length&&<div role="status" className="rounded-xl border border-line p-4 text-sm"><strong>Resultado da publicação</strong><ul className="mt-2 list-disc pl-5">{uploadMessages.map((m,i)=><li key={i}>{m}</li>)}</ul></div>}
       {state.status!=="idle"&&<div role="status" className="rounded-xl border border-line p-4 text-sm">
         <p className="font-bold">{state.message}</p>
         {!!state.details.length&&<ul className="mt-2 list-disc space-y-1 pl-5">{state.details.map((d,i)=><li key={i}>{d}</li>)}</ul>}
