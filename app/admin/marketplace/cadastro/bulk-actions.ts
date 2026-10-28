@@ -50,12 +50,12 @@ export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Pr
      !["SUPPLIER","PLATFORM_OPERATOR"].includes(org.data?.kind||""))
     return invalid("Fornecedor não está autorizado para cadastro comercial.");
   if(existing.error)return invalid("Não foi possível verificar SKUs existentes.");
-  if(existing.data?.length)return invalid("Já existem SKUs cadastrados: "+existing.data.map(s=>s.supplier_sku).join(", ")+". Ajuste antes de enviar.");
+  const knownSkus=new Set((existing.data??[]).map(s=>s.supplier_sku));
   const details:string[]=[];
   const created:{index:number;productId:string}[]=[];
   let completed=0;
   for(let i=0;i<rows.length;i++){
-    const r=rows[i],prefix="Produto "+(i+1)+" ("+r.name+"): ";
+    const r=rows[i],prefix="Produto "+(i+1)+" ("+r.name+"): ";\n    if(knownSkus.has(r.sku)){details.push(prefix+"SKU já existente; ignorado para não criar duplicação. Confira a situação e conclua eventuais pendências.");continue;}
     const product=await db.from("products").insert({
       name:r.name,slug:slug(r.name)+"-"+crypto.randomUUID().slice(0,8),gtin:r.gtin||null,
       base_unit:r.unit,status:"draft"
@@ -90,6 +90,6 @@ export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Pr
   }
   for(const path of ["/admin/marketplace/cadastro","/admin/marketplace/catalogo","/admin/marketplace","/app/fornecedor/catalogo","/produtos"])revalidatePath(path);
   return {status:completed===rows.length?"success":"error",
-    message:completed+" de "+rows.length+" produtos concluídos. "+(approve?"A vitrine pública exige publicação de imagem WebP separada.":"Os registros permanecem pendentes de homologação."),
+    message:completed+" de "+rows.length+" novos produtos concluídos. "+(approve?"A vitrine pública exige publicação de imagem WebP separada.":"Os registros permanecem pendentes de homologação."),
     details,created};
 }
