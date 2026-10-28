@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { requireMarketplacePortal } from "@/lib/marketplace/session";
 import { createClient } from "@/lib/supabase/server";
 
-export type BulkResult = {status:"idle"|"success"|"error";message:string;details:string[]};
+export type BulkResult = {status:"idle"|"success"|"error";message:string;details:string[];created:{index:number;productId:string}[]};
 type Item = {name:string;gtin:string;unit:string;sku:string;pack:number;stock:number;price:number;minimum:number};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const units=new Set(["un","kg","l"]);
 const states=new Set(["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"]);
-const invalid=(message:string):BulkResult=>({status:"error",message,details:[]});
+const invalid=(message:string):BulkResult=>({status:"error",message,details:[],created:[]});
 const slug=(name:string)=>name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,75);
 
 export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Promise<BulkResult>{
@@ -52,6 +52,7 @@ export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Pr
   if(existing.error)return invalid("Não foi possível verificar SKUs existentes.");
   if(existing.data?.length)return invalid("Já existem SKUs cadastrados: "+existing.data.map(s=>s.supplier_sku).join(", ")+". Ajuste antes de enviar.");
   const details:string[]=[];
+  const created:{index:number;productId:string}[]=[];
   let completed=0;
   for(let i=0;i<rows.length;i++){
     const r=rows[i],prefix="Produto "+(i+1)+" ("+r.name+"): ";
@@ -85,10 +86,10 @@ export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Pr
     if(region.error||!region.data?.length){details.push(prefix+"oferta pendente sem região. Não publique antes de corrigir.");continue;}
     const approval=await db.from("offers").update({status:"approved"}).eq("id",offer.data.id).eq("status","pending").select("id");
     if(approval.error||!approval.data?.length){details.push(prefix+"oferta pendente de aprovação. Revise manualmente.");continue;}
-    completed++;details.push(prefix+"produto, SKU, estoque e oferta homologados.");
+    completed++;created.push({index:i,productId});details.push(prefix+"produto, SKU, estoque e oferta homologados.");
   }
   for(const path of ["/admin/marketplace/cadastro","/admin/marketplace/catalogo","/admin/marketplace","/app/fornecedor/catalogo","/produtos"])revalidatePath(path);
   return {status:completed===rows.length?"success":"error",
     message:completed+" de "+rows.length+" produtos concluídos. "+(approve?"A vitrine pública exige publicação de imagem WebP separada.":"Os registros permanecem pendentes de homologação."),
-    details};
+    details,created};
 }
