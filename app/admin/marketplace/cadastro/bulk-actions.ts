@@ -33,7 +33,7 @@ export async function saveCommercialBatch(_previous:BulkResult,form:FormData):Pr
     if(name.length<2||name.length>160||!slug(name)||sku.length<1||sku.length>100||!units.has(unit)||
        (gtin&&!/^\d{8,14}$/.test(gtin))|| !Number.isFinite(pack)||pack<=0||pack>1000000||
        !Number.isFinite(stock)||stock<0||stock>100000000||
-       !Number.isSafeInteger(price)||price<=0||price>1000000000||
+       (!Number.isSafeInteger(price)||(approve && price<=0)||price<0||price>1000000000)||
        !Number.isSafeInteger(minimum)||minimum<1||minimum>10000000||
        [pack,stock].some(n=>Math.round(n*1000)!==n*1000))
       return invalid("Produto "+(i+1)+": confira nome, GTIN, SKU, unidade, embalagem, estoque, preço e mínimo.");
