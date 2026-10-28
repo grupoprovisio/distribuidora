@@ -48,7 +48,7 @@ export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
     }
     void process();
     return ()=>{alive=false;};
-  },[state,photos,uploading,published]);
+  },[state,photos,published]);
   const [supplier,setSupplier]=useState("");
   const [uf,setUf]=useState("SP");
   const [approve,setApprove]=useState(true);
