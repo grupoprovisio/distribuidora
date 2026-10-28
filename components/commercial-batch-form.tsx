@@ -9,7 +9,7 @@ import {saveCommercialBatch,type BulkResult} from "@/app/admin/marketplace/cadas
 type Supplier={id:string;label:string};
 type Product={name:string;gtin:string;sku:string;unit:string;pack:string;stock:string;price:string;minimum:string};
 const empty=():Product=>({name:"",gtin:"",sku:"",unit:"un",pack:"1",stock:"0",price:"",minimum:"1"});
-const initial:BulkResult={status:"idle",message:"",details:[]};
+const initial:BulkResult={status:"idle",message:"",details:[],created:[]};
 export function CommercialBatchForm({suppliers}:{suppliers:Supplier[]}){
   const [rows,setRows]=useState<Product[]>([empty()]);
   const [state,action,pending]=useActionState(saveCommercialBatch,initial);
