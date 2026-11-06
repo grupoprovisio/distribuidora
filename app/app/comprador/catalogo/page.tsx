@@ -25,10 +25,11 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   const buyerOrgId=summary.organizations[0]?.id??"";
   const catalog:BuyerCatalogResult=!summary.error && buyerOrgId &&
     access?.organizationIds.comprador.includes(buyerOrgId)
-    ? await buyerCatalog(await createClient(),region,page,buyerOrgId)
+    ? await buyerCatalog(await createClient(),region,page,buyerOrgId,chosenProduct)
     : {items:[],error:summary.error||!buyerOrgId||!access?.organizationIds.comprador.includes(buyerOrgId),hasMore:false};
-  const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1);
-  const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1);
+  const productParam=chosenProduct?"&produto="+encodeURIComponent(chosenProduct):"";
+  const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1)+productParam;
+  const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1)+productParam;
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="forest" title="Catálogo empresarial" backHref="/app/comprador" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
@@ -39,6 +40,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
       <section className="mt-6 overflow-hidden rounded-[2rem] border border-line bg-paper">
         <div className="border-b border-line p-6 sm:p-8">
           <form method="get" action="/app/comprador/catalogo" className="flex flex-wrap items-end gap-3">
+            {chosenProduct && <input type="hidden" name="produto" value={chosenProduct}/>}
             <label htmlFor="buyer-region" className="grid flex-1 gap-2 text-sm font-extrabold text-forest">Região de atendimento
               <input id="buyer-region" name="regiao" type="text" defaultValue={region} maxLength={12} placeholder="SP ou BR-SP" className="h-12 min-w-0 rounded-xl border border-line bg-canvas px-4 text-base uppercase focus-visible:outline-2 focus-visible:outline-forest"/>
             </label>
