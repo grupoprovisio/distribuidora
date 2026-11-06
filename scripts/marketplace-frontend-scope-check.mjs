@@ -154,7 +154,7 @@ test("Vitrine publica exige publicacao explicita e assina somente foto seleciona
   const db=file("db/migrations/0034_public_catalog_product_photos.sql");
   const action=file("app/admin/marketplace/cadastro/actions.ts");
   const ui=file("components/product-edit-and-image.tsx");
-  assert.match(page,/createSignedUrl\(product\.image_storage_path,5\*60\)/);
+  assert.match(file("lib/marketplace/public-catalog.ts"),/createSignedUrl\(row\.image_storage_path,300\)/);
   assert.match(page,/product\.imageUrl\?<Image/);
   assert.match(db,/create table public\.public_catalog_listings/);
   assert.match(db,/supplier\.qa_only=false/);
@@ -173,9 +173,9 @@ test("Vitrine publica exige publicacao explicita e assina somente foto seleciona
 test("Vitrine publica apresenta somente produtos comerciais homologados, sem preco ou Storage privado",()=>{
   const catalog=file("app/produtos/page.tsx");
   const db=file("db/migrations/0033_public_catalog_showcase.sql");
-  assert.match(catalog,/provisio_public_product_showcase/);
-  assert.match(catalog,/product\.product_name/);
-  assert.match(catalog,/Consultar preço/);
+  assert.match(file("lib/marketplace/public-catalog.ts"),/provisio_public_product_showcase/);
+  assert.match(catalog,/product\.name/);
+  assert.match(file("components/public-catalog-actions.tsx"),/Consultar preço/);
   assert.doesNotMatch(catalog,/Catálogo em preparação|Nenhuma oferta foi publicada nesta demonstração/);
   assert.match(db,/supplier\.qa_only=false/);
   assert.match(db,/offer\.status='approved'/);

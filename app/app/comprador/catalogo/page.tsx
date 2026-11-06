@@ -14,8 +14,11 @@ import { getMarketplaceAccess } from "@/lib/marketplace/session";
 export const metadata:Metadata={title:"Catálogo empresarial · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 
-export default async function BuyerCatalogPage({searchParams}:{searchParams:Promise<{regiao?:string;pagina?:string}>}) {
+export default async function BuyerCatalogPage({searchParams}:{searchParams:Promise<{regiao?:string;pagina?:string;produto?:string;oferta?:string;quantidade?:string}>}) {
   const params=await searchParams;
+  const slug=typeof params.produto==="string"&&/^[a-z0-9][a-z0-9-]{0,179}$/.test(params.produto)?params.produto:undefined;
+  const offerId=typeof params.oferta==="string"&&/^[0-9a-f-]{36}$/i.test(params.oferta)?params.oferta:undefined;
+  const requestedQuantity=/^[1-9][0-9]{0,5}$/.test(params.quantidade??"")?Math.min(100000,Number(params.quantidade)):undefined;
   const region=(params.regiao??"SP").trim().toUpperCase().slice(0,12);
   const page=/^[0-9]{1,4}$/.test(params.pagina??"1")?Math.min(1000,Math.max(1,Number(params.pagina??"1"))):1;
   // Both helpers independently verify the authenticated user and enforce RLS.
@@ -24,10 +27,10 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   const buyerOrgId=summary.organizations[0]?.id??"";
   const catalog:BuyerCatalogResult=!summary.error && buyerOrgId &&
     access?.organizationIds.comprador.includes(buyerOrgId)
-    ? await buyerCatalog(await createClient(),region,page,buyerOrgId)
+    ? await buyerCatalog(await createClient(),region,page,buyerOrgId,{slugs:slug?[slug]:undefined,offerId})
     : {items:[],error:summary.error||!buyerOrgId||!access?.organizationIds.comprador.includes(buyerOrgId),hasMore:false};
-  const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1);
-  const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1);
+  const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1)+(slug?"&produto="+encodeURIComponent(slug):"")+(offerId?"&oferta="+offerId:"");
+  const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1)+(slug?"&produto="+encodeURIComponent(slug):"")+(offerId?"&oferta="+offerId:"");
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="forest" title="Catálogo empresarial" backHref="/app/comprador" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
@@ -35,9 +38,13 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
       <p className="mt-5 text-xs font-black uppercase tracking-wide text-terra">Acesso privado · Compras empresariais</p>
       <h1 className="mt-2 text-3xl font-black text-forest-deep sm:text-4xl">Escolha seus produtos</h1>
       <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted">Compare ofertas, ajuste as quantidades e coloque tudo na cesta. Solicite sua cotação quando terminar.</p>
+      <Link href="/app/comprador/lista" className="mt-4 inline-flex min-h-11 items-center text-sm font-bold text-forest underline">Revisar minha lista do catálogo público</Link>
+      {(slug||offerId)&&<p className="mt-3 text-sm text-forest">Mostrando o produto selecionado. <Link href="/app/comprador/catalogo" className="underline">Ver todos os produtos</Link></p>}
       <section className="mt-6 overflow-hidden rounded-[2rem] border border-line bg-paper">
         <div className="border-b border-line p-6 sm:p-8">
           <form method="get" action="/app/comprador/catalogo" className="flex flex-wrap items-end gap-3">
+            {slug&&<input type="hidden" name="produto" value={slug}/>}
+            {offerId&&<input type="hidden" name="oferta" value={offerId}/>}
             <label htmlFor="buyer-region" className="grid flex-1 gap-2 text-sm font-extrabold text-forest">Região de atendimento
               <input id="buyer-region" name="regiao" type="text" defaultValue={region} maxLength={12} placeholder="SP ou BR-SP" className="h-12 min-w-0 rounded-xl border border-line bg-canvas px-4 text-base uppercase focus-visible:outline-2 focus-visible:outline-forest"/>
             </label>
@@ -52,7 +59,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
           <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
-        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId}/>}
+        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId} requestedQuantity={requestedQuantity}/>}
         <nav aria-label="Paginação do catálogo" className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 text-sm font-bold text-forest">
           <span>Página {page}</span><div className="flex gap-2">
             {page>1 && <Link href={prevUrl} className="rounded-full bg-paper px-4 py-3 ring-1 ring-line">Anterior</Link>}

@@ -12,12 +12,12 @@ function priceAt(item:PrivateOffer,quantity:number){
   return item.priceTiers.filter(t=>t.minQuantity<=quantity)
     .reduce((price,t)=>t.unitPriceMinor,item.priceMinor);
 }
-function BasketStepper({item,quantity,onUpdate}:{
-  item:PrivateOffer;quantity:number;onUpdate:(qty:number)=>void;
+function BasketStepper({item,quantity,onUpdate,suggestedQuantity}:{
+  item:PrivateOffer;quantity:number;onUpdate:(qty:number)=>void;suggestedQuantity?:number;
 }){
   if(quantity===0)return <button type="button"
     aria-label={"Adicionar "+item.productName+" à cesta"}
-    onClick={()=>onUpdate(item.minQuantity)}
+    onClick={()=>onUpdate(Math.min(item.availableQuantity,Math.max(item.minQuantity,suggestedQuantity??item.minQuantity)))}
     className="grid size-11 shrink-0 place-items-center rounded-full bg-lime text-forest-deep shadow-sm transition active:scale-90 focus-visible:ring-2 focus-visible:ring-forest">
     <Plus size={22} strokeWidth={2.8} aria-hidden/>
   </button>;
@@ -37,8 +37,8 @@ function BasketStepper({item,quantity,onUpdate}:{
     </button>
   </div>;
 }
-export function BuyerCatalogBrowser({items,region,userId,buyerOrgId}:{
-  items:PrivateOffer[];region:string;userId:string;buyerOrgId:string;
+export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,requestedQuantity}:{
+  items:PrivateOffer[];region:string;userId:string;buyerOrgId:string;requestedQuantity?:number;
 }){
   const [search,setSearch]=useState("");
   const [sort,setSort]=useState("name");
@@ -63,6 +63,7 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId}:{
     else setLastMessage("A cesta permite até 100 ofertas por solicitação.");
   }
   return <>
+    {requestedQuantity&&<p className="p-4 text-sm text-forest">Quantidade do pedido anterior: {requestedQuantity}. Confira o preço atual e adicione à cesta para uma nova cotação.</p>}
     <div className="border-b border-line bg-paper p-4 sm:p-6">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
         <label htmlFor="buyer-catalog-search" className="grid gap-1.5 text-xs font-extrabold text-forest">
@@ -132,7 +133,7 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId}:{
                   item.minQuantity>1?"Mín. "+item.minQuantity+" un":"Preço por unidade"}
               </p>
             </div>
-            <BasketStepper item={item} quantity={qty} onUpdate={value=>update(item,value)}/>
+            <BasketStepper item={item} suggestedQuantity={requestedQuantity} quantity={qty} onUpdate={value=>update(item,value)}/>
           </div>
         </article>;
       })}

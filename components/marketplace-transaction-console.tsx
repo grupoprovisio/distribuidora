@@ -354,6 +354,7 @@ export function TransactionConsole({
             <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"dispatch")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Confirmar expedição</button>}
           {mode==="supplier_orders"&&shipment?.status==="in_transit"&&
             <button type="button" disabled={busy} onClick={()=>advanceShipping(order,"deliver")} className="min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white disabled:opacity-50">Registrar entrega</button>}
+          {mode==="buyer_orders"&&<Link href={"/app/comprador/catalogo?oferta="+encodeURIComponent(order.offer_id)+"&quantidade="+order.quantity+"&regiao="+encodeURIComponent(order.region_code)} className="inline-flex min-h-11 items-center rounded-xl bg-lime-soft px-4 text-sm font-bold text-forest">Comprar novamente</Link>}
           {mode==="buyer_orders"&&order.status==="awaiting_supplier_confirmation"&&
             <button type="button" disabled={busy} onClick={()=>transition(order,"buyer_cancel")} className="min-h-11 rounded-full border border-line px-5 text-sm font-extrabold text-forest disabled:opacity-50">Cancelar solicitação</button>}
         </div>

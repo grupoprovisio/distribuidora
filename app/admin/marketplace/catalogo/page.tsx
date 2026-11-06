@@ -99,6 +99,7 @@ export default async function AdminCatalogReview({searchParams}:{searchParams:Pr
     <AppHeader theme="wine" title="Revisão do catálogo" backHref="/admin/marketplace" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
       <AdminNav/>
+      <Link href="/admin/marketplace/diagnostico" className="my-4 inline-flex min-h-11 items-center rounded-xl bg-lime-soft px-4 text-sm font-bold text-forest">Diagnóstico de publicação dos produtos</Link>
       <Link href="/admin/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-extrabold text-forest hover:underline focus-visible:ring-2 focus-visible:ring-forest">
         <ArrowLeft size={16} aria-hidden/> Administração
       </Link>

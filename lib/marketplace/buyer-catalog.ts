@@ -22,7 +22,7 @@ const PAGE_SIZE = 24;
 
 /** Only the authenticated user's RLS-visible rows are used; no service_role key. */
 export async function buyerCatalog(client: Client, region: string, page: number,
-  buyerOrgId: string): Promise<BuyerCatalogResult> {
+  buyerOrgId: string, selection?:{slugs?:string[];offerId?:string}): Promise<BuyerCatalogResult> {
   const empty: BuyerCatalogResult = { items: [], error: false, hasMore: false };
   const regionCodes=allowedBuyerRegionCodes(region);
   if (!regionCodes.length || !Number.isSafeInteger(page) || page < 1 || page > 1000) return {...empty,error:true};
@@ -56,13 +56,25 @@ export async function buyerCatalog(client: Client, region: string, page: number,
   // entitled to multiple UFs, but this page must not mix their offers.
   // PostgREST's !inner embed makes the region predicate part of the SQL query.
   // range() is inclusive, so PAGE_SIZE+1 checks whether the next page exists.
-  const query = await client.from("offers")
+  let selectedSkus:string[]|undefined;
+  if(selection?.slugs?.length){
+    const selectedProducts=await client.from("products").select("id").in("slug",selection.slugs.slice(0,100)).eq("status","active");
+    if(selectedProducts.error)return {...empty,error:true};
+    if(!selectedProducts.data?.length)return empty;
+    const selected=await client.from("supplier_products").select("id").in("product_id",selectedProducts.data.map(p=>p.id)).eq("status","approved").limit(500);
+    if(selected.error)return {...empty,error:true};
+    selectedSkus=(selected.data??[]).map(s=>s.id);if(!selectedSkus.length)return empty;
+  }
+  let offersQuery = client.from("offers")
     .select("id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from,valid_to,offer_regions!inner(region_code)")
     .in("offer_regions.region_code",regionCodes)
     .in("supplier_org_id",entitledSellerIds)
     .eq("status","approved").lte("valid_from",now)
     .or("valid_to.is.null,valid_to.gt." + now)
     .order("created_at",{ascending:false}).range(offset,offset+PAGE_SIZE);
+  if(selectedSkus)offersQuery=offersQuery.in("supplier_product_id",selectedSkus);
+  if(selection?.offerId)offersQuery=offersQuery.eq("id",selection.offerId);
+  const query=await offersQuery;
   if (query.error) return {...empty,error:true};
   const hasMore=(query.data?.length??0)>PAGE_SIZE;
   const visible=(query.data??[]).slice(0,PAGE_SIZE).filter(o=>SOURCES.has(o.source_type)
