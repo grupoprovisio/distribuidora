@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
+import {track} from "@/lib/analytics";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Method = "senha" | "link";
 
-export function MarketplaceLoginForm() {
+export function MarketplaceLoginForm({catalog=false,product}:{catalog?:boolean;product?:string}) {
   const router = useRouter();
   const [method, setMethod] = useState<Method>("senha");
   const [email, setEmail] = useState("");
@@ -24,11 +25,13 @@ export function MarketplaceLoginForm() {
     try {
       const address = email.trim().toLowerCase();
       const supabase = createClient();
+      if(catalog){try{sessionStorage.setItem("provisio-catalog-return",product??"");}catch{/* The saved list remains accessible. */}}
       if (method === "senha") {
         const result = await supabase.auth.signInWithPassword({ email: address, password });
         if (result.error) throw new Error("Não foi possível entrar. Confira os dados e tente novamente.");
         setPassword("");
-        router.replace("/app");
+        if(catalog){track("catalog_login_complete");router.replace("/produtos/continuar");}
+        else router.replace("/app");
         router.refresh();
       } else {
         // Nunca cadastrar contas a partir da tela de login pública.
@@ -37,7 +40,7 @@ export function MarketplaceLoginForm() {
           email: address,
           options: {
             shouldCreateUser: false,
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/auth/callback${catalog?"?flow=catalogo":""}`,
           },
         });
         if (result.error) throw new Error("Não foi possível enviar o acesso. Tente novamente em instantes.");
