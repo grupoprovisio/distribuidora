@@ -22,7 +22,7 @@ const PAGE_SIZE = 24;
 
 /** Only the authenticated user's RLS-visible rows are used; no service_role key. */
 export async function buyerCatalog(client: Client, region: string, page: number,
-  buyerOrgId: string): Promise<BuyerCatalogResult> {
+  buyerOrgId: string, productSlug = ""): Promise<BuyerCatalogResult> {
   const empty: BuyerCatalogResult = { items: [], error: false, hasMore: false };
   const regionCodes=allowedBuyerRegionCodes(region);
   if (!regionCodes.length || !Number.isSafeInteger(page) || page < 1 || page > 1000) return {...empty,error:true};
@@ -50,19 +50,37 @@ export async function buyerCatalog(client: Client, region: string, page: number,
   if(sellerResult.error)return {...empty,error:true};
   const entitledSellerIds=(sellerResult.data??[]).map(s=>s.id);
   if(!entitledSellerIds.length)return empty;
+  // A seleção feita na vitrine pública deve filtrar no servidor ANTES
+  // da paginação. Nunca procurar somente entre as 24 ofertas carregadas.
+  // Consultas sempre respeitam a RLS e a elegibilidade do comprador.
+  let matchingSkuIds: string[] = [];
+  if (productSlug) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(productSlug) || productSlug.length > 160)
+      return empty;
+    const product = await client.from("products").select("id")
+      .eq("slug",productSlug).eq("status","active").maybeSingle();
+    if (product.error) return {...empty,error:true};
+    if (!product.data) return empty;
+    const skus = await client.from("supplier_products").select("id")
+      .eq("product_id",product.data.id).eq("status","approved").limit(500);
+    if (skus.error) return {...empty,error:true};
+    matchingSkuIds = (skus.data??[]).map(row=>row.id);
+    if (!matchingSkuIds.length) return empty;
+  }
   const now = new Date().toISOString();
   const offset = (page - 1) * PAGE_SIZE;
   // Filter by selected delivery region BEFORE paginating; a buyer may be
   // entitled to multiple UFs, but this page must not mix their offers.
   // PostgREST's !inner embed makes the region predicate part of the SQL query.
   // range() is inclusive, so PAGE_SIZE+1 checks whether the next page exists.
-  const query = await client.from("offers")
+  let offersQuery = client.from("offers")
     .select("id,supplier_product_id,supplier_org_id,source_type,base_price_minor,min_quantity,status,valid_from,valid_to,offer_regions!inner(region_code)")
     .in("offer_regions.region_code",regionCodes)
     .in("supplier_org_id",entitledSellerIds)
     .eq("status","approved").lte("valid_from",now)
-    .or("valid_to.is.null,valid_to.gt." + now)
-    .order("created_at",{ascending:false}).range(offset,offset+PAGE_SIZE);
+    .or("valid_to.is.null,valid_to.gt." + now);
+  if (productSlug) offersQuery=offersQuery.in("supplier_product_id",matchingSkuIds);
+  const query = await offersQuery.order("created_at",{ascending:false}).range(offset,offset+PAGE_SIZE);
   if (query.error) return {...empty,error:true};
   const hasMore=(query.data?.length??0)>PAGE_SIZE;
   const visible=(query.data??[]).slice(0,PAGE_SIZE).filter(o=>SOURCES.has(o.source_type)
