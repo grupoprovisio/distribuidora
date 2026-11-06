@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   // Destinos enumerados: nao aceitar next arbitrario de querystring.
   const flow = request.nextUrl.searchParams.get("flow");
-  const destination = flow === "recovery" ? "/redefinir-senha" : "/app";
+  const destination = flow === "recovery" ? "/redefinir-senha" : flow === "catalogo" ? "/produtos/continuar" : "/app";
   if (!supabaseAuthEnabled()) return authRedirect("/entrar");
   const params=request.nextUrl.searchParams;
   const code=params.get("code");
