@@ -14,8 +14,9 @@ import { getMarketplaceAccess } from "@/lib/marketplace/session";
 export const metadata:Metadata={title:"Catálogo empresarial · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 
-export default async function BuyerCatalogPage({searchParams}:{searchParams:Promise<{regiao?:string;pagina?:string}>}) {
+export default async function BuyerCatalogPage({searchParams}:{searchParams:Promise<{regiao?:string;pagina?:string;produto?:string}>}) {
   const params=await searchParams;
+  const chosenProduct = typeof params.produto === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(params.produto) && params.produto.length <= 160 ? params.produto : "";
   const region=(params.regiao??"SP").trim().toUpperCase().slice(0,12);
   const page=/^[0-9]{1,4}$/.test(params.pagina??"1")?Math.min(1000,Math.max(1,Number(params.pagina??"1"))):1;
   // Both helpers independently verify the authenticated user and enforce RLS.
@@ -52,7 +53,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
           <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
-        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId}/>}
+        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId} initialProductSlug={chosenProduct}/>}
         <nav aria-label="Paginação do catálogo" className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 text-sm font-bold text-forest">
           <span>Página {page}</span><div className="flex gap-2">
             {page>1 && <Link href={prevUrl} className="rounded-full bg-paper px-4 py-3 ring-1 ring-line">Anterior</Link>}
