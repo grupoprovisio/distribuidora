@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const destinations = ["/entrar", "/entrar?erro=confirmacao", "/redefinir-senha", "/app"] as const;
+const destinations = ["/entrar", "/entrar?erro=confirmacao", "/redefinir-senha", "/app", "/produtos/continuar"] as const;
 type AuthDestination = typeof destinations[number];
 const allowedDestinations = new Set<string>(destinations);
 
