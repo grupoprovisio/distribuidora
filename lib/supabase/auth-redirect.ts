@@ -18,3 +18,17 @@ export function authRedirect(destination: AuthDestination): NextResponse {
     },
   });
 }
+
+/** Redirecionamento pós-login limitado a um slug de produto validado. */
+export function authBuyerProductRedirect(slug: string): NextResponse {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 160) {
+    return authRedirect("/app");
+  }
+  return new NextResponse(null, {
+    status: 307,
+    headers: {
+      Location: "/app/comprador/catalogo?produto=" + encodeURIComponent(slug),
+      "Cache-Control": "private, no-store",
+    },
+  });
+}

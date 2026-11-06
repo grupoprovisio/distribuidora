@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Method = "senha" | "link";
 
-export function MarketplaceLoginForm() {
+export function MarketplaceLoginForm({ productSlug = "" }: { productSlug?: string }) {
   const router = useRouter();
   const [method, setMethod] = useState<Method>("senha");
   const [email, setEmail] = useState("");
@@ -28,7 +28,7 @@ export function MarketplaceLoginForm() {
         const result = await supabase.auth.signInWithPassword({ email: address, password });
         if (result.error) throw new Error("Não foi possível entrar. Confira os dados e tente novamente.");
         setPassword("");
-        router.replace("/app");
+        router.replace(productSlug ? "/app/comprador/catalogo?produto=" + encodeURIComponent(productSlug) : "/app");
         router.refresh();
       } else {
         // Nunca cadastrar contas a partir da tela de login pública.
@@ -37,7 +37,7 @@ export function MarketplaceLoginForm() {
           email: address,
           options: {
             shouldCreateUser: false,
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/auth/callback${productSlug ? "?flow=buyer-product&produto=" + encodeURIComponent(productSlug) : ""}`,
           },
         });
         if (result.error) throw new Error("Não foi possível enviar o acesso. Tente novamente em instantes.");
@@ -51,6 +51,7 @@ export function MarketplaceLoginForm() {
   }
 
   return <div className="mt-7">
+    {productSlug && <p className="mb-4 rounded-xl bg-lime-soft p-3 text-sm font-semibold text-forest">Após entrar, abriremos o catálogo empresarial com o produto que você escolheu.</p>}
     <div className="grid grid-cols-2 gap-2 rounded-2xl bg-canvas p-1" role="group" aria-label="Forma de autenticação">
       {(["senha", "link"] as const).map(item =>
         <button key={item} type="button"
