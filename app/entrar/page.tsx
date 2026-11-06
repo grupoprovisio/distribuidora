@@ -9,7 +9,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
-export default function EntrarPage() {
+export default async function EntrarPage({ searchParams }: { searchParams: Promise<{ produto?: string }> }) {
+  const params = await searchParams;
+  const productSlug = typeof params.produto === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(params.produto) && params.produto.length <= 160 ? params.produto : "";
   const enabled = supabaseAuthEnabled();
   return (
     <main className="min-h-dvh bg-canvas px-5 py-10">
@@ -25,7 +27,7 @@ export default function EntrarPage() {
             Acesso para compradores e fornecedores homologados.
             A criação e aprovação de usuários são controladas pela administração.
           </p>
-          {enabled ? <MarketplaceLoginForm /> :
+          {enabled ? <MarketplaceLoginForm productSlug={productSlug} /> :
             <p role="status" className="mt-7 rounded-2xl bg-sand px-4 py-4 text-sm font-semibold text-forest">
               O acesso empresarial está em preparação. Nenhuma conta ou pedido foi ativado.
             </p>}
