@@ -37,7 +37,7 @@ export function MarketplaceLoginForm({ productSlug = "" }: { productSlug?: strin
           email: address,
           options: {
             shouldCreateUser: false,
-            emailRedirectTo: `${window.location.origin}/auth/callback${productSlug ? "?flow=buyer-product%26produto=" + encodeURIComponent(productSlug) : ""}`,
+            emailRedirectTo: `${window.location.origin}/auth/callback${productSlug ? "?flow=buyer-product&produto=" + encodeURIComponent(productSlug) : ""}`,
           },
         });
         if (result.error) throw new Error("Não foi possível enviar o acesso. Tente novamente em instantes.");
