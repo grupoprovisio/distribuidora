@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {BuyerSavedLists} from "@/components/buyer-saved-lists";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -71,7 +72,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       setSnapshot({key:serialized,value:null,failure:"network_error"});
     }});
     return ()=>controller.abort();
-  },[serialized,buyerOrgId,region,refresh,selected]);
+  },[serialized,buyerOrgId,region,refresh,selected,rows.length]);
   async function submit(){
     if(submitting||!validation?.ready||!validation.quoteEnabled||!selected.length)return;
     if(mode!=="checkout"||!savedContact){
@@ -164,6 +165,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     "&recebimento="+(method==="pickup"?"retirada":"entrega");
   const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
   return <div className="space-y-6 pb-20">
+    {mode==="basket"&&<BuyerSavedLists userId={userId} buyerOrgId={buyerOrgId} region={region}/>}
     <div className="flex flex-wrap items-center justify-between gap-3">
       <Link href={catalogHref} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-forest">
         <ArrowLeft size={18} aria-hidden/> Continuar comprando
