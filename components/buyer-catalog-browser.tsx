@@ -41,7 +41,8 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
   items:PrivateOffer[];region:string;userId:string;buyerOrgId:string;initialProductSlug?:string;
 }){
   const [search,setSearch]=useState("");
-  const [selectedProduct,setSelectedProduct]=useState(initialProductSlug);
+  const selectedProduct=initialProductSlug;
+  const clearProductHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
   const [sort,setSort]=useState("name");
   const [lastMessage,setLastMessage]=useState("");
   const normalizedRegion=region.startsWith("BR-")?region:"BR-"+region;
@@ -49,12 +50,12 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
   const href="/app/comprador/cesta?regiao="+encodeURIComponent(normalizedRegion);
   const shown=useMemo(()=>{
     const term=search.trim().toLocaleLowerCase("pt-BR");
-    const matched=items.filter(item=>(!selectedProduct||item.slug===selectedProduct)&&(!term||[item.productName,item.supplier,item.sku]
-      .some(value=>value.toLocaleLowerCase("pt-BR").includes(term))));
+    const matched=items.filter(item=>!term||[item.productName,item.supplier,item.sku]
+      .some(value=>value.toLocaleLowerCase("pt-BR").includes(term)));
     return [...matched].sort((a,b)=>sort==="lowest"?a.priceMinor-b.priceMinor:
       sort==="highest"?b.priceMinor-a.priceMinor:
       a.productName.localeCompare(b.productName,"pt-BR"));
-  },[items,search,sort,selectedProduct]);
+  },[items,search,sort]);
   function update(item:PrivateOffer,next:number){
     if(next>item.availableQuantity||next>100000)return;
     if(basket.setQuantity(item.id,next,{
@@ -65,14 +66,14 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
   }
   return <>
     <div className="border-b border-line bg-paper p-4 sm:p-6">
-      {selectedProduct && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-lime-soft p-3 text-sm text-forest"><span>Produto selecionado na vitrine pública. Confira a oferta disponível para sua empresa nesta página.</span><button type="button" onClick={()=>setSelectedProduct("")} className="min-h-11 rounded-full px-4 font-black underline">Ver todos os produtos</button></div>}
+      {selectedProduct && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-lime-soft p-3 text-sm text-forest"><span>Produto selecionado na vitrine pública. Confira a oferta disponível para sua empresa nesta página.</span><Link href={clearProductHref} className="inline-flex min-h-11 items-center rounded-full px-4 font-black underline">Ver todos os produtos</Link></div>}
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
         <label htmlFor="buyer-catalog-search" className="grid gap-1.5 text-xs font-extrabold text-forest">
           Buscar produtos
           <span className="relative flex items-center">
             <Search size={18} className="pointer-events-none absolute left-3 text-muted" aria-hidden/>
             <input id="buyer-catalog-search" type="search" value={search}
-              onChange={event=>{setSelectedProduct("");setSearch(event.target.value);}}
+              onChange={event=>setSearch(event.target.value)}
               placeholder="Produto, marca ou fornecedor"
               className="min-h-12 min-w-0 w-full rounded-full border border-line bg-canvas pl-10 pr-10 text-base text-ink focus-visible:outline-2 focus-visible:outline-forest"/>
             {search&&<button type="button" aria-label="Limpar busca" onClick={()=>setSearch("")}
@@ -145,9 +146,9 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
         {search||selectedProduct?"Nenhuma oferta corresponde à busca nesta página":"Nenhuma oferta publicada"}
       </h2>
       <p className="mx-auto mt-3 max-w-xl text-sm text-muted">Consulte outra página ou região, ou veja todos os produtos disponíveis para sua empresa.</p>
-      {(search||selectedProduct)&&<button type="button" onClick={()=>{setSearch("");setSelectedProduct("");}}
+      {search&&<button type="button" onClick={()=>setSearch("")}
         className="mt-5 min-h-11 rounded-full bg-forest px-5 text-sm font-extrabold text-white">
-        Limpar filtros
+        Limpar busca
       </button>}
     </div>}
     <Link href={href}
