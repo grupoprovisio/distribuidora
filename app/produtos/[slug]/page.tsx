@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { createClient } from "@/lib/supabase/server";
 import { WRAP } from "@/lib/ui";
+import { PublicCepAvailability } from "@/components/public-cep-availability";
 
 export const metadata: Metadata = {
   title: "Detalhes do produto · Grupo Provisio",
@@ -60,6 +61,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <p className="mt-3 text-xs leading-relaxed text-muted">
             A disponibilidade e o frete para seu CEP são confirmados durante a cotação.
           </p>
+          <PublicCepAvailability regions={product.regions ?? []} />
           <Link href={"/entrar?produto=" + encodeURIComponent(product.slug)}
             className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-forest px-5 text-sm font-black text-white">
             Consultar preço e cotar <ArrowRight size={17} aria-hidden />
