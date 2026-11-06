@@ -16,7 +16,7 @@ new Function('module', 'exports', 'require', js)(loaded, loaded.exports, require
 const { authRedirect } = loaded.exports;
 
 test('authentication destinations return relative, private, uncached redirects', () => {
-  for (const destination of ['/entrar', '/entrar?erro=confirmacao', '/redefinir-senha', '/app']) {
+  for (const destination of ['/entrar', '/entrar?erro=confirmacao', '/redefinir-senha', '/app', '/produtos/continuar']) {
     const response = authRedirect(destination);
     assert.equal(response.status, 307);
     assert.equal(response.headers.get('location'), destination);
