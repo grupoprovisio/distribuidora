@@ -9,5 +9,6 @@ Configure somente no ambiente da Vercel:
 - STRIPE_INTEGRATION_IDENTIFIER: identificador opcional.
 - STRIPE_CHECKOUT_ENABLED=true: habilita o endpoint.
 - MARKETPLACE_TRANSACTIONS_ENABLED=true: segunda trava exigida pelo marketplace.
+- STRIPE_WEBHOOK_SECRET: segredo sensível do destino de webhook, somente na Vercel.
 
 A Stripe Checkout hospedada mostra os meios de pagamento habilitados na conta. Antes de habilitar produção, configure um webhook para confirmar o pagamento e persistir o pedido de forma idempotente. A página de sucesso não substitui webhook.
