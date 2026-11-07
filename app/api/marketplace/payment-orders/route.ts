@@ -10,7 +10,7 @@ export async function GET(){
     return NextResponse.json({ok:false,reason:"buyer_not_authorized"},{status:403});
   const db=await createClient();
   const {data:orders,error}=await (db as any).from("marketplace_payment_orders")
-    .select("id,basket_id,buyer_org_id,status,fulfillment_status,created_at")
+    .select("id,basket_id,buyer_org_id,status,fulfillment_status,amount_total_minor,created_at")
     .in("buyer_org_id",access.organizationIds.comprador)
     .order("created_at",{ascending:false}).limit(50);
   if(error)return NextResponse.json({ok:false,reason:"query_failed"},{status:503});

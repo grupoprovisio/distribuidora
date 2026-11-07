@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   if (!signature) return Response.json({ ok: false, reason: "webhook_signature_missing" }, { status: 400 });
   const payload = await request.text();
   if (!(await verifyStripeSignature(payload, signature, secret))) return Response.json({ ok: false, reason: "invalid_signature" }, { status: 400 });
-  const event = JSON.parse(payload) as { type?: string; data?: { object?: { id?: string; payment_status?: string; metadata?: Record<string,string> } } };
+  const event = JSON.parse(payload) as { type?: string; data?: { object?: { id?: string; payment_status?: string; amount_total?: number; metadata?: Record<string,string> } } };
   const session = event.data?.object;
   if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     if (session?.payment_status === "paid") {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         const response=await fetch(supabaseUrl+"/rest/v1/rpc/marketplace_mark_basket_paid",{
           method:"POST",
           headers:{apikey:supabaseKey,Authorization:"Bearer "+supabaseKey,"Content-Type":"application/json"},
-          body:JSON.stringify({p_basket:basketId,p_session:session.id,p_token:paymentToken}),
+          body:JSON.stringify({p_basket:basketId,p_session:session.id,p_token:paymentToken,p_amount:session.amount_total??0}),
           cache:"no-store",
         });
         if(!response.ok)console.error("Basket payment update failed",{basketId,status:response.status});
