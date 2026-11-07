@@ -44,9 +44,16 @@ export async function buyerCatalog(client: Client, region: string, page: number,
   // Admin/BUYER accounts can read more RLS-visible rows than the buyer
   // company itself is eligible to buy. Always restrict the catalog to the
   // chosen buyer's QA/commercial realm before server-side pagination.
-  const sellerResult=await client.from("organizations").select("id")
-    .eq("qa_only",buyer.data.qa_only).eq("status","approved")
+  // QA suppliers are never exposed by the hosted production catalog. The
+  // QA realm remains available to local/integration checks only.
+  const includeQa=process.env.NODE_ENV!=="production"
+    && process.env.MARKETPLACE_QA_TRANSACTIONS_ENABLED==="true";
+  const sellerQuery=client.from("organizations").select("id")
+    .eq("status","approved")
     .in("kind",["SUPPLIER","PLATFORM_OPERATOR"]).limit(500);
+  const sellerResult=includeQa
+    ? await sellerQuery.eq("qa_only",buyer.data.qa_only)
+    : await sellerQuery.eq("qa_only",false);
   if(sellerResult.error)return {...empty,error:true};
   const entitledSellerIds=(sellerResult.data??[]).map(s=>s.id);
   if(!entitledSellerIds.length)return empty;
