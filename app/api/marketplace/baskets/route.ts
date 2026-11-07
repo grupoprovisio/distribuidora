@@ -45,8 +45,9 @@ export async function POST(request:Request){
   if(!verified.ok)return respond(verified,422);
   if(body.action==="validate"){
     const qaScope=readQaTransactionScope(process.env);
-    const quoteEnabled=transactionAccessMode(access)==="qa"
-      && qaScope?.buyer===body.buyerOrgId;
+    const mode=transactionAccessMode(access);
+    const quoteEnabled=mode==="global" ||
+      (mode==="qa"&&qaScope?.buyer===body.buyerOrgId);
     return respond({...verified,quoteEnabled});
   }
   if(!verified.ready)return respond({...verified,reason:"basket_changed"},409);

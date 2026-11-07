@@ -75,7 +75,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   async function submit(){
     if(submitting||!validation?.ready||!validation.quoteEnabled||!selected.length)return;
     if(mode!=="checkout"||!savedContact){
-      setError("Confira e salve seu cadastro de contato e endereço antes de solicitar a cotação.");
+      setError("Confira e salve seu cadastro e endereço antes de continuar para o pagamento.");
       return;
     }
     if(normalizeCep(cep)!==savedContact.postalCode){
@@ -84,7 +84,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     }
     if(method==="delivery"&&(!freight?.available||!freight.quote||
       freight.quote.state!==savedContact.state||freight.cep!==savedContact.postalCode)){
-      setError("Calcule o frete para seu endereço cadastrado antes de solicitar a cotação.");
+      setError("Calcule o frete para seu endereço cadastrado antes de continuar.");
       return;
     }
     if(method==="pickup"&&!freight?.pickupAvailable){
@@ -101,20 +101,18 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       try{window.sessionStorage.setItem(storageKey,requestKey);}catch{}
     }
     try{
-      const response=await fetch(URL,{
+      const response=await fetch("/api/marketplace/payment",{
         method:"POST",headers:{"content-type":"application/json"},
         credentials:"same-origin",cache:"no-store",
-        body:JSON.stringify({action:"submit",buyerOrgId,region,lines:selected,method,requestKey}),
+        body:JSON.stringify({buyerOrgId,region,lines:selected,method,requestKey}),
       });
-      const data=await response.json() as BasketResponse;
-      if(!response.ok||!data.ok||!data.id){
-        if(response.status===409||data.reason==="basket_changed")setError("Algum item mudou. Revise a cesta antes de enviar.");
-        else setError("Não foi possível enviar a solicitação. Tente novamente, sem duplicar os itens.");
+      const data=await response.json() as BasketResponse&{url?:string};
+      if(!response.ok||!data.ok||!data.url){
+        if(response.status===409||data.reason==="basket_changed")setError("Algum item mudou. Revise a cesta antes de pagar.");
+        else setError("Não foi possível iniciar o pagamento. Revise a cesta e tente novamente.");
         return;
       }
-      basket.clear();
-      try{window.sessionStorage.removeItem(storageKey);}catch{}
-      router.push("/app/comprador/solicitacoes?enviada="+encodeURIComponent(data.id));
+      window.location.assign(data.url);
     }catch{setError("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setSubmitting(false);}
   }
@@ -307,7 +305,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
         {mode==="checkout"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
-          {submitting?"Registrando solicitação...":"Solicitar cotação"}
+          {submitting?"Abrindo pagamento...":"Pagar com Stripe"}
           {!submitting&&<ArrowRight size={18} aria-hidden/>}
         </button>:<Link href={checkoutHref} aria-disabled={!validation?.ready}
           className={"mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-extrabold "+(validation?.ready?"bg-forest text-white":"pointer-events-none bg-canvas text-muted")}>
