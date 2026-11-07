@@ -3,8 +3,9 @@ import { CheckCircle2, Clock3 } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
+import { ClearPaidBasket } from "@/components/clear-paid-basket";
 
-type CheckoutSession = { payment_status?: string; status?: string };
+type CheckoutSession = { payment_status?: string; status?: string; metadata?: Record<string,string> };
 
 async function readSession(sessionId: string | undefined): Promise<CheckoutSession | null> {
   const secret = process.env.STRIPE_SECRET_KEY;
@@ -32,6 +33,7 @@ export default async function CheckoutSuccessPage({ searchParams }: { searchPara
             {paid ? "A Stripe confirmou o pagamento. Em breve você verá os próximos passos do pedido." : "O pagamento pode levar alguns instantes para ser confirmado. Você receberá a atualização assim que o webhook da Stripe processar a sessão."}
           </p>
           <Link href="/app/comprador/pedidos" className="mt-8 inline-flex min-h-11 items-center rounded-full bg-forest px-6 text-sm font-extrabold text-white">Acompanhar pedido</Link>
+          {paid&&<ClearPaidBasket userId={session?.metadata?.created_by} buyerOrgId={session?.metadata?.buyer_org_id} region={session?.metadata?.region??"BR-SP"}/>} 
         </section>
       </main>
       <SiteFooter />

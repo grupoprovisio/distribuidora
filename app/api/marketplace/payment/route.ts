@@ -46,6 +46,7 @@ export async function POST(request:Request){
   params.set("metadata[basket_id]",basket.data);
   params.set("metadata[buyer_org_id]",body.buyerOrgId);
   params.set("metadata[created_by]",access.userId);
+  params.set("metadata[region]",body.region);
   params.set("allow_promotion_codes","true");
   const response=await fetch("https://api.stripe.com/v1/checkout/sessions",{
     method:"POST",headers:{Authorization:"Bearer "+secret,"Content-Type":"application/x-www-form-urlencoded"},
