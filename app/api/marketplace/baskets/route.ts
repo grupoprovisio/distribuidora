@@ -36,8 +36,9 @@ export async function POST(request:Request){
     return respond({ok:false,reason:"buyer_not_authorized"},403);
   if(body.action==="submit"){
     const scope=readQaTransactionScope(process.env);
-    if(transactionAccessMode(access)!=="qa"||!scope||
-       body.buyerOrgId!==scope.buyer)
+    const mode=transactionAccessMode(access);
+    const qaAllowed=mode==="qa"&&scope&&body.buyerOrgId===scope.buyer;
+    if(mode==="disabled"||(!qaAllowed&&mode!=="global"))
       return respond({ok:false,reason:"not_enabled"},503);
   }
   const db=await createClient();
@@ -45,8 +46,9 @@ export async function POST(request:Request){
   if(!verified.ok)return respond(verified,422);
   if(body.action==="validate"){
     const qaScope=readQaTransactionScope(process.env);
-    const quoteEnabled=transactionAccessMode(access)==="qa"
-      && qaScope?.buyer===body.buyerOrgId;
+    const mode=transactionAccessMode(access);
+    const quoteEnabled=mode==="global" ||
+      (mode==="qa"&&qaScope?.buyer===body.buyerOrgId);
     return respond({...verified,quoteEnabled});
   }
   if(!verified.ready)return respond({...verified,reason:"basket_changed"},409);
