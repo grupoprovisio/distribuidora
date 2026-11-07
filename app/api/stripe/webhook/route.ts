@@ -19,7 +19,8 @@ async function verifyStripeSignature(payload: string, signature: string, secret:
 export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_RUNTIME_SECRET ?? process.env.STRIPE_WEBHOOK_SIGNING_SECRET ?? process.env.STRIPE_WEBHOOK_SECRET;
   const signature = request.headers.get("stripe-signature");
-  if (!secret || !signature) return Response.json({ ok: false, reason: "webhook_not_configured" }, { status: 400 });
+  if (!secret) return Response.json({ ok: false, reason: "webhook_secret_missing" }, { status: 400 });
+  if (!signature) return Response.json({ ok: false, reason: "webhook_signature_missing" }, { status: 400 });
   const payload = await request.text();
   if (!(await verifyStripeSignature(payload, signature, secret))) return Response.json({ ok: false, reason: "invalid_signature" }, { status: 400 });
   const event = JSON.parse(payload) as { type?: string; data?: { object?: { id?: string; payment_status?: string } } };
