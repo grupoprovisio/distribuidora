@@ -74,7 +74,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   },[serialized,buyerOrgId,region,refresh,selected]);
   async function submit(){
     if(submitting||!validation?.ready||!validation.quoteEnabled||!selected.length)return;
-    if(mode!=="checkout"||!savedContact){
+    if(!savedContact){
       setError("Confira e salve seu cadastro e endereço antes de continuar para o pagamento.");
       return;
     }
@@ -127,7 +127,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
     !!(freight?.available&&freight.quote&&savedContact&&
       freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
-  const checkoutReady=!!(mode==="checkout"&&savedContact&&
+  const checkoutReady=!!(savedContact&&
     normalizeCep(cep)===savedContact.postalCode&&deliveryValid);
   const visibleLines=useMemo(()=>{
     const byId=new Map((validation?.lines??[]).map(line=>[line.offerId,line]));
@@ -253,8 +253,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
             </div>
           </article>)}
         </section>)}
-        {mode==="checkout"&&<BuyerCheckoutContactSummary buyerOrgId={buyerOrgId}
-           onLoaded={handleSaved}/>}
+        <BuyerCheckoutContactSummary buyerOrgId={buyerOrgId}
+           onLoaded={handleSaved}/>
         <button type="button" onClick={()=>{if(window.confirm("Remover todos os produtos da cesta?"))basket.clear();}}
           className="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-bold text-muted">
           <Trash2 size={16} aria-hidden/> Limpar cesta
@@ -288,11 +288,11 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
           <p role="status" className="mt-3 text-xs font-semibold text-wine">
             Produtos sem preço confirmado não entram no total. Revise ou remova os indisponíveis para continuar.
           </p>}
-        {mode==="checkout"&&!savedContact&&
+        {!savedContact&&
           <p className="mt-3 text-xs font-semibold text-muted">
             Cadastre o destinatário e endereço em Meu cadastro para prosseguir.
           </p>}
-        {mode==="checkout"&&method==="delivery"&&freight?.available&&freight.quote&&
+        {method==="delivery"&&freight?.available&&freight.quote&&
           <p className="mt-3 text-xs font-semibold text-forest">
             Entrega estimada: {freight.quote.minBusinessDays}–{freight.quote.maxBusinessDays} dias úteis.
           </p>}
@@ -302,20 +302,22 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
             para enviar a cotação. Entre com uma conta de comprador autorizada.
           </p>}
         {error&&<p role="alert" className="mt-4 rounded-xl bg-sand p-3 text-sm font-semibold text-wine">{error}</p>}
-        {mode==="checkout"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
+        {mode==="basket"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
           {submitting?"Abrindo pagamento...":"Pagar com Stripe"}
           {!submitting&&<ArrowRight size={18} aria-hidden/>}
-        </button>:<Link href={checkoutHref} aria-disabled={!validation?.ready}
-          className={"mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-extrabold "+(validation?.ready?"bg-forest text-white":"pointer-events-none bg-canvas text-muted")}>
-          Revisar solicitação <ArrowRight size={18} aria-hidden/>
-        </Link>}
+        </button>:<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
+          onClick={()=>void submit()}
+          className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
+          {submitting?"Abrindo pagamento...":"Pagar com Stripe"}
+          {!submitting&&<ArrowRight size={18} aria-hidden/>}
+        </button>}
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Os valores apresentados são estimativas. A cotação será registrada na sua conta
-          e os preços finais dependerão das propostas recebidas.
+          Os valores e o frete são confirmados antes do pagamento. O pedido só será registrado
+          e liberado após a confirmação do pagamento pela Stripe.
           O frete informado usa tarifas configuradas pela administração e o prazo é estimado.
-          Nenhum pagamento é realizado nesta etapa.
+          Você será redirecionado ao ambiente seguro da Stripe.
         </p>
       </aside>
     </div>}
