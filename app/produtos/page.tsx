@@ -74,17 +74,18 @@ export default async function ProductsPage({searchParams}:{
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-muted"><p>{!error ? `${products.length}${more?"+":""} ${products.length===1?"produto encontrado":"produtos encontrados"} nesta página` : "Não foi possível carregar os resultados"}</p>{search&&<Link href="/produtos" className="min-h-11 inline-flex items-center rounded-full px-3 text-forest underline">Limpar busca</Link>}</div>
         {error?<div role="alert" className="mt-6 rounded-2xl bg-sand p-6 text-sm font-semibold text-forest-deep">
           O catálogo está temporariamente indisponível. Tente atualizar a página.
-        </div>:products.length?<div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        </div>:products.length?<div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {products.map(product=><article key={product.slug}
-            className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-paper p-3 sm:p-4">
-            <div className="relative grid aspect-square place-items-center overflow-hidden rounded-xl bg-canvas text-forest">
+            className="flex min-w-0 flex-row-reverse items-stretch gap-3 overflow-hidden rounded-2xl border border-line bg-paper p-3 text-left sm:flex-col sm:p-4">
+            <div className="relative grid aspect-square w-[38%] shrink-0 place-items-center overflow-hidden rounded-xl bg-canvas text-forest sm:w-auto">
               {product.imageUrl?<Image src={product.imageUrl}
                 alt={"Foto de "+product.product_name} fill unoptimized
                 sizes="(max-width:640px) 46vw, (max-width:1024px) 30vw, 235px"
                 className="object-contain p-2"/>:
                 <Boxes size={40} strokeWidth={1.5} aria-hidden/>}
             </div>
-            <p className="mt-4 text-xs font-extrabold uppercase tracking-wide text-muted">
+            <div className="flex min-w-0 flex-1 flex-col items-start sm:contents">
+            <p className="mt-0 text-xs font-extrabold uppercase tracking-wide text-muted sm:mt-4">
               {product.category_name}
             </p>
             <h3 className="mt-2 flex-1 text-sm font-black text-forest-deep sm:text-base"><Link className="hover:underline focus-visible:underline" href={"/produtos/"+encodeURIComponent(product.slug)}>{product.product_name}</Link></h3>
@@ -95,6 +96,7 @@ export default async function ProductsPage({searchParams}:{
             <Link href={loginFor(product.slug)} className="mt-2 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-lime-soft px-3 text-center text-xs font-extrabold text-forest">
               Consultar preço <ArrowRight size={14} aria-hidden/>
             </Link>
+            </div>
           </article>)}
         </div>:<div role="status" className="mt-6 rounded-2xl bg-canvas p-7 text-center">
           <PackageSearch size={32} className="mx-auto text-forest" aria-hidden/>
