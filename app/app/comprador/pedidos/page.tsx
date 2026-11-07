@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
 import { getMarketplaceAccess } from "@/lib/marketplace/session";
 import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
+import { BuyerPaymentOrders } from "@/components/buyer-payment-orders";
 
 export const metadata:Metadata={title:"Solicitações de pedido · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
@@ -19,6 +20,7 @@ export default async function BuyerOrdersPage() {
       <p className="mt-3 mb-8 max-w-3xl text-sm leading-relaxed text-muted">
         Confira os pedidos enviados a fornecedores após aceitar uma proposta de cotação. São solicitações pendentes de confirmação, sem cobrança ou baixa de estoque.
       </p>
+      <BuyerPaymentOrders />
       <TransactionConsole mode="buyer_orders"/>
     </main><SiteFooter/>
   </div>;

@@ -31,7 +31,7 @@ export default async function CheckoutSuccessPage({ searchParams }: { searchPara
           <p className="mt-3 text-sm leading-relaxed text-muted">
             {paid ? "A Stripe confirmou o pagamento. Em breve você verá os próximos passos do pedido." : "O pagamento pode levar alguns instantes para ser confirmado. Você receberá a atualização assim que o webhook da Stripe processar a sessão."}
           </p>
-          <Link href="/" className="mt-8 inline-flex min-h-11 items-center rounded-full bg-forest px-6 text-sm font-extrabold text-white">Voltar ao início</Link>
+          <Link href="/app/comprador/pedidos" className="mt-8 inline-flex min-h-11 items-center rounded-full bg-forest px-6 text-sm font-extrabold text-white">Acompanhar pedido</Link>
         </section>
       </main>
       <SiteFooter />
