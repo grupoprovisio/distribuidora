@@ -158,8 +158,6 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     }
     return [...map.entries()];
   },[visibleLines]);
-  const checkoutHref="/app/comprador/checkout?regiao="+encodeURIComponent(region)+
-    "&recebimento="+(method==="pickup"?"retirada":"entrega");
   const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
   return <div className="space-y-6 pb-20">
     <div className="flex flex-wrap items-center justify-between gap-3">
