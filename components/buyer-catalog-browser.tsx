@@ -100,15 +100,15 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
         {lastMessage&&<span className="ml-2 text-forest">· {lastMessage}</span>}
       </p>
     </div>
-    {shown.length?<div className="grid grid-cols-2 gap-3 bg-canvas p-3 pb-24 sm:grid-cols-3 sm:gap-4 sm:p-6 lg:grid-cols-4 xl:grid-cols-5">
+    {shown.length?<div className="grid grid-cols-1 gap-3 bg-canvas p-3 pb-24 sm:grid-cols-3 sm:gap-4 sm:p-6 lg:grid-cols-4 xl:grid-cols-5">
       {shown.map(item=>{
         const qty=basket.getQuantity(item.id);
         const tiers=item.priceTiers.filter(t=>t.minQuantity>item.minQuantity);
         const next=tiers[0];
         const selectedPrice=qty?priceAt(item,qty):item.priceMinor;
         return <article key={item.id}
-          className="flex min-w-0 flex-col rounded-[1.8rem] bg-paper p-3 shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float/30 sm:p-4">
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-paper">
+          className="flex min-w-0 flex-row-reverse items-stretch gap-3 rounded-[1.8rem] bg-paper p-3 text-left shadow-card ring-1 ring-line/70 transition-shadow hover:shadow-float/30 sm:flex-col sm:p-4">
+          <div className="relative aspect-square w-[38%] shrink-0 overflow-hidden rounded-2xl bg-paper sm:w-auto">
             {item.imageUrl?<Image src={item.imageUrl} alt={item.productName} fill unoptimized
               sizes="(max-width:640px) 45vw, (max-width:1024px) 30vw, 18vw"
               className="object-contain p-2"/>:
@@ -120,7 +120,8 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
               {Math.round((1-next.unitPriceMinor/item.priceMinor)*100)}% por volume
             </span>}
           </div>
-          <p className="mt-2 truncate text-[10px] font-bold uppercase tracking-wide text-muted sm:text-xs">
+          <div className="flex min-w-0 flex-1 flex-col items-start sm:contents">
+          <p className="mt-0 truncate text-[10px] font-bold uppercase tracking-wide text-muted sm:mt-2 sm:text-xs">
             {item.supplier}
           </p>
           <h2 className="mt-1 line-clamp-2 min-h-[2.7rem] text-[13px] font-extrabold leading-snug text-forest-deep sm:text-sm">
@@ -130,7 +131,7 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
           <p className="mt-2 text-xs font-black text-forest" aria-label={`Estoque disponível: ${item.availableQuantity} unidades`}>
             Disponível: {item.availableQuantity} {item.availableQuantity===1?"unidade":"unidades"}
           </p>
-          <div className="mt-auto flex items-end justify-between gap-1 pt-4">
+          <div className="mt-auto flex w-full items-end justify-between gap-1 pt-4">
             <div className="min-w-0">
               <p className="text-lg font-black tabular-nums text-forest-deep sm:text-xl">{brl(selectedPrice)}</p>
               <p className="mt-1 text-[10px] font-semibold leading-tight text-forest sm:text-xs">
@@ -139,6 +140,7 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
               </p>
             </div>
             <BasketStepper item={item} quantity={qty} onUpdate={value=>update(item,value)}/>
+          </div>
           </div>
         </article>;
       })}
