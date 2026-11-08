@@ -108,6 +108,7 @@ export default async function MarketplaceAdminPage() {
               {href:"/admin/marketplace/homologacoes",title:"Fila de homologações",detail:"Veja pendências reais de empresas, usuários e acessos antes de tomar uma decisão."},
               {href:"/admin/marketplace/cotacoes-compradores",title:"Cotações recebidas dos compradores",detail:"Acompanhe solicitações agrupadas e pendências por fornecedor."},
               {href:"/admin/marketplace/pedidos-pagos",title:"Pedidos pagos",detail:"Atualize preparação, nota fiscal, entrega e retirada."},
+              {href:"/admin/marketplace/emissao-fiscal",title:"Emissão fiscal",detail:"Configure os pré-requisitos da NF-e e revise o fluxo de autorização."},
               {href:"/admin/marketplace/frete",title:"Fretes, CEP e prazos de entrega",detail:"Cadastre a origem, as tarifas por CEP e os prazos em dias úteis."},
               {href:"/app/fornecedor",title:"Operação do fornecedor",detail:"Acesso condicionado à capacidade de fornecedor no Supabase."},
               {href:"/produtos",title:"Catálogo autorizado",detail:"Visualize a vitrine institucional, sem ofertas externas."},
