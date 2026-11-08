@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Circle, PackageCheck, Truck } from "lucide-react";
 
 type Item={id:string;created_at:string;status:string;fulfillment_status:string;amount_total_minor:number;basket:{region_code:string;fulfillment_method:"delivery"|"pickup"}|null};
-const delivery=["paid","processing","ready_for_delivery","out_for_delivery","delivered"];
-const pickup=["paid","processing","ready_for_pickup","picked_up"];
-const labels:Record<string,string>={paid:"Pagamento confirmado",processing:"Pedido em preparação",ready_for_delivery:"Pronto para envio",out_for_delivery:"Saiu para entrega",delivered:"Entregue",ready_for_pickup:"Pronto para retirada",picked_up:"Retirado",cancelled:"Cancelado"};
+const delivery=["paid","processing","invoice_issued","ready_for_delivery","out_for_delivery","delivered"];
+const pickup=["paid","processing","invoice_issued","ready_for_pickup","picked_up"];
+const labels:Record<string,string>={paid:"Pagamento confirmado",processing:"Pedido em preparação",invoice_issued:"Nota fiscal emitida",ready_for_delivery:"Pronto para envio",out_for_delivery:"Saiu para entrega",delivered:"Entregue",ready_for_pickup:"Pronto para retirada",picked_up:"Retirado",cancelled:"Cancelado"};
 export function BuyerPaymentOrders(){
   const [items,setItems]=useState<Item[]>([]); const [loading,setLoading]=useState(true);
   useEffect(()=>{void fetch("/api/marketplace/payment-orders",{credentials:"same-origin",cache:"no-store"}).then(r=>r.json()).then(d=>{if(d.ok)setItems(d.items??[]);}).finally(()=>setLoading(false));},[]);
