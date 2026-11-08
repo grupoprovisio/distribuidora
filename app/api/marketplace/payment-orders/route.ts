@@ -16,9 +16,12 @@ export async function GET(){
   if(error)return NextResponse.json({ok:false,reason:"query_failed"},{status:503});
   const ids=(orders??[]).map((row:any)=>row.basket_id);
   const baskets=ids.length?await db.from("quote_baskets")
-    .select("id,region_code,fulfillment_method")
+    .select("id,region_code,fulfillment_method,payment_status,freight_minor")
     .in("id",ids):{data:[],error:null};
   if(baskets.error)return NextResponse.json({ok:false,reason:"query_failed"},{status:503});
   const byId=new Map((baskets.data??[]).map((row:any)=>[row.id,row]));
-  return NextResponse.json({ok:true,items:(orders??[]).map((row:any)=>({...row,basket:byId.get(row.basket_id)??null}))},{headers:{"Cache-Control":"no-store"}});
+  const orderIds=(orders??[]).map((row:any)=>row.id);
+  const fiscal=orderIds.length?await (db as any).from("marketplace_fiscal_documents").select("payment_order_id,status,access_key,issued_at,rejection_message").in("payment_order_id",orderIds):{data:[],error:null};
+  const fiscalByOrder=new Map((fiscal.data??[]).map((row:any)=>[row.payment_order_id,row]));
+  return NextResponse.json({ok:true,items:(orders??[]).map((row:any)=>({...row,basket:byId.get(row.basket_id)??null,fiscal:fiscalByOrder.get(row.id)??null}))},{headers:{"Cache-Control":"no-store"}});
 }

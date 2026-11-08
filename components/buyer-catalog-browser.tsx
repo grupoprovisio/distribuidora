@@ -128,8 +128,8 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
             {item.productName}
           </h2>
           <p className="mt-1 truncate text-[11px] text-muted">{item.pack}</p>
-          <p className="mt-2 text-xs font-black text-forest" aria-label={`Estoque disponível: ${item.availableQuantity} unidades`}>
-            Disponível: {item.availableQuantity} {item.availableQuantity===1?"unidade":"unidades"}
+          <p className={`mt-2 text-xs font-black ${item.availableQuantity <= 10 ? "text-terra" : "text-forest"}`} aria-label={`Estoque disponível: ${item.availableQuantity} unidades`}>
+            {item.availableQuantity <= 10 ? "Estoque baixo: " : "Disponível: "}{item.availableQuantity} {item.availableQuantity===1?"unidade":"unidades"}
           </p>
           <div className="mt-auto flex w-full items-end justify-between gap-1 pt-4">
             <div className="min-w-0">
