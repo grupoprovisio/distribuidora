@@ -78,7 +78,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       setError("Confira e salve seu cadastro e endereço antes de continuar para o pagamento.");
       return;
     }
-    if(normalizeCep(cep)!==savedContact.postalCode){
+    if(method==="delivery"&&normalizeCep(cep)!==savedContact.postalCode){
       setError("O CEP calculado precisa ser igual ao CEP salvo no cadastro. Atualize seu endereço.");
       return;
     }
@@ -126,7 +126,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     !!(freight?.available&&freight.quote&&savedContact&&
       freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
   const checkoutReady=!!(method&&savedContact&&
-    normalizeCep(cep)===savedContact.postalCode&&deliveryValid);
+    (method==="pickup"||normalizeCep(cep)===savedContact.postalCode)&&deliveryValid);
   const visibleLines=useMemo(()=>{
     const byId=new Map((validation?.lines??[]).map(line=>[line.offerId,line]));
     return rows.map((cached):ValidatedBasketLine=>{
