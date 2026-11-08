@@ -19,9 +19,11 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   const chosenProduct = typeof params.produto === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(params.produto) && params.produto.length <= 160 ? params.produto : "";
   const region=(params.regiao??"SP").trim().toUpperCase().slice(0,12);
   const page=/^[0-9]{1,4}$/.test(params.pagina??"1")?Math.min(1000,Math.max(1,Number(params.pagina??"1"))):1;
-  // Both helpers independently verify the authenticated user and enforce RLS.
-  const summary=await myMarketplaceOrganizations("comprador");
+  // Authenticate once and reuse the verified access snapshot. Repeating the
+  // session/profile/membership/capability chain here added several database
+  // round trips before the catalog could render.
   const access=await getMarketplaceAccess();
+  const summary=access ? await myMarketplaceOrganizations("comprador",access) : {organizations:[],error:true};
   const buyerOrgId=summary.organizations[0]?.id??"";
   const catalog:BuyerCatalogResult=!summary.error && buyerOrgId &&
     access?.organizationIds.comprador.includes(buyerOrgId)
