@@ -27,13 +27,13 @@ const failureText=(code?:string)=>{
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const brl=(value:number)=>money.format(value/100);
 const URL="/api/marketplace/baskets";
-export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod="delivery"}:Props){
+export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod}:Props){
   const basket=useBuyerBasket(userId,buyerOrgId,region);
   const [snapshot,setSnapshot]=useState<BasketSnapshot|null>(null);
   const [refresh,setRefresh]=useState(0);
   const [submitting,setSubmitting]=useState(false);
   const [error,setError]=useState("");
-  const [method,setMethod]=useState<"delivery"|"pickup">(initialMethod);
+  const [method,setMethod]=useState<"delivery"|"pickup"|undefined>(initialMethod);
   const [savedContact,setSavedContact]=useState<BuyerContact|null>(null);
   const [cep,setCep]=useState("");
   const [freight,setFreight]=useState<FreightInfo|null>(null);
@@ -124,10 +124,10 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   // even when another line needs review. Submission still requires ready=true.
   const total=productsTotal!==null&&shippingMinor!==null
     ?productsTotal+shippingMinor:null;
-  const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:
+  const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:method==="delivery"&&
     !!(freight?.available&&freight.quote&&savedContact&&
       freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
-  const checkoutReady=!!(savedContact&&
+  const checkoutReady=!!(method&&savedContact&&
     normalizeCep(cep)===savedContact.postalCode&&deliveryValid);
   const visibleLines=useMemo(()=>{
     const byId=new Map((validation?.lines??[]).map(line=>[line.offerId,line]));
@@ -263,7 +263,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
         <div className="mt-5 rounded-2xl border border-line bg-canvas p-3">
           <BuyerFreightCalculator buyerOrgId={buyerOrgId}
             postalCode={cep} onPostalCodeChange={handlePostal} onQuote={handleFreight}
-            method={method} onMethodChange={setMethod}
+            method={method} onMethodChange={next=>{setMethod(next);if(next==="pickup"){setCep("");setFreight(null);}}}
             auto={mode==="checkout"&&!!savedContact}/>
         </div>
         <dl className="mt-5 space-y-3 text-sm text-muted">
@@ -303,12 +303,12 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
         {mode==="basket"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
-          {submitting?"Abrindo pagamento...":"Pagar com Stripe"}
+          {submitting?"Abrindo pagamento...":"Efetuar pagamento"}
           {!submitting&&<ArrowRight size={18} aria-hidden/>}
         </button>:<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
-          {submitting?"Abrindo pagamento...":"Pagar com Stripe"}
+          {submitting?"Abrindo pagamento...":"Efetuar pagamento"}
           {!submitting&&<ArrowRight size={18} aria-hidden/>}
         </button>}
         <p className="mt-4 text-xs leading-relaxed text-muted">

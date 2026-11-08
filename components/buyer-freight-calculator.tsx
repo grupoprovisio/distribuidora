@@ -14,7 +14,7 @@ export type FreightInfo={
 type Method="delivery"|"pickup";
 type Props={
   buyerOrgId:string;postalCode:string;onPostalCodeChange:(cep:string)=>void;
-  onQuote:(quote:FreightInfo|null)=>void;method:Method;
+  onQuote:(quote:FreightInfo|null)=>void;method:Method|undefined;
   onMethodChange:(mode:Method)=>void;auto?:boolean;
 };
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
@@ -96,7 +96,7 @@ export function BuyerFreightCalculator({
         Consulte o frete para seu CEP e escolha a modalidade antes de continuar.
       </p>
     </div>
-    <div className="space-y-2">
+    {method==="delivery"&&<div className="space-y-2">
       <label htmlFor="basket-freight-cep" className="text-xs font-bold text-forest">
         CEP de entrega
       </label>
@@ -116,7 +116,7 @@ export function BuyerFreightCalculator({
       {current?.destination&&<p className="text-xs font-medium text-muted">
         CEP consultado: {current.destination.city}/{current.destination.state}
       </p>}
-    </div>
+    </div>}
     <fieldset className="space-y-2">
       <legend className="mb-2 text-xs font-bold text-forest-deep">Como deseja receber?</legend>
       <label className={choiceClass(method==="delivery")}>
