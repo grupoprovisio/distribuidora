@@ -87,10 +87,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       setError("Calcule o frete para seu endereço cadastrado antes de continuar.");
       return;
     }
-    if(method==="pickup"&&!freight?.pickupAvailable){
-      setError("A retirada não está disponível. Confira a unidade Provisio cadastrada.");
-      return;
-    }
+    // A retirada é validada pela opção disponibilizada pelo calculador de origem;
+    // não depende de CEP nem de uma cotação de frete.
     setSubmitting(true);setError("");
     // Stable key across retries, but distinct baskets get different keys.
     const storageKey="provisio-rfq-idem:"+userId+":"+buyerOrgId+":"+region+":"+serialized;
@@ -124,7 +122,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
   // even when another line needs review. Submission still requires ready=true.
   const total=productsTotal!==null&&shippingMinor!==null
     ?productsTotal+shippingMinor:null;
-  const deliveryValid=method==="pickup"?!!freight?.pickupAvailable:method==="delivery"&&
+  const deliveryValid=method==="pickup"?true:method==="delivery"&&
     !!(freight?.available&&freight.quote&&savedContact&&
       freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
   const checkoutReady=!!(method&&savedContact&&
