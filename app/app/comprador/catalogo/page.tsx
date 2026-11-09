@@ -14,7 +14,7 @@ import { getMarketplaceAccess } from "@/lib/marketplace/session";
 export const metadata:Metadata={title:"Catálogo empresarial · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 
-export default async function BuyerCatalogPage({searchParams}:{searchParams:Promise<{regiao?:string;pagina?:string;produto?:string}>}) {
+export default async function BuyerCatalogPage({searchParams}:{searchParams:Promise<{regiao?:string;pagina?:string;produto?:string;empresa?:string}>}) {
   const params=await searchParams;
   const chosenProduct = typeof params.produto === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(params.produto) && params.produto.length <= 160 ? params.produto : "";
   const region=(params.regiao??"SP").trim().toUpperCase().slice(0,12);
@@ -24,12 +24,12 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
   // round trips before the catalog could render.
   const access=await getMarketplaceAccess();
   const summary=access ? await myMarketplaceOrganizations("comprador",access) : {organizations:[],error:true};
-  const buyerOrgId=summary.organizations[0]?.id??"";
+  const buyerOrgId=summary.organizations.some(org=>org.id===params.empresa)?params.empresa!:summary.organizations.length===1?summary.organizations[0].id:"";
   const catalog:BuyerCatalogResult=!summary.error && buyerOrgId &&
     access?.organizationIds.comprador.includes(buyerOrgId)
     ? await buyerCatalog(await createClient(),region,page,buyerOrgId,chosenProduct)
     : {items:[],error:summary.error||!buyerOrgId||!access?.organizationIds.comprador.includes(buyerOrgId),hasMore:false};
-  const productParam=chosenProduct?"&produto="+encodeURIComponent(chosenProduct):"";
+  const productParam=(chosenProduct?"&produto="+encodeURIComponent(chosenProduct):"")+(buyerOrgId?"&empresa="+encodeURIComponent(buyerOrgId):"");
   const nextUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page+1)+productParam;
   const prevUrl="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&pagina="+String(page-1)+productParam;
   return <div className="min-h-dvh bg-canvas">
@@ -43,13 +43,14 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
         <div className="border-b border-line p-6 sm:p-8">
           <form method="get" action="/app/comprador/catalogo" className="flex flex-wrap items-end gap-3">
             {chosenProduct && <input type="hidden" name="produto" value={chosenProduct}/>}
+            {buyerOrgId && <input type="hidden" name="empresa" value={buyerOrgId}/>}
             <label htmlFor="buyer-region" className="grid flex-1 gap-2 text-sm font-extrabold text-forest">Região de atendimento
               <input id="buyer-region" name="regiao" type="text" defaultValue={region} maxLength={12} placeholder="SP ou BR-SP" className="h-12 min-w-0 rounded-xl border border-line bg-canvas px-4 text-base uppercase focus-visible:outline-2 focus-visible:outline-forest"/>
             </label>
             <button type="submit" className="h-12 rounded-xl bg-forest px-5 text-sm font-extrabold text-white focus-visible:outline-2 focus-visible:outline-forest">Consultar região</button>
           </form>
         </div>
-        {catalog.error ? <div role="alert" className="p-8">
+        {!buyerOrgId&&!summary.error&&summary.organizations.length>1 ? <p role="alert" className="p-8 text-sm text-muted">Selecione uma empresa autorizada na Área do comprador antes de consultar produtos.</p> : catalog.error ? <div role="alert" className="p-8">
           <ShieldAlert size={28} className="text-terra" aria-hidden/>
           <h2 className="mt-4 text-lg font-black text-forest-deep">Consulta indisponível</h2><p className="mt-2 text-sm text-muted">Verifique sua sessão, sua permissão de comprador ou o código da região.</p>
         </div> : catalog.regionNotAuthorized ? <div role="status" className="p-8">
@@ -57,7 +58,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
           <p className="mt-2 text-sm text-muted">Solicite à administração da Provisio a liberação da região de entrega. Nenhuma oferta ou preço foi exibido.</p>
         </div> : !summary.organizations.length ? <div className="p-8">
           <h2 className="text-lg font-black text-forest-deep">Sua empresa ainda não está homologada</h2><p className="mt-2 text-sm text-muted">Um operador autorizado precisa validar sua empresa antes de liberar ofertas.</p>
-        </div> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId} initialProductSlug={chosenProduct}/>}
+        </div> : !buyerOrgId ? <p role="alert" className="p-8 text-sm text-muted">Selecione uma empresa autorizada na Área do comprador antes de consultar produtos.</p> : <BuyerCatalogBrowser items={catalog.items} region={region} userId={access?.userId??""} buyerOrgId={buyerOrgId} initialProductSlug={chosenProduct}/>}
         <nav aria-label="Paginação do catálogo" className="flex items-center justify-between border-t border-line bg-canvas px-5 py-4 text-sm font-bold text-forest">
           <span>Página {page}</span><div className="flex gap-2">
             {page>1 && <Link href={prevUrl} className="rounded-full bg-paper px-4 py-3 ring-1 ring-line">Anterior</Link>}

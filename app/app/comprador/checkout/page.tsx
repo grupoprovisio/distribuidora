@@ -10,11 +10,12 @@ export const metadata:Metadata={title:"Revisar cotação · Provisio",robots:{in
 export const dynamic="force-dynamic";
 export default async function BuyerCheckoutPage({
  searchParams,
-}:{searchParams:Promise<{regiao?:string;recebimento?:string}>}){
+}:{searchParams:Promise<{regiao?:string;recebimento?:string;empresa?:string}>}){
   const params=await searchParams;
   const access=await requireMarketplacePortal("comprador");
   const summary=await myMarketplaceOrganizations("comprador",access);
-  const orgId=summary.organizations[0]?.id;
+  const orgId=summary.organizations.find(org=>org.id===params.empresa)?.id ??
+    (summary.organizations.length===1?summary.organizations[0]?.id:undefined);
   const raw=(params.regiao??"BR-SP").trim().toUpperCase();
   const region=/^BR-[A-Z]{2}$/.test(raw)?raw:/^[A-Z]{2}$/.test(raw)?"BR-"+raw:"BR-SP";
   return <div className="min-h-dvh bg-canvas">
@@ -24,7 +25,7 @@ export default async function BuyerCheckoutPage({
       {orgId&&!summary.error?
         <BuyerBasketCheckout userId={access.userId} buyerOrgId={orgId} region={region} mode="checkout" initialMethod={params.recebimento==="retirada"?"pickup":"delivery"}/>:
         <p role="alert" className="rounded-2xl bg-paper p-5 text-sm text-muted">
-          Sua empresa compradora não está disponível nesta sessão.
+          Selecione sua empresa autorizada na Área do comprador antes de revisar a cotação.
         </p>}
     </main>
     <SiteFooter/>

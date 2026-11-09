@@ -13,7 +13,7 @@ async function verifyStripeSignature(payload: string, signature: string, secret:
   const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signed = await crypto.subtle.sign("HMAC", key, encoder.encode(timestamp + "." + payload));
   const expected = Array.from(new Uint8Array(signed)).map(byte => byte.toString(16).padStart(2, "0")).join("");
-  return candidates.some(candidate => candidate.length === expected.length && candidate.split("").every((char, index) => char === expected[index]));
+  return candidates.some(candidate => candidate.length === expected.length && /^[a-f0-9]{64}$/i.test(candidate) && candidate.toLowerCase() === expected);
 }
 
 export async function POST(request: Request) {
@@ -23,7 +23,12 @@ export async function POST(request: Request) {
   if (!signature) return Response.json({ ok: false, reason: "webhook_signature_missing" }, { status: 400 });
   const payload = await request.text();
   if (!(await verifyStripeSignature(payload, signature, secret))) return Response.json({ ok: false, reason: "invalid_signature" }, { status: 400 });
-  const event = JSON.parse(payload) as { type?: string; data?: { object?: { id?: string; payment_status?: string; amount_total?: number; metadata?: Record<string,string> } } };
+  let event: { type?: string; data?: { object?: { id?: string; payment_status?: string; amount_total?: number; metadata?: Record<string,string> } } };
+  try {
+    event = JSON.parse(payload) as typeof event;
+  } catch {
+    return Response.json({ok:false,reason:"invalid_event_payload"},{status:400});
+  }
   const session = event.data?.object;
   if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     if (session?.payment_status === "paid") {
@@ -31,14 +36,29 @@ export async function POST(request: Request) {
       const supabaseUrl=process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
       const paymentToken=process.env.STRIPE_PAYMENT_WEBHOOK_TOKEN;
-      if(basketId&&session.id&&supabaseUrl&&supabaseKey&&paymentToken){
+      if(!basketId || !session.id || !supabaseUrl || !supabaseKey || !paymentToken || !Number.isSafeInteger(session.amount_total) || (session.amount_total ?? 0) <= 0){
+        console.error("Stripe payment event lacks required verified settlement configuration");
+        return Response.json({ok:false,reason:"settlement_configuration_missing"},{status:503});
+      }
+      {
         const response=await fetch(supabaseUrl+"/rest/v1/rpc/marketplace_mark_basket_paid",{
           method:"POST",
           headers:{apikey:supabaseKey,Authorization:"Bearer "+supabaseKey,"Content-Type":"application/json"},
           body:JSON.stringify({p_basket:basketId,p_session:session.id,p_token:paymentToken,p_amount:session.amount_total??0}),
           cache:"no-store",
         });
-        if(!response.ok)console.error("Basket payment update failed",{basketId,status:response.status});
+        if(!response.ok){
+          console.error("Basket payment update failed",{basketId,status:response.status});
+          return Response.json({ok:false,reason:"settlement_failed"},{status:503});
+        }
+        // A successful HTTP response may still contain false: the RPC could not
+        // reconcile this session with a basket. Request Stripe retry instead of
+        // silently acknowledging a paid checkout without a recorded order.
+        const settled = await response.json().catch(()=>null) as boolean|null;
+        if(settled!==true){
+          console.error("Stripe payment settlement was not confirmed",{basketId,sessionId:session.id});
+          return Response.json({ok:false,reason:"settlement_not_confirmed"},{status:503});
+        }
       }
       console.info("Stripe checkout paid", { sessionId: session.id, eventType: event.type, basketId });
     }

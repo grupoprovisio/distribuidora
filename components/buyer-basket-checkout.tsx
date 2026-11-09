@@ -91,7 +91,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     // não depende de CEP nem de uma cotação de frete.
     setSubmitting(true);setError("");
     // Stable key across retries, but distinct baskets get different keys.
-    const storageKey="provisio-rfq-idem:"+userId+":"+buyerOrgId+":"+region+":"+serialized;
+    const storageKey="provisio-rfq-idem:"+userId+":"+buyerOrgId+":"+region+":"+(method??"none")+":"+serialized;
     let requestKey="";
     try{requestKey=window.sessionStorage.getItem(storageKey)??"";}catch{}
     if(!/^[0-9a-f-]{36}$/i.test(requestKey)){
@@ -107,6 +107,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       const data=await response.json() as BasketResponse&{url?:string};
       if(!response.ok||!data.ok||!data.url){
         if(response.status===409||data.reason==="basket_changed")setError("Algum item mudou. Revise a cesta antes de pagar.");
+        else if(data.reason==="delivery_checkout_pending_freight_verification")setError("O pagamento com entrega está em homologação. Se disponível, selecione a retirada gratuita para continuar.");
+        else if(data.reason==="pickup_unavailable")setError("A retirada está indisponível no momento. Tente novamente quando a unidade estiver habilitada.");
         else setError("Não foi possível iniciar o pagamento. Revise a cesta e tente novamente.");
         return;
       }
@@ -156,7 +158,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     }
     return [...map.entries()];
   },[visibleLines]);
-  const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
+  const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&empresa="+encodeURIComponent(buyerOrgId);
   return <div className="space-y-6 pb-20">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <Link href={catalogHref} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-forest">

@@ -62,7 +62,7 @@ test("Portais privados refletem permissao QA sem habilitar compras comerciais", 
   const portal=file("components/marketplace-portal.tsx");
   for(const profile of ["comprador","fornecedor"]){
     const source=file("app/app/"+profile+"/page.tsx");
-    assert.match(source,/transactionAccessMode\(await getMarketplaceAccess\(\)\)/);
+    assert.match(source,/transactionAccessMode\((?:access|await getMarketplaceAccess\(\))\)/);
     assert.match(source,/transactionMode=\{mode\}/);
   }
   assert.doesNotMatch(portal,/Homologação QA habilitada|Teste QA autorizado/);
@@ -83,7 +83,9 @@ test("Checkout B2B e cesta mantêm RLS, escopo QA e pagamento bloqueado", () => 
   assert.match(cart,/buyerOrgId/);
   assert.match(api,/validateBuyerBasket/);
   assert.match(api,/marketplace_submit_quote_basket/);
-  assert.match(api,/transactionAccessMode\(access\)!=="qa"/);
+  assert.match(api,/transactionAccessMode\(access\)/);
+  assert.match(api,/readQaTransactionScope\(process\.env\)/);
+  assert.match(api,/body\.buyerOrgId!==scope\.buyer/);
   assert.match(validation,/inventory_positions/);
   assert.match(validation,/offer_price_tiers/);
   assert.match(migration,/create table public.quote_baskets/);
@@ -223,7 +225,8 @@ test("Frete automático SP respeita ADM, CEP específico e escolha de retirada",
   assert.match(calc,/basket-delivery-method/);
   assert.match(calc,/Calcular frete/);
   assert.match(calc,/Retirar no local/);
-  assert.match(cart,/recebimento/);
+  assert.match(file("app/app/comprador/checkout/page.tsx"),/recebimento/);
+  assert.match(cart,/BuyerFreightCalculator/);
   assert.match(cart,/method==="pickup"/);
 });
 
@@ -261,10 +264,14 @@ test("Rotas de comparacao externa nao executam as integracoes legadas", () => {
     "app/(tabs)/buscar/page.tsx", "app/(tabs)/categorias/page.tsx",
     "app/(tabs)/ofertas/page.tsx", "app/(tabs)/promocoes/page.tsx",
     "app/(tabs)/lista/page.tsx", "app/produto/[id]/page.tsx",
-    "app/scan/page.tsx", "app/checkout/page.tsx"
+    "app/scan/page.tsx"
   ]) {
     assert.ok(file(pathname).includes('redirect("/produtos")'), pathname);
   }
+  assert.match(file("app/checkout/page.tsx"),/redirect\("\/app\/comprador\/cesta"\)/);
+  const oldCheckout=file("app/api/checkout/route.ts");
+  assert.match(oldCheckout,/status:410/);
+  assert.doesNotMatch(oldCheckout,/STRIPE_PRICE_ID|api\.stripe\.com/);
   const handlers = [
     "app/api/catalog/route.ts", "app/api/catalog/prices/route.ts",
     "app/api/promos/route.ts", "app/api/lookup/route.ts",
