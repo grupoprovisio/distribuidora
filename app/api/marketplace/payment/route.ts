@@ -35,6 +35,10 @@ export async function POST(request:Request){
   // charged. Until that server-side price is integrated, fail closed.
   if(body.method==="delivery")
     return NextResponse.json({ok:false,reason:"delivery_checkout_pending_freight_verification"},{status:503});
+  const pickup=await db.from("provisio_shipping_origin")
+    .select("pickup_enabled,active").eq("id",1).eq("active",true).maybeSingle();
+  if(pickup.error||!pickup.data?.pickup_enabled)
+    return NextResponse.json({ok:false,reason:"pickup_unavailable"},{status:503});
   const rpc=(db as any).rpc.bind(db) as (name:string,args:Record<string,unknown>)=>Promise<{data:unknown;error:{message?:string}|null}>;
   const basket=await rpc("marketplace_create_payment_basket",{
     p_buyer:body.buyerOrgId,p_region:body.region,p_method:body.method,
