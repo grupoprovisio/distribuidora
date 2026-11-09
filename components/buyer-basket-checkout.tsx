@@ -156,7 +156,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     }
     return [...map.entries()];
   },[visibleLines]);
-  const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
+  const catalogHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&empresa="+encodeURIComponent(buyerOrgId);
   return <div className="space-y-6 pb-20">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <Link href={catalogHref} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-forest">
