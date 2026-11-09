@@ -39,7 +39,7 @@ export async function POST(request:Request){
     .select("pickup_enabled,active").eq("id",1).eq("active",true).maybeSingle();
   if(pickup.error||!pickup.data?.pickup_enabled)
     return NextResponse.json({ok:false,reason:"pickup_unavailable"},{status:503});
-  const rpc=(db as any).rpc.bind(db) as (name:string,args:Record<string,unknown>)=>Promise<{data:unknown;error:{message?:string}|null}>;
+  const rpc=db.rpc.bind(db) as (name:string,args:Record<string,unknown>)=>Promise<{data:unknown;error:{message?:string}|null}>;
   const basket=await rpc("marketplace_create_payment_basket",{
     p_buyer:body.buyerOrgId,p_region:body.region,p_method:body.method,
     p_lines:body.lines,p_key:body.requestKey,
