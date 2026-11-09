@@ -41,7 +41,7 @@ export function BuyerCheckoutContactSummary({
       <h2 id="buyer-address-title" className="text-base font-black text-forest-deep">
         Destinatário e endereço
       </h2>
-      <Link href="/app/comprador/cadastro"
+      <Link href={"/app/comprador/cadastro?empresa="+encodeURIComponent(buyerOrgId)}
         className="inline-flex min-h-10 items-center gap-1 text-xs font-extrabold text-forest hover:underline">
         Alterar em Meu cadastro <ArrowRight size={14} aria-hidden/>
       </Link>
