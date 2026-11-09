@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMarketplaceAccess } from "@/lib/marketplace/session";
 import { isSameOriginRequest } from "@/lib/marketplace/request-origin";
 import { transactionAccessMode } from "@/lib/marketplace/qa-transaction-gate";
-import { validateBasketInput, type BasketSelection } from "@/lib/marketplace/basket-validation";
+import { validateBasketInput, validateBuyerBasket } from "@/lib/marketplace/basket-validation";
 
 export const dynamic="force-dynamic";
 const siteUrl=(process.env.NEXT_PUBLIC_SITE_URL??"https://grupoprovisio.com").replace(/\/+$/,"");
@@ -25,10 +25,16 @@ export async function POST(request:Request){
   if(transactionAccessMode(access)==="disabled")
     return NextResponse.json({ok:false,reason:"checkout_not_enabled"},{status:503});
   const secret=process.env.STRIPE_SECRET_KEY;
-  const price=process.env.STRIPE_PRICE_ID;
-  if(!secret||!price||process.env.STRIPE_CHECKOUT_ENABLED!=="true")
+  if(!secret||process.env.STRIPE_CHECKOUT_ENABLED!=="true")
     return NextResponse.json({ok:false,reason:"checkout_not_configured"},{status:503});
   const db=await createClient();
+  const verified=await validateBuyerBasket(db,access,body.buyerOrgId,body.region,body.lines);
+  if(!verified.ok||!verified.ready||verified.totalMinor<=0)
+    return NextResponse.json({ok:false,reason:"basket_changed"},{status:409});
+  // Delivery pricing must be independently verified and included in the amount
+  // charged. Until that server-side price is integrated, fail closed.
+  if(body.method==="delivery")
+    return NextResponse.json({ok:false,reason:"delivery_checkout_pending_freight_verification"},{status:503});
   const rpc=(db as any).rpc.bind(db) as (name:string,args:Record<string,unknown>)=>Promise<{data:unknown;error:{message?:string}|null}>;
   const basket=await rpc("marketplace_create_payment_basket",{
     p_buyer:body.buyerOrgId,p_region:body.region,p_method:body.method,
@@ -36,18 +42,23 @@ export async function POST(request:Request){
   });
   if(basket.error||typeof basket.data!=="string")
     return NextResponse.json({ok:false,reason:"basket_unavailable"},{status:422});
-  const quantity=(body.lines as BasketSelection[]).reduce((sum,line)=>sum+line.quantity,0);
   const params=new URLSearchParams();
   params.set("mode","payment");
-  params.set("line_items[0][price]",price);
-  params.set("line_items[0][quantity]",String(quantity));
+  verified.lines.forEach((line,index)=>{
+    params.set(`line_items[${index}][price_data][currency]`,"brl");
+    params.set(`line_items[${index}][price_data][product_data][name]`,line.productName.slice(0,120));
+    params.set(`line_items[${index}][price_data][unit_amount]`,String(line.unitPriceMinor));
+    params.set(`line_items[${index}][quantity]`,String(line.quantity));
+  });
   params.set("success_url",siteUrl+"/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}");
   params.set("cancel_url",siteUrl+"/checkout/cancelado");
   params.set("metadata[basket_id]",basket.data);
   params.set("metadata[buyer_org_id]",body.buyerOrgId);
   params.set("metadata[created_by]",access.userId);
   params.set("metadata[region]",body.region);
-  params.set("allow_promotion_codes","true");
+  params.set("payment_method_types[0]","card");
+  // Pix and boleto are deliberately not forced until account eligibility,
+  // currency, amount limits and asynchronous webhook states are homologated.
   const response=await fetch("https://api.stripe.com/v1/checkout/sessions",{
     method:"POST",headers:{Authorization:"Bearer "+secret,"Content-Type":"application/x-www-form-urlencoded"},
     body:params,cache:"no-store",
