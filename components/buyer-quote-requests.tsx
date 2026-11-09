@@ -15,7 +15,8 @@ type Proposal={id:string;quote_request_id:string;unit_price_minor:number;status:
 type Order={id:string;quote_request_id:string;status:string;total_price_minor:number};
 type Fulfillment={order_id:string;status:string};
 type Summary={ok:boolean;baskets?:Basket[];quotes?:Quote[];proposals?:Proposal[];
- orders?:Order[];fulfillments?:Fulfillment[]};
+ orders?:Order[];fulfillments?:Fulfillment[];
+ buyerOrganizations?:{id:string;trade_name:string|null;legal_name:string|null}[]};
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const brl=(value:number)=>money.format(value/100);
 const date=(s:string)=>new Date(s).toLocaleDateString("pt-BR");
@@ -79,13 +80,14 @@ export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
     </div>}
     {baskets.map(basket=>{
       const quotes=(summary?.quotes??[]).filter(q=>q.basket_id===basket.id);
+      const buyerName=(summary?.buyerOrganizations??[]).find(org=>org.id===basket.buyer_org_id);
       const value=quotes.reduce((sum,q)=>{
         const p=(summary?.proposals??[]).find(p=>p.quote_request_id===q.id&&p.status==="proposed");
         return p?sum+p.unit_price_minor*q.quantity:sum;
       },0);
       return <section key={basket.id} className="overflow-hidden rounded-3xl bg-paper shadow-card ring-1 ring-line/70">
         <div className="flex flex-wrap justify-between gap-3 border-b border-line p-5">
-          <div><p className="text-xs font-bold uppercase text-muted">Solicitação · {date(basket.created_at)}</p>
+          <div><p className="text-xs font-bold uppercase text-muted">{buyerName?.trade_name||buyerName?.legal_name||"Empresa compradora"} · {date(basket.created_at)}</p>
             <h2 className="mt-1 text-lg font-black text-forest-deep">Cotação #{basket.id.slice(0,8)}</h2>
             <p className="mt-1 text-xs text-muted">{basket.fulfillment_method==="pickup"?"Retirada na unidade":"Entrega no endereço cadastrado"} · {basket.region_code}</p>
           </div>
@@ -153,7 +155,7 @@ export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
     <p className="text-xs leading-relaxed text-muted">
       As solicitações ficam registradas por empresa. Cada fornecedor responde às ofertas sob sua responsabilidade.
       A separação, a expedição e a entrega só podem avançar após confirmação válida de pagamento.
-      O pagamento online ainda não está habilitado.
+      A disponibilidade do pagamento depende da autorização da empresa e da modalidade escolhida.
     </p>
   </div>;
 }
