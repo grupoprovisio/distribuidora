@@ -25,6 +25,7 @@ export function BuyerProfileForm({buyerOrgId,onSaved,onEdited,compact=false}:Pro
  const [saving,setSaving]=useState(false);
  const [status,setStatus]=useState<"idle"|"saved"|"error">("idle");
  const [error,setError]=useState("");
+ const [lookingUpCep,setLookingUpCep]=useState(false);
  // Every response belongs to the signed in buyer and organization, never a public profile.
  useEffect(()=>{
    const controller=new AbortController();
@@ -47,6 +48,23 @@ export function BuyerProfileForm({buyerOrgId,onSaved,onEdited,compact=false}:Pro
  function edit(k:Field,value:string){
    setProfile(prev=>({...prev,[k]:k==="state"?value.toUpperCase().slice(0,2):value}));
    setStatus("idle");setError("");onEdited?.();
+ }
+ async function lookupCep(){
+   const cep=profile.postalCode.replace(/\\D/g,"");
+   if(!/^\\d{8}$/.test(cep)){setError("Informe um CEP válido de 8 dígitos.");return;}
+   setLookingUpCep(true);setError("");
+   try{
+     const response=await fetch("https://viacep.com.br/ws/"+cep+"/json/",{signal:AbortSignal.timeout(6000)});
+     const data=await response.json() as {erro?:boolean;logradouro?:string;bairro?:string;localidade?:string;uf?:string};
+     if(!response.ok||data.erro||!data.uf||!data.localidade)throw Error();
+     // Do not overwrite previously saved street and neighborhood details.
+     setProfile(current=>({...current,state:data.uf??current.state,
+       city:current.city||data.localidade||"",
+       neighborhood:current.neighborhood||data.bairro||"",
+       street:current.street||data.logradouro||""}));
+     setStatus("idle");onEdited?.();
+   }catch{setError("Não foi possível localizar o CEP. Preencha o endereço manualmente.");}
+   finally{setLookingUpCep(false);}
  }
  async function save(event:React.FormEvent<HTMLFormElement>){
    event.preventDefault();
@@ -81,6 +99,7 @@ export function BuyerProfileForm({buyerOrgId,onSaved,onEdited,compact=false}:Pro
    </p>
    {load?<p role="status" className="text-sm text-muted">Carregando seu cadastro...</p>:
    <form onSubmit={event=>void save(event)} className="space-y-5">
+     <div className="flex flex-wrap items-center gap-2"><button type="button" disabled={lookingUpCep} onClick={()=>void lookupCep()} className="min-h-11 rounded-full border border-forest px-4 text-sm font-bold text-forest disabled:opacity-50">{lookingUpCep?"Buscando CEP...":"Preencher endereço pelo CEP"}</button><span className="text-xs text-muted">Preenche apenas campos de endereço ainda vazios. Confira antes de salvar.</span></div>
      <div className="grid gap-4 sm:grid-cols-2">
        {fields.map(([key,label,type,placeholder])=><label key={key}
          className={"grid gap-1.5 text-xs font-extrabold text-forest "+(["fullName","street","reference"].includes(key)?"sm:col-span-2":"")}>
