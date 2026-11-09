@@ -48,6 +48,7 @@ export async function POST(request:Request){
     return NextResponse.json({ok:false,reason:"basket_unavailable"},{status:422});
   const params=new URLSearchParams();
   params.set("mode","payment");
+  params.set("client_reference_id",basket.data);
   verified.lines.forEach((line,index)=>{
     params.set(`line_items[${index}][price_data][currency]`,"brl");
     params.set(`line_items[${index}][price_data][product_data][name]`,line.productName.slice(0,120));
@@ -57,13 +58,16 @@ export async function POST(request:Request){
   params.set("success_url",siteUrl+"/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}");
   params.set("cancel_url",siteUrl+"/checkout/cancelado");
   params.set("metadata[basket_id]",basket.data);
+  params.set("metadata[checkout_flow]","buyer_basket_v2");
   params.set("metadata[buyer_org_id]",body.buyerOrgId);
   params.set("metadata[created_by]",access.userId);
   params.set("metadata[region]",body.region);
   // Stripe chooses eligible methods from Dashboard settings; do not force
   // payment_method_types (unsupported by newer Stripe API versions).
   const response=await fetch("https://api.stripe.com/v1/checkout/sessions",{
-    method:"POST",headers:{Authorization:"Bearer "+secret,"Content-Type":"application/x-www-form-urlencoded"},
+    method:"POST",headers:{Authorization:"Bearer "+secret,"Content-Type":"application/x-www-form-urlencoded",
+      // Prevent repeated taps or network retries from creating multiple payable sessions.
+      "Idempotency-Key":"provisio-checkout-"+basket.data},
     body:params,cache:"no-store",
   });
   const session=await response.json() as {url?:string;error?:{message?:string}};
