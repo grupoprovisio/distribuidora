@@ -91,7 +91,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     // não depende de CEP nem de uma cotação de frete.
     setSubmitting(true);setError("");
     // Stable key across retries, but distinct baskets get different keys.
-    const storageKey="provisio-rfq-idem:"+userId+":"+buyerOrgId+":"+region+":"+serialized;
+    const storageKey="provisio-rfq-idem:"+userId+":"+buyerOrgId+":"+region+":"+(method??"none")+":"+serialized;
     let requestKey="";
     try{requestKey=window.sessionStorage.getItem(storageKey)??"";}catch{}
     if(!/^[0-9a-f-]{36}$/i.test(requestKey)){
