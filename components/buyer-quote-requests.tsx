@@ -31,6 +31,14 @@ const status=(quote:Quote,proposal?:Proposal,order?:Order,fulfillment?:Fulfillme
   if(quote.status==="cancelled")return "Cancelada";
   return "Em análise pelo fornecedor";
 };
+const timelineStage=(proposal?:Proposal,order?:Order,fulfillment?:Fulfillment)=>{
+  if(fulfillment?.status==="delivered")return 4;
+  if(fulfillment&&["in_transit","ready_to_dispatch","separating"].includes(fulfillment.status))return 3;
+  if(order&&order.status!=="cancelled")return 2;
+  if(proposal?.status==="proposed")return 1;
+  return 0;
+};
+const timelineLabels=["Solicitada","Proposta","Pedido","Separação e envio","Entregue"];
 export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
   const [revision,setRevision]=useState(0);
   const [snapshot,setSnapshot]=useState<{revision:number;summary:Summary|null;error:boolean}|null>(null);
@@ -112,6 +120,7 @@ export function BuyerQuoteRequests({submittedId}: {submittedId?:string}){
                 <h3 className="text-sm font-black text-forest-deep">{q.productName}</h3>
                 <p className="text-xs text-muted">{q.supplierName} · {q.quantity} un.</p>
                 <p className="mt-1 text-xs font-bold text-forest">{status(q,p,order,fulfillment)}</p>
+                <ol aria-label={"Etapas de "+q.productName} className="mt-3 flex flex-wrap gap-1.5">{timelineLabels.map((label,i)=><li key={label} aria-current={i===timelineStage(p,order,fulfillment)?"step":undefined} className={"rounded-full px-2 py-1 text-[10px] font-semibold "+(i<=timelineStage(p,order,fulfillment)?"bg-lime-soft text-forest":"bg-canvas text-muted")}>{label}</li>)}</ol>
               </div>
               <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
                 <span className="text-sm font-black tabular-nums text-forest-deep">{p?brl(p.unit_price_minor*q.quantity):"Aguardando proposta"}</span>
