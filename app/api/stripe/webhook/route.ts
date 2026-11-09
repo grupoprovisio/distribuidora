@@ -23,7 +23,12 @@ export async function POST(request: Request) {
   if (!signature) return Response.json({ ok: false, reason: "webhook_signature_missing" }, { status: 400 });
   const payload = await request.text();
   if (!(await verifyStripeSignature(payload, signature, secret))) return Response.json({ ok: false, reason: "invalid_signature" }, { status: 400 });
-  const event = JSON.parse(payload) as { type?: string; data?: { object?: { id?: string; payment_status?: string; amount_total?: number; metadata?: Record<string,string> } } };
+  let event: { type?: string; data?: { object?: { id?: string; payment_status?: string; amount_total?: number; metadata?: Record<string,string> } } };
+  try {
+    event = JSON.parse(payload) as typeof event;
+  } catch {
+    return Response.json({ok:false,reason:"invalid_event_payload"},{status:400});
+  }
   const session = event.data?.object;
   if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     if (session?.payment_status === "paid") {
@@ -45,6 +50,14 @@ export async function POST(request: Request) {
         if(!response.ok){
           console.error("Basket payment update failed",{basketId,status:response.status});
           return Response.json({ok:false,reason:"settlement_failed"},{status:503});
+        }
+        // A successful HTTP response may still contain false: the RPC could not
+        // reconcile this session with a basket. Request Stripe retry instead of
+        // silently acknowledging a paid checkout without a recorded order.
+        const settled = await response.json().catch(()=>null) as boolean|null;
+        if(settled!==true){
+          console.error("Stripe payment settlement was not confirmed",{basketId,sessionId:session.id});
+          return Response.json({ok:false,reason:"settlement_not_confirmed"},{status:503});
         }
       }
       console.info("Stripe checkout paid", { sessionId: session.id, eventType: event.type, basketId });
