@@ -39,6 +39,10 @@ export async function POST(request:Request){
   const quantity=(body.lines as BasketSelection[]).reduce((sum,line)=>sum+line.quantity,0);
   const params=new URLSearchParams();
   params.set("mode","payment");
+  // Keep the supported Brazilian methods explicit so Pix is offered in the
+  // hosted Checkout whenever it is enabled for the connected Stripe account.
+  params.append("payment_method_types[]","card");
+  params.append("payment_method_types[]","pix");
   params.set("line_items[0][price]",price);
   params.set("line_items[0][quantity]",String(quantity));
   params.set("success_url",siteUrl+"/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}");
