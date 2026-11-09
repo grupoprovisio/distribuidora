@@ -10,11 +10,11 @@ export const metadata:Metadata={title:"Minha cesta · Provisio",robots:{index:fa
 export const dynamic="force-dynamic";
 export default async function BuyerBasketPage({
  searchParams,
-}:{searchParams:Promise<{regiao?:string}>}){
+}:{searchParams:Promise<{regiao?:string;empresa?:string}>}){
   const params=await searchParams;
   const access=await requireMarketplacePortal("comprador");
   const summary=await myMarketplaceOrganizations("comprador",access);
-  const orgId=summary.organizations[0]?.id;
+  const orgId=summary.organizations.some(org=>org.id===params.empresa)?params.empresa:summary.organizations.length===1?summary.organizations[0]?.id:undefined;
   const raw=(params.regiao??"BR-SP").trim().toUpperCase();
   const region=/^BR-[A-Z]{2}$/.test(raw)?raw:/^[A-Z]{2}$/.test(raw)?"BR-"+raw:"BR-SP";
   return <div className="min-h-dvh bg-canvas">
@@ -24,7 +24,7 @@ export default async function BuyerBasketPage({
       {orgId&&!summary.error?
         <BuyerBasketCheckout userId={access.userId} buyerOrgId={orgId} region={region} mode="basket"/>:
         <p role="alert" className="rounded-2xl bg-paper p-5 text-sm text-muted">
-          Sua empresa compradora não está disponível nesta sessão.
+          Selecione uma empresa autorizada na Área do comprador antes de continuar.
         </p>}
     </main>
     <SiteFooter/>
