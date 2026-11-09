@@ -56,9 +56,8 @@ export async function POST(request:Request){
   params.set("metadata[buyer_org_id]",body.buyerOrgId);
   params.set("metadata[created_by]",access.userId);
   params.set("metadata[region]",body.region);
-  params.set("payment_method_types[0]","card");
-  // Pix and boleto are deliberately not forced until account eligibility,
-  // currency, amount limits and asynchronous webhook states are homologated.
+  // Stripe chooses eligible methods from Dashboard settings; do not force
+  // payment_method_types (unsupported by newer Stripe API versions).
   const response=await fetch("https://api.stripe.com/v1/checkout/sessions",{
     method:"POST",headers:{Authorization:"Bearer "+secret,"Content-Type":"application/x-www-form-urlencoded"},
     body:params,cache:"no-store",
