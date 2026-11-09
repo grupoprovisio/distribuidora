@@ -107,6 +107,8 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       const data=await response.json() as BasketResponse&{url?:string};
       if(!response.ok||!data.ok||!data.url){
         if(response.status===409||data.reason==="basket_changed")setError("Algum item mudou. Revise a cesta antes de pagar.");
+        else if(data.reason==="delivery_checkout_pending_freight_verification")setError("O pagamento com entrega está em homologação. Se disponível, selecione a retirada gratuita para continuar.");
+        else if(data.reason==="pickup_unavailable")setError("A retirada está indisponível no momento. Tente novamente quando a unidade estiver habilitada.");
         else setError("Não foi possível iniciar o pagamento. Revise a cesta e tente novamente.");
         return;
       }
