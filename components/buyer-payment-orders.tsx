@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { CheckCircle2, ChevronDown, Circle, FileText, PackageCheck, RefreshCw, ShieldCheck, Truck } from "lucide-react";
 
 type Fiscal={status:string;access_key?:string|null;issued_at?:string|null;rejection_message?:string|null};
