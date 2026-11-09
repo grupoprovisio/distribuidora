@@ -43,6 +43,8 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - name: Static type checking
         run: npm run typecheck
+      - name: Signed Stripe Pix webhook regression tests
+        run: npm run test:stripe-webhook
       - name: Lint
         run: npm run lint
       - name: Marketplace domain tests
