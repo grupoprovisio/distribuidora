@@ -50,7 +50,7 @@ export default async function BuyerCatalogPage({searchParams}:{searchParams:Prom
             <button type="submit" className="h-12 rounded-xl bg-forest px-5 text-sm font-extrabold text-white focus-visible:outline-2 focus-visible:outline-forest">Consultar região</button>
           </form>
         </div>
-        {catalog.error ? <div role="alert" className="p-8">
+        {!buyerOrgId&&!summary.error&&summary.organizations.length>1 ? <p role="alert" className="p-8 text-sm text-muted">Selecione uma empresa autorizada na Área do comprador antes de consultar produtos.</p> : catalog.error ? <div role="alert" className="p-8">
           <ShieldAlert size={28} className="text-terra" aria-hidden/>
           <h2 className="mt-4 text-lg font-black text-forest-deep">Consulta indisponível</h2><p className="mt-2 text-sm text-muted">Verifique sua sessão, sua permissão de comprador ou o código da região.</p>
         </div> : catalog.regionNotAuthorized ? <div role="status" className="p-8">
