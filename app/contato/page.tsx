@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { ContactForm } from "@/components/contact-form";
 import { SiteFooter } from "@/components/site-footer";
+import { COMMERCIAL_EMAIL } from "@/lib/commercial-contact";
 import { WRAP } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Contato · Distribuidora" };
-
-const CHANNELS = [
-  { icon: MessageCircle, label: "WhatsApp comercial", value: "Fale com a equipe", className: "bg-lime-soft text-forest" },
-  { icon: Phone, label: "Telefone", value: "(00) 00000-0000", className: "bg-sand text-terra" },
-  { icon: Mail, label: "E-mail", value: "comercial@distribuidora.com", className: "bg-mist text-forest" },
-];
 
 export default function ContactPage() {
   return (
@@ -21,16 +16,14 @@ export default function ContactPage() {
         <section className="max-w-2xl">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-plum">Estamos por perto</p>
           <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight text-forest-deep sm:text-5xl">Vamos conversar sobre sua operação.</h1>
-          <p className="mt-4 text-base font-medium leading-relaxed text-muted sm:text-lg">Escolha o canal mais conveniente para pedir uma cotação, tirar dúvidas sobre entrega ou falar com o comercial.</p>
+          <p className="mt-4 text-base font-medium leading-relaxed text-muted sm:text-lg">Escreva para pedir uma cotação, tirar dúvidas sobre entrega ou conversar sobre uma parceria.</p>
         </section>
-        <section className="mt-10 grid gap-3 sm:grid-cols-3" aria-label="Canais de atendimento">
-          {CHANNELS.map(({ icon: Icon, label, value, className }) => (
-            <article key={label} className="rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70">
-              <span className={`grid size-11 place-items-center rounded-2xl ${className}`}><Icon size={21} aria-hidden /></span>
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.12em] text-muted">{label}</p>
-              <p className="mt-2 text-sm font-extrabold text-ink">{value}</p>
-            </article>
-          ))}
+        <section className="mt-10" aria-label="Canal de atendimento">
+          <a href={`mailto:${COMMERCIAL_EMAIL}`} className="block max-w-xl rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70 focus-visible:ring-4 focus-visible:ring-forest/40">
+            <span className="grid size-11 place-items-center rounded-2xl bg-mist text-forest"><Mail size={21} aria-hidden /></span>
+            <p className="mt-5 text-xs font-black uppercase tracking-[0.12em] text-muted">E-mail comercial</p>
+            <p className="mt-2 break-all text-sm font-extrabold text-ink underline underline-offset-4">{COMMERCIAL_EMAIL}</p>
+          </a>
         </section>
         <section className="mt-10 rounded-3xl bg-paper p-6 shadow-card ring-1 ring-line/70 sm:p-8">
           <h2 className="text-xl font-extrabold">Para agilizar o atendimento</h2>
