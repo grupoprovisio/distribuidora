@@ -69,16 +69,20 @@ export async function POST(request:Request){
 export async function GET(request:Request){
   const access=await getMarketplaceAccess();
   if(!access)return respond({ok:false,reason:"unauthorized"},401);
-  if(transactionAccessMode(access)!=="qa")return respond({ok:false,reason:"not_enabled"},503);
-  const scope=readQaTransactionScope(process.env);
-  if(!scope||!access.organizationIds.comprador.includes(scope.buyer))
+  const mode=transactionAccessMode(access);
+  if(mode==="disabled")return respond({ok:false,reason:"not_enabled"},503);
+  const scope=mode==="qa"?readQaTransactionScope(process.env):null;
+  const authorized=mode==="qa"?(scope?[scope.buyer]:[]):access.organizationIds.comprador;
+  if(!access.allowed.includes("comprador")||!authorized.length||
+     authorized.some(id=>!access.organizationIds.comprador.includes(id)))
     return respond({ok:false,reason:"forbidden"},403);
   const url=new URL(request.url),buyer=url.searchParams.get("buyer");
-  if(buyer&&buyer!==scope.buyer)return respond({ok:false,reason:"forbidden"},403);
+  if(buyer&&!authorized.includes(buyer))return respond({ok:false,reason:"forbidden"},403);
+  const buyerIds=buyer?[buyer]:authorized;
   const db=await createClient();
   const baskets=await db.from("quote_baskets")
     .select("id,buyer_org_id,region_code,fulfillment_method,payment_status,created_at,recipient_snapshot,origin_snapshot,freight_minor,min_business_days,max_business_days,delivery_postal_code")
-    .eq("buyer_org_id",scope.buyer).order("created_at",{ascending:false}).limit(30);
+    .in("buyer_org_id",buyerIds).order("created_at",{ascending:false}).limit(30);
   if(baskets.error)return respond({ok:false,reason:"query_failed"},503);
   const basketIds=(baskets.data??[]).map(b=>b.id);
   const quotes=basketIds.length?await db.from("quote_requests")
@@ -107,9 +111,12 @@ export async function GET(request:Request){
   const productIds=[...new Set((skus?.data??[]).map(s=>s.product_id))];
   const products=productIds.length?await db.from("products")
     .select("id,name").in("id",productIds):null;
-  const suppliers=await db.from("organizations")
-    .select("id,trade_name,legal_name").in("id",[...scope.suppliers]);
-  if(offers?.error||skus?.error||products?.error||suppliers.error)
+  const supplierIds=[...new Set((quotes?.data??[]).map(q=>q.supplier_org_id))];
+  const suppliers=supplierIds.length?await db.from("organizations")
+    .select("id,trade_name,legal_name").in("id",supplierIds):{data:[],error:null};
+  const buyerOrganizations=await db.from("organizations")
+    .select("id,trade_name,legal_name").in("id",buyerIds);
+  if(offers?.error||skus?.error||products?.error||suppliers.error||buyerOrganizations.error)
     return respond({ok:false,reason:"query_failed"},503);
   const skuById=new Map((skus?.data??[]).map(s=>[s.id,s.product_id]));
   const productById=new Map((products?.data??[]).map(p=>[p.id,p.name]));
@@ -123,5 +130,6 @@ export async function GET(request:Request){
       supplierName:supplierById.get(q.supplier_org_id)??"Fornecedor"};
   });
   return respond({ok:true,baskets:baskets.data??[],quotes:lines,
-    proposals:proposals?.data??[],orders:orders?.data??[],fulfillments:fulfillments?.data??[]});
+    proposals:proposals?.data??[],orders:orders?.data??[],fulfillments:fulfillments?.data??[],
+    buyerOrganizations:buyerOrganizations.data??[]});
 }

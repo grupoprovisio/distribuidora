@@ -5,9 +5,10 @@ import { SiteFooter } from "@/components/site-footer";
 import { WRAP } from "@/lib/ui";
 import { getMarketplaceAccess } from "@/lib/marketplace/session";
 import { transactionEnabledForAccess } from "@/lib/marketplace/qa-transaction-gate";
+import { TransactionConsole } from "@/components/marketplace-transaction-console";
 import { BuyerPaymentOrders } from "@/components/buyer-payment-orders";
 
-export const metadata:Metadata={title:"Pedidos pagos · Provisio",robots:{index:false,follow:false}};
+export const metadata:Metadata={title:"Meus pedidos · Provisio",robots:{index:false,follow:false}};
 export const dynamic="force-dynamic";
 export default async function BuyerOrdersPage() {
   if(!transactionEnabledForAccess(await getMarketplaceAccess()))
@@ -15,11 +16,14 @@ export default async function BuyerOrdersPage() {
   return <div className="min-h-dvh bg-canvas">
     <AppHeader theme="forest" title="Pedidos" backHref="/app/comprador" showListButton={false}/>
     <main className={WRAP+" animate-page-in py-8 sm:py-12"}>
-      <h1 className="text-3xl font-black text-forest-deep sm:text-4xl">Meus pedidos pagos</h1>
+      <h1 className="text-3xl font-black text-forest-deep sm:text-4xl">Meus pedidos</h1>
       <p className="mt-3 mb-8 max-w-3xl text-sm leading-relaxed text-muted">
-        Confira pagamentos confirmados e acompanhe a preparação, entrega ou retirada do pedido.
+        Acompanhe os pedidos pagos e as solicitações de pedido feitas por cotação.
       </p>
-      <BuyerPaymentOrders />
+      <div className="space-y-6">
+        <BuyerPaymentOrders />
+        <TransactionConsole mode="buyer_orders" />
+      </div>
     </main><SiteFooter/>
   </div>;
 }

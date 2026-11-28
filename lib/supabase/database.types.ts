@@ -23,6 +23,73 @@ export type Database = {
         Update: {product_id?:string;image_storage_path?:string|null;published_at?:string}
         Relationships: []
       }
+      // Schema reconciled with hosted columns on 2026-11-09.
+      marketplace_payment_orders: {
+        Row: {
+          id:string;basket_id:string;buyer_org_id:string;stripe_session_id:string;
+          status:string;fulfillment_status:string;amount_total_minor:number;
+          inventory_applied:boolean;tax_split_status:string;fiscal_document_id:string|null;
+          created_at:string
+        }
+        Insert: {
+          id?:string;basket_id:string;buyer_org_id:string;stripe_session_id:string;
+          status?:string;fulfillment_status?:string;amount_total_minor?:number;
+          inventory_applied?:boolean;tax_split_status?:string;fiscal_document_id?:string|null;
+          created_at?:string
+        }
+        Update: {
+          id?:string;basket_id?:string;buyer_org_id?:string;stripe_session_id?:string;
+          status?:string;fulfillment_status?:string;amount_total_minor?:number;
+          inventory_applied?:boolean;tax_split_status?:string;fiscal_document_id?:string|null;
+          created_at?:string
+        }
+        Relationships: []
+      }
+      marketplace_fiscal_documents: {
+        Row: {
+          id:string;payment_order_id:string;issuer_cnpj:string;regime:string;
+          environment:string;status:string;access_key:string|null;
+          xml_storage_path:string|null;danfe_storage_path:string|null;
+          provider:string|null;provider_document_id:string|null;
+          rejection_code:string|null;rejection_message:string|null;
+          issued_at:string|null;created_at:string;updated_at:string
+        }
+        Insert: {
+          id?:string;payment_order_id:string;issuer_cnpj:string;regime:string;
+          environment:string;status?:string;access_key?:string|null;
+          xml_storage_path?:string|null;danfe_storage_path?:string|null;
+          provider?:string|null;provider_document_id?:string|null;
+          rejection_code?:string|null;rejection_message?:string|null;
+          issued_at?:string|null;created_at?:string;updated_at?:string
+        }
+        Update: {
+          id?:string;payment_order_id?:string;issuer_cnpj?:string;regime?:string;
+          environment?:string;status?:string;access_key?:string|null;
+          xml_storage_path?:string|null;danfe_storage_path?:string|null;
+          provider?:string|null;provider_document_id?:string|null;
+          rejection_code?:string|null;rejection_message?:string|null;
+          issued_at?:string|null;created_at?:string;updated_at?:string
+        }
+        Relationships: []
+      }
+      marketplace_commission_ledger: {
+        Row: {
+          id:string;payment_order_id:string;supplier_org_id:string;
+          gross_minor:number;commission_rate_bps:number;commission_minor:number;
+          supplier_due_minor:number;status:string;created_at:string
+        }
+        Insert: {
+          id?:string;payment_order_id:string;supplier_org_id:string;
+          gross_minor:number;commission_rate_bps:number;commission_minor:number;
+          supplier_due_minor:number;status?:string;created_at?:string
+        }
+        Update: {
+          id?:string;payment_order_id?:string;supplier_org_id?:string;
+          gross_minor?:number;commission_rate_bps?:number;commission_minor?:number;
+          supplier_due_minor?:number;status?:string;created_at?:string
+        }
+        Relationships: []
+      }
       order_fulfillments: {
         Row: {
           id: string

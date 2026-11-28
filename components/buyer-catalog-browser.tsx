@@ -42,12 +42,12 @@ export function BuyerCatalogBrowser({items,region,userId,buyerOrgId,initialProdu
 }){
   const [search,setSearch]=useState("");
   const selectedProduct=initialProductSlug;
-  const clearProductHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region);
+  const clearProductHref="/app/comprador/catalogo?regiao="+encodeURIComponent(region)+"&empresa="+encodeURIComponent(buyerOrgId);
   const [sort,setSort]=useState("name");
   const [lastMessage,setLastMessage]=useState("");
   const normalizedRegion=region.startsWith("BR-")?region:"BR-"+region;
   const basket=useBuyerBasket(userId,buyerOrgId,normalizedRegion);
-  const href="/app/comprador/cesta?regiao="+encodeURIComponent(normalizedRegion);
+  const href="/app/comprador/cesta?regiao="+encodeURIComponent(normalizedRegion)+"&empresa="+encodeURIComponent(buyerOrgId);
   const shown=useMemo(()=>{
     const term=search.trim().toLocaleLowerCase("pt-BR");
     const matched=items.filter(item=>!term||[item.productName,item.supplier,item.sku]

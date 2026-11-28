@@ -62,7 +62,7 @@ test("Portais privados refletem permissao QA sem habilitar compras comerciais", 
   const portal=file("components/marketplace-portal.tsx");
   for(const profile of ["comprador","fornecedor"]){
     const source=file("app/app/"+profile+"/page.tsx");
-    assert.match(source,/transactionAccessMode\(await getMarketplaceAccess\(\)\)/);
+    assert.match(source,/transactionAccessMode\((?:access|await getMarketplaceAccess\(\))\)/);
     assert.match(source,/transactionMode=\{mode\}/);
   }
   assert.doesNotMatch(portal,/Homologação QA habilitada|Teste QA autorizado/);
@@ -71,19 +71,32 @@ test("Portais privados refletem permissao QA sem habilitar compras comerciais", 
   assert.match(file("lib/marketplace/qa-transaction-gate.ts"),/MARKETPLACE_TRANSACTIONS_ENABLED/);
 });
 
+test("Atalhos da Área do Comprador mantêm dois cartões quadrados por linha no celular", () => {
+  const portal = file("components/marketplace-portal.tsx");
+  const modules = portal.match(/<section[^>]*aria-label="Módulos do portal"[^>]*>[\s\S]*?<\/section>/)?.[0] ?? "";
+  assert.match(modules, /portal === "comprador" \? "grid-cols-2\b/);
+  assert.match(modules, /portal === "comprador" \? "[^"]*\baspect-square\b[^"]*\bsm:aspect-auto\b/);
+});
+
 test("Checkout B2B e cesta mantêm RLS, escopo QA e pagamento bloqueado", () => {
   const card=file("components/buyer-catalog-browser.tsx");
   const cart=file("components/buyer-basket-checkout.tsx");
   const api=file("app/api/marketplace/baskets/route.ts");
   const migration=file("db/migrations/0029_marketplace_quote_baskets_payment_gate.sql");
   const validation=file("lib/marketplace/basket-validation.ts");
-  assert.match(card,/grid-cols-2/);
   assert.match(card,/Minha cesta/);
-  assert.match(cart,/Solicitar cotação/);
+  // This branch takes the buyer to payment; the old quote-button label is no longer the contract.
+  assert.match(cart,/!validation\?\.ready\|\|!validation\.quoteEnabled/);
+  assert.match(cart,/fetch\("\/api\/marketplace\/payment"/);
+  const payment = file("app/api/marketplace/payment/route.ts");
+  assert.match(payment,/transactionAccessMode\(access\)==="disabled"/);
+  assert.match(payment,/validateBuyerBasket\(db,access,body\.buyerOrgId,body\.region,body\.lines\)/);
   assert.match(cart,/buyerOrgId/);
   assert.match(api,/validateBuyerBasket/);
   assert.match(api,/marketplace_submit_quote_basket/);
-  assert.match(api,/transactionAccessMode\(access\)!=="qa"/);
+  assert.match(api,/transactionAccessMode\(access\)/);
+  assert.match(api,/readQaTransactionScope\(process\.env\)/);
+  assert.match(api,/body\.buyerOrgId!==scope\.buyer/);
   assert.match(validation,/inventory_positions/);
   assert.match(validation,/offer_price_tiers/);
   assert.match(migration,/create table public.quote_baskets/);
@@ -223,7 +236,8 @@ test("Frete automático SP respeita ADM, CEP específico e escolha de retirada",
   assert.match(calc,/basket-delivery-method/);
   assert.match(calc,/Calcular frete/);
   assert.match(calc,/Retirar no local/);
-  assert.match(cart,/recebimento/);
+  assert.match(file("app/app/comprador/checkout/page.tsx"),/recebimento/);
+  assert.match(cart,/BuyerFreightCalculator/);
   assert.match(cart,/method==="pickup"/);
 });
 
@@ -261,10 +275,14 @@ test("Rotas de comparacao externa nao executam as integracoes legadas", () => {
     "app/(tabs)/buscar/page.tsx", "app/(tabs)/categorias/page.tsx",
     "app/(tabs)/ofertas/page.tsx", "app/(tabs)/promocoes/page.tsx",
     "app/(tabs)/lista/page.tsx", "app/produto/[id]/page.tsx",
-    "app/scan/page.tsx", "app/checkout/page.tsx"
+    "app/scan/page.tsx"
   ]) {
     assert.ok(file(pathname).includes('redirect("/produtos")'), pathname);
   }
+  assert.match(file("app/checkout/page.tsx"),/redirect\("\/app\/comprador\/cesta"\)/);
+  const oldCheckout=file("app/api/checkout/route.ts");
+  assert.match(oldCheckout,/status:410/);
+  assert.doesNotMatch(oldCheckout,/STRIPE_PRICE_ID|api\.stripe\.com/);
   const handlers = [
     "app/api/catalog/route.ts", "app/api/catalog/prices/route.ts",
     "app/api/promos/route.ts", "app/api/lookup/route.ts",
