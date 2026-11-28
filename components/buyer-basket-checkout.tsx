@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { normalizeCep } from "@/lib/marketplace/buyer-contact";
 import { BuyerCheckoutContactSummary } from "@/components/buyer-checkout-contact-summary";
 import { BuyerFreightCalculator, type FreightInfo } from "@/components/buyer-freight-calculator";
 
-type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout";initialMethod?:"delivery"|"pickup"};
+type Props={userId:string;buyerOrgId:string;region:string;mode:"basket"|"checkout";groupedQuoteEnabled?:boolean;initialMethod?:"delivery"|"pickup"};
 type BasketResponse=BasketValidation&{id?:string;status?:string;paymentStatus?:string};
 type BasketSnapshot={key:string;value:BasketValidation|null;failure?:string};
 const failureText=(code?:string)=>{
@@ -27,11 +27,13 @@ const failureText=(code?:string)=>{
 const money=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const brl=(value:number)=>money.format(value/100);
 const URL="/api/marketplace/baskets";
-export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod}:Props){
+export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,groupedQuoteEnabled=false,initialMethod}:Props){
   const basket=useBuyerBasket(userId,buyerOrgId,region);
   const [snapshot,setSnapshot]=useState<BasketSnapshot|null>(null);
   const [refresh,setRefresh]=useState(0);
   const [submitting,setSubmitting]=useState(false);
+  const [submittingQuote,setSubmittingQuote]=useState(false);
+  const quotePending=useRef(false);
   const [error,setError]=useState("");
   const [method,setMethod]=useState<"delivery"|"pickup"|undefined>(initialMethod);
   const [savedContact,setSavedContact]=useState<BuyerContact|null>(null);
@@ -73,7 +75,7 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
     return ()=>controller.abort();
   },[serialized,buyerOrgId,region,refresh,selected]);
   async function submit(){
-    if(submitting||!validation?.ready||!validation.quoteEnabled||!selected.length)return;
+    if(submitting||quotePending.current||!validation?.ready||!validation.quoteEnabled||!selected.length)return;
     if(!savedContact){
       setError("Confira e salve seu cadastro e endereço antes de continuar para o pagamento.");
       return;
@@ -129,6 +131,35 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
       freight.cep===savedContact.postalCode&&freight.quote.state===savedContact.state);
   const checkoutReady=!!(method&&savedContact&&
     (method==="pickup"||normalizeCep(cep)===savedContact.postalCode)&&deliveryValid);
+  async function submitQuote(){
+    if(!groupedQuoteEnabled||!method||!checkoutReady||!validation?.ready||
+      !validation.quoteEnabled||!selected.length||submitting||quotePending.current)return;
+    quotePending.current=true;
+    setSubmittingQuote(true);
+    setError("");
+    try{
+      const storageKey=["provisio-grouped-quote",userId,buyerOrgId,region,method,serialized].join(":");
+      let requestKey=sessionStorage.getItem(storageKey);
+      if(!requestKey){
+        requestKey=crypto.randomUUID();
+        sessionStorage.setItem(storageKey,requestKey);
+      }
+      const response=await fetch(URL,{method:"POST",credentials:"same-origin",cache:"no-store",
+        headers:{"content-type":"application/json"},
+        body:JSON.stringify({action:"submit",buyerOrgId,region,lines:selected,method,requestKey})});
+      const result:BasketResponse=await response.json();
+      if(!response.ok||!result.ok||!result.id||!/^[-a-f0-9]{36}$/i.test(result.id)){
+        setError("Não foi possível confirmar a cotação. Revise a cesta e tente novamente.");
+        return;
+      }
+      router.push("/app/comprador/solicitacoes?enviada="+encodeURIComponent(result.id));
+    }catch{
+      setError("Não foi possível confirmar a cotação. Se a conexão caiu, consulte Minhas solicitações antes de tentar novamente.");
+    }finally{
+      quotePending.current=false;
+      setSubmittingQuote(false);
+    }
+  }
   const visibleLines=useMemo(()=>{
     const byId=new Map((validation?.lines??[]).map(line=>[line.offerId,line]));
     return rows.map((cached):ValidatedBasketLine=>{
@@ -300,12 +331,22 @@ export function BuyerBasketCheckout({userId,buyerOrgId,region,mode,initialMethod
             para enviar a cotação. Entre com uma conta de comprador autorizada.
           </p>}
         {error&&<p role="alert" className="mt-4 rounded-xl bg-sand p-3 text-sm font-semibold text-wine">{error}</p>}
-        {mode==="basket"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
+        {groupedQuoteEnabled&&<>
+          <button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||submittingQuote||!checkoutReady}
+            onClick={()=>void submitQuote()}
+            className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full border border-forest bg-paper px-5 py-3 text-sm font-extrabold text-forest disabled:cursor-not-allowed disabled:opacity-50">
+            {submittingQuote?"Registrando cotação...":"Solicitar cotação"}
+          </button>
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            Solicita cotação de todos os produtos da cesta, sem cobrança. Acompanhe o protocolo em Minhas solicitações.
+          </p>
+        </>}
+        {mode==="basket"?<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||submittingQuote||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
           {submitting?"Abrindo pagamento...":"Efetuar pagamento"}
           {!submitting&&<ArrowRight size={18} aria-hidden/>}
-        </button>:<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||!checkoutReady}
+        </button>:<button type="button" disabled={!validation?.ready||!validation.quoteEnabled||loading||submitting||submittingQuote||!checkoutReady}
           onClick={()=>void submit()}
           className="mt-6 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-forest px-5 py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50">
           {submitting?"Abrindo pagamento...":"Efetuar pagamento"}

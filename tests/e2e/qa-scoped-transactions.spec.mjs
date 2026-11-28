@@ -315,7 +315,18 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await page.getByRole('radio',{name:/Retirar no local/}).check();
     await expect(page.getByText('R$ 35,50',{exact:true}).last()).toBeVisible();
     await expect(page.getByRole('button',{name:'Efetuar pagamento',exact:true})).toBeEnabled();
-    const registered=await submitGroupedRfq(page,'pickup',[fixture.offer,id.offer]);
+    const quoteButton=page.getByRole('button',{name:'Solicitar cotação',exact:true});
+    await expect(quoteButton).toBeEnabled();
+    await quoteButton.click();
+    await page.waitForURL(/\/app\/comprador\/solicitacoes\?enviada=/);
+    const registeredId=new URL(page.url()).searchParams.get('enviada');
+    expect(registeredId).toMatch(/^[0-9a-f-]{36}$/i);
+    const registered={
+      id:registeredId,
+      card:page.locator('section').filter({has:page.getByRole('heading',{
+        name:`Cotação #${registeredId.slice(0,8)}`,exact:true,
+      })}),
+    };
     await expect(registered.card.getByText('2 produtos',{exact:true})).toBeVisible();
     await expect(registered.card.getByText(/Retirada na unidade/)).toBeVisible();
     const baskets=rows(`select b.id,b.payment_status,b.fulfillment_method,
@@ -349,6 +360,9 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
       return r.status;
     });
     expect(buyerB).toBe(503);
+    await pages.buyerB.goto('/app/comprador/cesta?regiao=BR-SP');
+    await expect(pages.buyerB.getByRole('heading',{name:'Minha cesta'}).last()).toBeVisible();
+    await expect(pages.buyerB.getByRole('button',{name:'Solicitar cotação',exact:true})).toHaveCount(0);
     // The API intentionally does not mutate browser localStorage.
     await page.goto('/app/comprador/cesta?regiao=BR-SP');
     page.once('dialog',dialog=>dialog.accept());
@@ -376,7 +390,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await page.getByLabel('CEP de entrega').fill('01001000');
     await page.getByRole('button',{name:'Calcular frete'}).click();
     await expect(page.getByText('R$ 14,90',{exact:false}).first()).toBeVisible();
-    await expect(page.getByText('2–4 dias úteis',{exact:false})).toBeVisible();
+    await expect(page.getByText('Entrega estimada: 2–4 dias úteis.',{exact:true})).toBeVisible();
     await expect(page.getByText('R$ 27,40',{exact:true})).toBeVisible();
     const pay=page.getByRole('button',{name:'Efetuar pagamento',exact:true});
     await expect(pay).toBeEnabled();
