@@ -372,10 +372,15 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
     await confirmUI(page,card.getByRole('button',{name:'Registrar entrega',exact:true}));
     await expect.poll(()=>rows(`select status from public.order_fulfillments where order_id='${mainOrder.id}'`)[0]?.status).toBe('delivered');
     await pages.buyerA.goto('/app/comprador/pedidos');
-    await expect(pages.buyerA.getByText('Entregue (registro manual)',{exact:true})).toBeVisible();
-    await expect(pages.buyerA.getByText('Entrega registrada',{exact:true})).toBeVisible();
-    await expect(pages.buyerA.getByText('Confirmado pelo fornecedor · estoque reservado',{exact:true})).toHaveCount(0);
-    await expect(pages.buyerA.getByText('Referência informada pelo fornecedor: E2E-LOCAL-ENTREGA-001')).toBeVisible();
+    await expect(pages.buyerA.getByRole('heading',{name:'Pedidos pagos',exact:true})).toBeVisible();
+    const buyerCard=pages.buyerA.getByRole('listitem').filter({
+      has:pages.buyerA.getByText(`Pedido #${mainOrder.id.slice(0,8)}`,{exact:true}),
+    });
+    await expect(buyerCard.getByText('Entregue (registro manual)',{exact:true})).toBeVisible();
+    await expect(buyerCard.getByText('Entrega registrada',{exact:true})).toBeVisible();
+    await expect(buyerCard.getByText('Confirmado pelo fornecedor · estoque reservado',{exact:true})).toHaveCount(0);
+    await expect(buyerCard.getByText('Referência informada pelo fornecedor: E2E-LOCAL-ENTREGA-001',{exact:true})).toBeVisible();
+    expect(stock()).toEqual({available_quantity:90,reserved_quantity:0});
     await pages.buyerA.screenshot({path:test.info().outputPath('comprador-entrega-concluida.png'),fullPage:true});
   });
 
@@ -385,6 +390,9 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
         const data=await clients[who].from(table).select('id');expect(data.error).toBeNull();expect(data.data).toEqual([]);
       }
     }
+    await pages.buyerB.goto('/app/comprador/pedidos');
+    await expect(pages.buyerB.getByText('Nenhuma solicitação de pedido encontrada.',{exact:true})).toBeVisible();
+    await expect(pages.buyerB.getByText(`Pedido #${mainOrder.id.slice(0,8)}`,{exact:true})).toHaveCount(0);
     const foreignStock=await clients.supplierB.rpc('set_supplier_available_stock',{p_org:ORGS.supplierA,p_sku:A.skuId,p_available:999});
     expect(foreignStock.error?.code).toBe('42501');expect(stock().available_quantity).toBe(90);
     const foreignOrder=await api('supplierB',{action:'order_transition',transition:'supplier_cancel',orderId:mainOrder.id});expect(foreignOrder.status).toBe(422);
