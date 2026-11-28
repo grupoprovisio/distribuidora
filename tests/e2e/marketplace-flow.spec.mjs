@@ -72,6 +72,13 @@ async function submitProduct(item) {
   await expect.poll(()=>rows(`select id from public.supplier_product_submissions where supplier_sku='${item.sku}'`).length).toBe(1);
   item.submissionId=rows(`select id from public.supplier_product_submissions where supplier_sku='${item.sku}'`)[0].id;
 }
+async function openIndividualCatalogTools(page) {
+  const summary = page.locator("summary").filter({ hasText: /^Ferramentas avançadas de cadastro individual$/ });
+  const details = page.locator("details").filter({ has: summary });
+  await expect(summary).toBeVisible();
+  if (!(await details.evaluate((element) => element.open))) await summary.click();
+  await expect(details).toHaveJSProperty("open", true);
+}
 async function prepareProduct(item) {
   const page=pages.admin;await page.goto('/admin/marketplace/solicitacoes');
   const card=page.locator('article').filter({has:page.getByRole('heading',{name:item.name,exact:true})});
@@ -82,11 +89,13 @@ async function prepareProduct(item) {
   item.skuId=rows(`select id from public.supplier_products where product_id='${item.productId}'`)[0].id;
   item.offerId=rows(`select id from public.offers where supplier_product_id='${item.skuId}'`)[0].id;
   await page.goto('/admin/marketplace/cadastro');
+  await openIndividualCatalogTools(page);
   const active=section(page,'2. Ativar produto mestre');
   await active.locator('[name="product_id"]').selectOption(item.productId);
   await active.getByRole('button',{name:'Ativar produto',exact:true}).click();
   await expect.poll(()=>rows(`select status from public.products where id='${item.productId}'`)[0].status).toBe('active');
   await page.reload();
+  await openIndividualCatalogTools(page);
   const sku=section(page,'4. Homologar SKU');
   await sku.locator('[name="sku_id"]').selectOption(item.skuId);
   await sku.getByRole('button',{name:'Homologar SKU',exact:true}).click();
@@ -102,6 +111,7 @@ async function saveStock(item, amount) {
 }
 async function approveOffer(id) {
   const page=pages.admin;await page.goto('/admin/marketplace/cadastro');
+  await openIndividualCatalogTools(page);
   const s=section(page,'7. Aprovar oferta para catálogo');
   await s.locator('[name="offer_id"]').selectOption(id);
   await s.getByRole('button',{name:'Aprovar oferta',exact:true}).click();
@@ -218,6 +228,7 @@ test.describe.serial('Provisio: navegador + Auth + PostgreSQL + Storage reais, e
   test('04 - administrador promove e homologa produtos; oferta sem estoque é recusada',async()=>{
     await prepareProduct(A);await prepareProduct(B);
     const page=pages.admin;await page.goto('/admin/marketplace/cadastro');
+    await openIndividualCatalogTools(page);
     const s=section(page,'7. Aprovar oferta para catálogo');
     await s.locator('[name="offer_id"]').selectOption(A.offerId);
     await s.getByRole('button',{name:'Aprovar oferta',exact:true}).click();
