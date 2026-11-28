@@ -63,7 +63,7 @@ export default function FornecedoresPage() {
        <p className="flex items-center gap-3"><Check size={18} className="shrink-0 text-[#d5edaa]"/> Conexão com o setor alimentício</p>
       </div>
       <a href="#interesse" className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#d5edaa] px-4 py-4 text-sm font-extrabold text-[#173b30] transition hover:bg-white">Apresentar minha empresa <ArrowRight size={17} aria-hidden="true"/></a>
-      <p className="mt-3 text-center text-[11px] leading-5 text-white/65">Interesse demonstrativo; cadastro público e vendas reais ainda não habilitados.</p>
+      <p className="mt-3 text-center text-[11px] leading-5 text-white/65">A apresentação por e-mail não confirma cadastro nem homologação.</p>
      </aside>
     </div>
    </section>

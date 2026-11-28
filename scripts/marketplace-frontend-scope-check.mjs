@@ -305,13 +305,14 @@ test("Páginas premium preservam textos, imagens e cards principais sem consulta
  * O hash é o SHA1 de blob Git, calculado sobre os bytes exatos do arquivo.
  */
 test("Home, Sou comprador, Sou fornecedor, cards e fotos mantêm a identidade visual aprovada", () => {
+  // Atualização pontual dos textos e do formulário de cotação assistida (tarefa #10).
   const approved = {
     "app/(tabs)/page.tsx": "7eb4cfbedff14c823789902f8dd86e4cd1a5fb43",
-    "app/compradores/page.tsx": "edbb5b6e225d8fbb3d47c6506cb8f9e2321a36b7",
-    "app/fornecedores/page.tsx": "345cf55361d222d3a8842f769665373c00dde019",
+    "app/compradores/page.tsx": "4db64d7ff79581875c7f889cd45e15ac82f7c53b",
+    "app/fornecedores/page.tsx": "10987adaf517216a107411f0449851f3a8790f1a",
     "components/home-benefits.tsx": "b48c2e151075af25abea17fd570333bc6f826824",
     "components/home-marketplace-showcase.tsx": "fbdd63872fe17991822ebe927d0130582683f343",
-    "components/marketplace-lead-form.tsx": "31699aad3b6b693c16342599a9a3e642f29aa0ea",
+    "components/marketplace-lead-form.tsx": "47191afe2d793454ebbf57dcc0340927e8f6f028",
     "public/images/fornecedores/chef-hero.png": "b62de160e5692338b4ad3b860cb373daf41e2c8f",
     "public/images/fornecedores/operacao-abastecimento.png": "295704f2704cd1cbf85dea349db92cee84497ade",
     "public/images/fornecedores/parceria-cozinha.png": "66bdcaf522eedd5737b1ec15120faea0b9011006",
