@@ -372,6 +372,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await page.goto('/app/comprador/catalogo?regiao=SP');
     await page.getByRole('button',{name:'Adicionar QA local commodity à cesta'}).click();
     await page.getByRole('link',{name:/Minha cesta/}).first().click();
+    await page.getByRole('radio',{name:/Receber no endereço/}).check();
     await page.getByLabel('CEP de entrega').fill('01001000');
     await page.getByRole('button',{name:'Calcular frete'}).click();
     await expect(page.getByText('R$ 14,90',{exact:false}).first()).toBeVisible();
@@ -456,6 +457,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await expect(page.getByText('Preço Total',{exact:true})).toBeVisible();
     await expect(page.getByText('Produtos diferentes',{exact:true})).toHaveCount(0);
     await expect(page.getByText('R$ 25,00',{exact:true}).last()).toBeVisible();
+    await page.getByRole('radio',{name:/Receber no endereço/}).check();
     await page.getByLabel('CEP de entrega').fill('01001000');
     await page.getByRole('button',{name:'Calcular frete'}).click();
     // A valid subtotal + freight is visible while the old product stays blocked.
