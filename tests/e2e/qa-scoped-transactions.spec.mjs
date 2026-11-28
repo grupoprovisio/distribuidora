@@ -360,9 +360,13 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
       return r.status;
     });
     expect(buyerB).toBe(503);
-    await pages.buyerB.goto('/app/comprador/cesta?regiao=BR-SP');
-    await expect(pages.buyerB.getByRole('heading',{name:'Minha cesta'}).last()).toBeVisible();
-    await expect(pages.buyerB.getByRole('button',{name:'Solicitar cotação',exact:true})).toHaveCount(0);
+    const otherBuyerPage=pages.buyerB;
+    await otherBuyerPage.goto('/app/comprador/catalogo?regiao=SP');
+    await otherBuyerPage.getByRole('button',{name:'Adicionar Non QA test offer à cesta',exact:true}).click();
+    await otherBuyerPage.getByRole('link',{name:/Minha cesta/}).first().click();
+    await expect(otherBuyerPage.getByText('Non QA test offer',{exact:true})).toBeVisible();
+    await expect(otherBuyerPage.getByText('Você pode consultar os preços, mas esta conta não está habilitada',{exact:false})).toBeVisible();
+    await expect(otherBuyerPage.getByRole('button',{name:'Solicitar cotação',exact:true})).toHaveCount(0);
     // The API intentionally does not mutate browser localStorage.
     await page.goto('/app/comprador/cesta?regiao=BR-SP');
     page.once('dialog',dialog=>dialog.accept());
@@ -399,7 +403,7 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     const blocked=await payment;
     expect(blocked.status()).toBe(503);
     expect(await blocked.json()).toMatchObject({ok:false,reason:'checkout_not_configured'});
-    await expect(page.getByRole('alert')).toContainText('Não foi possível iniciar o pagamento.');
+    await expect(page.getByRole('alert').filter({hasText:'Não foi possível iniciar o pagamento.'})).toBeVisible();
     const registered=await submitGroupedRfq(page,'delivery',[fixture.offer]);
     await expect(registered.card.getByText(/Entrega no endereço cadastrado/)).toBeVisible();
     await expect(registered.card.getByText(/Rua Teste Local/)).toBeVisible();
