@@ -23,6 +23,27 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     return { status: r.status, ...(await r.json()) };
   }, mode);
 
+  // The cart CTA starts payment. Grouped RFQs are a separate, QA-only API.
+  async function submitGroupedRfq(page, method, offerIds) {
+    const result = await page.evaluate(async payload => {
+      const response = await fetch('/api/marketplace/baskets', {
+        method:'POST',headers:{'Content-Type':'application/json'},
+        credentials:'same-origin',body:JSON.stringify(payload),
+      });
+      return {httpStatus:response.status,...await response.json()};
+    }, {
+      action:'submit',buyerOrgId:ORGS.buyerA,region:'BR-SP',method,
+      lines:offerIds.map(offerId=>({offerId,quantity:1})),requestKey:randomUUID(),
+    });
+    expect(result).toMatchObject({httpStatus:201,ok:true,status:'submitted',paymentStatus:'unpaid'});
+    expect(result.id).toMatch(/^[0-9a-f-]{36}$/i);
+    await page.goto('/app/comprador/solicitacoes');
+    // Match the persisted basket, not the flash notice derived from a URL parameter.
+    const heading=page.getByRole('heading',{name:`Cotação #${result.id.slice(0,8)}`,exact:true});
+    await expect(heading).toBeVisible();
+    return {id:result.id,card:page.locator('section').filter({has:heading})};
+  }
+
   async function login(page, email) {
     await page.goto('/entrar', { waitUntil: 'domcontentloaded' });
     // Wait for React hydration before editing controlled fields on a cold Next.js build.
@@ -288,17 +309,20 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await pages.buyerA.getByRole('button',{name:'Adicionar QA segundo produto à cesta'}).click();
     await pages.buyerA.getByRole('link',{name:/Minha cesta/}).first().click();
     await expect(pages.buyerA.getByRole('heading',{name:'Minha cesta'}).last()).toBeVisible();
-    await expect(pages.buyerA.getByText('QA segundo produto')).toBeVisible();
-    await pages.buyerA.getByRole('link',{name:/Revisar solicitação/}).click();
-    await expect(pages.buyerA.getByRole('button',{name:/Solicitar cotação/})).toBeEnabled();
-    await pages.buyerA.getByRole('radio',{name:/Retirar no local/}).check();
-    await pages.buyerA.getByRole('button',{name:/Solicitar cotação/}).click();
-    await pages.buyerA.waitForURL(/\/app\/comprador\/solicitacoes\?enviada=/);
-    await expect(pages.buyerA.getByText('Solicitação registrada.',{exact:false})).toBeVisible();
+    const page=pages.buyerA;
+    await expect(page.getByText('QA local commodity',{exact:true})).toBeVisible();
+    await expect(page.getByText('QA segundo produto',{exact:true})).toBeVisible();
+    await page.getByRole('radio',{name:/Retirar no local/}).check();
+    await expect(page.getByText('R$ 35,50',{exact:true}).last()).toBeVisible();
+    await expect(page.getByRole('button',{name:'Efetuar pagamento',exact:true})).toBeEnabled();
+    const registered=await submitGroupedRfq(page,'pickup',[fixture.offer,id.offer]);
+    await expect(registered.card.getByText('2 produtos',{exact:true})).toBeVisible();
+    await expect(registered.card.getByText(/Retirada na unidade/)).toBeVisible();
     const baskets=rows(`select b.id,b.payment_status,b.fulfillment_method,
       (select count(*) from public.quote_requests q where q.basket_id=b.id) as lines
       from public.quote_baskets b where b.buyer_org_id='${ORGS.buyerA}'`);
     expect(baskets).toHaveLength(1);
+    expect(baskets[0].id).toBe(registered.id);
     expect(baskets[0].lines).toBe(2);
     expect(baskets[0].payment_status).toBe('unpaid');
     expect(baskets[0].fulfillment_method).toBe('pickup');
@@ -325,6 +349,11 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
       return r.status;
     });
     expect(buyerB).toBe(503);
+    // The API intentionally does not mutate browser localStorage.
+    await page.goto('/app/comprador/cesta?regiao=BR-SP');
+    page.once('dialog',dialog=>dialog.accept());
+    await page.getByRole('button',{name:'Limpar cesta',exact:true}).click();
+    await expect(page.getByText('QA segundo produto',{exact:true})).toHaveCount(0);
   });
 
   test('05 — cadastro editável, frete real de tabela por CEP e endereço persistido na cotação',async()=>{
@@ -347,16 +376,22 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     await page.getByRole('button',{name:'Calcular frete'}).click();
     await expect(page.getByText('R$ 14,90',{exact:false}).first()).toBeVisible();
     await expect(page.getByText('2–4 dias úteis',{exact:false})).toBeVisible();
-    await page.getByRole('link',{name:/Revisar solicitação/}).click();
-    await expect(page.getByLabel('Complemento (opcional)')).toHaveValue('Sala QA 2');
-    await expect(page.getByRole('button',{name:'Solicitar cotação'})).toBeEnabled();
-    await page.getByRole('button',{name:'Solicitar cotação'}).click();
-    await page.waitForURL(/\/app\/comprador\/solicitacoes\?enviada=/);
-    await expect(page.getByText('Solicitação registrada.',{exact:false})).toBeVisible();
+    await expect(page.getByText('R$ 27,40',{exact:true})).toBeVisible();
+    const pay=page.getByRole('button',{name:'Efetuar pagamento',exact:true});
+    await expect(pay).toBeEnabled();
+    const payment=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/marketplace/payment'&&r.request().method()==='POST');
+    await pay.click();
+    const blocked=await payment;
+    expect(blocked.status()).toBe(503);
+    expect(await blocked.json()).toMatchObject({ok:false,reason:'checkout_not_configured'});
+    await expect(page.getByRole('alert')).toContainText('Não foi possível iniciar o pagamento.');
+    const registered=await submitGroupedRfq(page,'delivery',[fixture.offer]);
+    await expect(registered.card.getByText(/Entrega no endereço cadastrado/)).toBeVisible();
+    await expect(registered.card.getByText(/Rua Teste Local/)).toBeVisible();
     const latest=rows(`select recipient_snapshot,origin_snapshot,freight_minor,
       min_business_days,max_business_days,delivery_postal_code,fulfillment_method
-      from public.quote_baskets where buyer_org_id='${ORGS.buyerA}'
-      and fulfillment_method='delivery' order by created_at desc limit 1`);
+      from public.quote_baskets where id='${registered.id}' and buyer_org_id='${ORGS.buyerA}'
+      and fulfillment_method='delivery'`);
     expect(latest).toHaveLength(1);
     expect(latest[0].recipient_snapshot.complement).toBe('Sala QA 2');
     expect(latest[0].recipient_snapshot.fullName).toBe('Comprador Local Teste');
@@ -426,13 +461,16 @@ test.describe.serial('Homologação: transações habilitadas exclusivamente par
     // A valid subtotal + freight is visible while the old product stays blocked.
     await expect(page.getByText('R$ 39,90',{exact:true})).toBeVisible();
     await expect(page.getByText('Produtos sem preço confirmado não entram no total.',{exact:false})).toBeVisible();
-    await expect(page.getByRole('link',{name:/Revisar solicitação/})).toHaveAttribute('aria-disabled','true');
+    const pay=page.getByRole('button',{name:'Efetuar pagamento',exact:true});
+    await expect(pay).toBeDisabled();
     await page.getByRole('button',{name:'Remover itens indisponíveis'}).click();
     await expect(page.getByText('Produto antigo',{exact:true})).toHaveCount(0);
     await expect(page.getByText('R$ 39,90',{exact:true})).toBeVisible();
-    await expect(page.getByRole('link',{name:/Revisar solicitação/})).toHaveAttribute('aria-disabled','false');
+    await expect(pay).toBeEnabled();
     await page.getByRole('radio',{name:/Retirar no local/}).check();
     await expect(page.getByText('R$ 25,00',{exact:true}).last()).toBeVisible();
+    await expect(page.getByText('Grátis',{exact:true}).last()).toBeVisible();
+    await expect(pay).toBeEnabled();
     await page.evaluate(key=>{window.localStorage.removeItem(key);
       window.dispatchEvent(new Event('provisio:basket-changed'));},key);
   });
